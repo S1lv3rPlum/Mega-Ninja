@@ -1,8 +1,14 @@
 import Phaser from 'phaser';
 import { SaveManager } from '../SaveManager.js';
+import DialogueBox from '../DialogueBox.js';
+import dialogueData from '../data/dialogue.json';
 
 const TILE = 16;
 const MOVE_MS = 140; // time to slide one tile
+
+// NPCs on this map. 'dialogue' is a key in src/data/dialogue.json.
+// (Later these can come from an object layer in Tiled.)
+const NPCS = [{ id: 'elder', x: 17, y: 10, texture: 'npc', dialogue: 'elder' }];
 
 export default class WorldScene extends Phaser.Scene {
   constructor() {
@@ -13,9 +19,13 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('tiles', 'assets/tilesets/tiles.png');
     this.load.tilemapTiledJSON('town', 'assets/maps/town.json');
     this.load.image('player', 'assets/sprites/player.png');
+    this.load.image('npc', 'assets/sprites/npc.png');
+    this.load.image('dialogue-box', 'assets/ui/dialogue-box.png');
   }
 
   create() {
+    this.cameras.main.fadeIn(300);
+
     // --- Map (made in Tiled; layer names must match the JSON) ---
     this.map = this.make.tilemap({ key: 'town' });
     const tileset = this.map.addTilesetImage('tiles', 'tiles');
@@ -30,7 +40,15 @@ export default class WorldScene extends Phaser.Scene {
       gold: 0,
       flags: {},
     };
+    if (!this.gameState.flags) this.gameState.flags = {};
     this.tile = { ...this.gameState.tile };
+    this.facing = { x: 0, y: 1 }; // which way the player is looking (down)
+
+    // --- NPCs ---
+    this.npcs = NPCS.map((def) => ({
+      ...def,
+      sprite: this.add.image(def.x * TILE, def.y * TILE, def.texture).setOrigin(0, 0),
+    }));
 
     // --- Player (grid-based: tracks a tile position, slides between tiles) ---
     this.player = this.add
@@ -42,9 +60,18 @@ export default class WorldScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
     this.cameras.main.startFollow(this.player, true);
 
-    // --- Input: arrows + WASD ---
+    // --- Dialogue ---
+    this.dialogue = new DialogueBox(this);
+
+    // --- Input: arrows + WASD to move; Space / Enter / Z to talk; P to save ---
     this.cursors = this.input.keyboard.createCursorKeys();
     this.wasd = this.input.keyboard.addKeys('W,A,S,D');
+    const onActionKey = (event) => {
+      if (!event.repeat) this.onAction();
+    };
+    this.input.keyboard.on('keydown-SPACE', onActionKey);
+    this.input.keyboard.on('keydown-ENTER', onActionKey);
+    this.input.keyboard.on('keydown-Z', onActionKey);
 
     // --- Save (P) ---
     this.toast = this.add
@@ -88,9 +115,42 @@ export default class WorldScene extends Phaser.Scene {
     // lifting any finger stops movement
     this.input.on('pointerup', () => (this.touchDir = { x: 0, y: 0 }));
 
+    // A button = talk / interact (same as Space on a keyboard)
+    make(292, 220, 'A', () => this.onAction());
+
     // save button (replaces the P key on phones)
     const save = make(292, 16, 'SAVE', () => this.saveGame());
     save.setStyle({ fixedWidth: 44, fontSize: '10px' });
+  }
+
+  // Space / Enter / Z / the A button
+  onAction() {
+    if (this.dialogue.isOpen) {
+      this.dialogue.advance();
+      return;
+    }
+    if (this.moving) return;
+
+    const tx = this.tile.x + this.facing.x;
+    const ty = this.tile.y + this.facing.y;
+    const npc = this.npcAt(tx, ty);
+    if (npc) this.talkTo(npc);
+  }
+
+  npcAt(x, y) {
+    return this.npcs.find((n) => n.x === x && n.y === y) ?? null;
+  }
+
+  talkTo(npc) {
+    const data = dialogueData[npc.dialogue];
+    if (!data) return;
+
+    const flag = `met_${npc.id}`;
+    const firstTime = !this.gameState.flags[flag];
+    this.gameState.flags[flag] = true;
+
+    this.touchDir = { x: 0, y: 0 };
+    this.dialogue.open(firstTime ? data.lines : data.repeatLines, data.name);
   }
 
   saveGame() {
@@ -105,7 +165,7 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   update() {
-    if (this.moving) return;
+    if (this.moving || this.dialogue.isOpen) return;
 
     let dx = 0;
     let dy = 0;
@@ -124,6 +184,8 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   tryMove(dx, dy) {
+    this.facing = { x: dx, y: dy }; // turn to face that way, even if blocked
+
     const nx = this.tile.x + dx;
     const ny = this.tile.y + dy;
     if (!this.canWalk(nx, ny)) return;
@@ -144,6 +206,8 @@ export default class WorldScene extends Phaser.Scene {
   canWalk(x, y) {
     // stay inside the map
     if (x < 0 || y < 0 || x >= this.map.width || y >= this.map.height) return false;
+    // NPCs block the way
+    if (this.npcAt(x, y)) return false;
     // any tile painted on the "obstacles" layer blocks movement
     return this.obstacles.getTileAt(x, y) === null;
   }
