@@ -3,8 +3,9 @@ import { SaveManager } from '../SaveManager.js';
 import DialogueBox from '../DialogueBox.js';
 import dialogueData from '../data/dialogue.json';
 import questsData from '../data/quests.json';
-import { MAX_STAGE, ensureState, getPlot, plant, water, harvest, fillCan, tick } from '../farming.js';
+import { MAX_STAGE, ensureState, getPlot, plant, water, harvest, fillCan, tick, eatPlot } from '../farming.js';
 import { talkToQuestGiver } from '../quests.js';
+import { createRabbit, tickRabbit, catchRabbit, throwRabbit, canCatch, rabbitOnMap } from '../rabbit.js';
 
 const TILE = 16;
 const MOVE_MS = 140; // time to slide one tile
@@ -32,6 +33,8 @@ export default class WorldScene extends Phaser.Scene {
     TILESETS.forEach((t) => this.load.image(t, `assets/tilesets/${t}.png`));
     this.load.image('player', 'assets/sprites/player.png');
     this.load.image('npc', 'assets/sprites/npc.png');
+    this.load.image('rabbit', 'assets/sprites/rabbit.png');
+    this.load.image('shovel', 'assets/items/shovel.png');
     this.load.image('dialogue-box', 'assets/ui/dialogue-box.png');
   }
 
@@ -41,6 +44,8 @@ export default class WorldScene extends Phaser.Scene {
     this.transitioning = false;
     this.plotMarks = {}; // little icons drawn on plots: thirsty / watered / ready
     this.makeMarkTextures();
+    this.dropSprites = {}; // items lying on the ground
+    this.rabbitSprite = null;
 
     // --- Game state: kept in memory between maps, loaded from the save on first entry ---
     let gs = this.registry.get('gameState');
@@ -145,6 +150,10 @@ export default class WorldScene extends Phaser.Scene {
       .setScrollFactor(0) // stays fixed on screen
       .setDepth(100);
     this.input.keyboard.on('keydown-P', () => this.saveGame());
+    // F = pick up / throw
+    this.input.keyboard.on('keydown-F', (event) => {
+      if (!event.repeat) this.onGrab();
+    });
 
     // --- Touch controls (phones/tablets) ---
     this.touchDir = { x: 0, y: 0 };
@@ -165,12 +174,24 @@ export default class WorldScene extends Phaser.Scene {
     }
     this.tickPlots();
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickPlots() });
+
+    // --- Rabbit: a garden pest on any map that has plots (starts once you've met the farmer) ---
+    this.rabbit = null;
+    this.plotCells = [];
+    if (this.crops) {
+      this.plotCells = this.crops.filterTiles((t) => t.index > 0).map((t) => ({ x: t.x, y: t.y }));
+      if (this.plotCells.length > 0) this.rabbit = createRabbit();
+    }
+
+    // --- Items lying on the ground (like the shovel) ---
+    (gs.drops[gs.map] ?? []).forEach((d) => this.showDrop(d));
   }
 
   updateHud() {
     const gs = this.gameState;
     this.hud.setText(
-      `Gold ${gs.gold}  Water ${gs.can.water}/${gs.can.max}\nSeeds ${gs.items.seeds}  Wheat ${gs.items.wheat}`
+      `Gold ${gs.gold}  Water ${gs.can.water}/${gs.can.max}\nSeeds ${gs.items.seeds}  Wheat ${gs.items.wheat}` +
+        (gs.items.shovel > 0 ? '  Shovel' : '')
     );
   }
 
@@ -257,6 +278,153 @@ export default class WorldScene extends Phaser.Scene {
     this.updateHud();
   }
 
+  // ---------- Rabbit ----------
+
+  updateRabbit(delta) {
+    const r = this.rabbit;
+    if (!r) return;
+
+    // a rabbit in your arms rides above your head
+    if (r.phase === 'held') {
+      if (this.rabbitSprite) this.rabbitSprite.setPosition(this.player.x, this.player.y - 9);
+      return;
+    }
+    // the rabbit waits until you've met the farmer, and pauses during dialogue and map changes
+    if (!this.gameState.flags.met_farmer || this.dialogue.isOpen || this.transitioning) return;
+
+    const gs = this.gameState;
+    const events = tickRabbit(r, delta, {
+      plots: this.plotCells.map((c) => ({ ...c, planted: getPlot(gs, gs.map, c.x, c.y).stage > 0 })),
+      isFree: (x, y) => this.isFreeTile(x, y),
+      rng: Math.random,
+    });
+    events.forEach((e) => this.onRabbitEvent(e));
+  }
+
+  onRabbitEvent(e) {
+    const gs = this.gameState;
+    if (e.type === 'appear') {
+      this.rabbitSprite = this.add.image(e.x * TILE, e.y * TILE, 'rabbit').setOrigin(0, 0).setDepth(8);
+      this.tweens.add({ targets: this.rabbitSprite, alpha: { from: 0, to: 1 }, duration: 250 });
+      if (!gs.flags.rabbit_hint) {
+        gs.flags.rabbit_hint = true;
+        this.showToast('A rabbit! Face it and press F to catch it.');
+      } else {
+        this.showToast('A rabbit is in the garden!');
+      }
+    } else if (e.type === 'eat') {
+      if (eatPlot(gs, gs.map, e.x, e.y)) {
+        this.refreshPlot(e.x, e.y);
+        this.showToast('The rabbit ate your plant!');
+      }
+      if (this.rabbitSprite) {
+        this.tweens.add({ targets: this.rabbitSprite, y: this.rabbitSprite.y - 3, duration: 100, yoyo: true, repeat: 3 });
+      }
+    } else if (e.type === 'hop') {
+      if (this.rabbitSprite) {
+        this.tweens.add({ targets: this.rabbitSprite, x: e.to.x * TILE, y: e.to.y * TILE, duration: 350 });
+      }
+    } else if (e.type === 'leave') {
+      if (this.rabbitSprite) this.rabbitSprite.destroy();
+      this.rabbitSprite = null;
+    }
+  }
+
+  // a tile something can land or hop on: inside the map, not blocked, and not where the player stands
+  isFreeTile(x, y) {
+    return this.canWalk(x, y) && !(x === this.tile.x && y === this.tile.y);
+  }
+
+  // F: throw the rabbit if you're holding it; otherwise pick up the rabbit or an item in front of you
+  onGrab() {
+    if (this.dialogue.isOpen || this.moving || this.transitioning) return;
+
+    const r = this.rabbit;
+    if (r && r.phase === 'held') {
+      this.throwRabbitAway();
+      return;
+    }
+
+    const tx = this.tile.x + this.facing.x;
+    const ty = this.tile.y + this.facing.y;
+
+    if (r && canCatch(r) && r.x === tx && r.y === ty && this.rabbitSprite) {
+      catchRabbit(r);
+      this.rabbitSprite.setDepth(11);
+      this.showToast('Caught it! Face away and press F to throw it out.');
+      return;
+    }
+
+    // otherwise: an item on the tile you face, or the one you are standing on
+    const gs = this.gameState;
+    const here = (gs.drops[gs.map] ?? []).find(
+      (d) => (d.x === tx && d.y === ty) || (d.x === this.tile.x && d.y === this.tile.y)
+    );
+    if (here) this.pickUpDrop(here);
+  }
+
+  throwRabbitAway() {
+    const gs = this.gameState;
+
+    // lands up to 3 tiles away, flying over fences and trees; pick the farthest free tile
+    let land = null;
+    for (let d = 3; d >= 1 && !land; d--) {
+      const x = this.tile.x + this.facing.x * d;
+      const y = this.tile.y + this.facing.y * d;
+      if (this.isFreeTile(x, y)) land = { x, y };
+    }
+    if (!land) {
+      this.showToast('No room to throw it that way!');
+      return;
+    }
+
+    throwRabbit(this.rabbit); // cooldown starts again
+    const sprite = this.rabbitSprite;
+    this.rabbitSprite = null;
+    this.showToast('You threw the rabbit out of the garden!');
+
+    // the first rabbit you ever throw drops a shovel where it lands
+    const firstTime = !gs.flags.shovel_dropped;
+    if (firstTime) gs.flags.shovel_dropped = true;
+
+    this.tweens.add({
+      targets: sprite,
+      x: land.x * TILE,
+      y: land.y * TILE,
+      duration: 350,
+      ease: 'Sine.easeOut',
+      onComplete: () => {
+        this.tweens.add({ targets: sprite, alpha: 0, duration: 300, onComplete: () => sprite.destroy() });
+        if (firstTime) {
+          const drop = { x: land.x, y: land.y, item: 'shovel' };
+          if (!gs.drops[gs.map]) gs.drops[gs.map] = [];
+          gs.drops[gs.map].push(drop);
+          this.showDrop(drop);
+          this.showToast('The rabbit dropped a shovel!');
+        }
+      },
+    });
+  }
+
+  showDrop(drop) {
+    this.dropSprites[`${drop.x},${drop.y}`] = this.add
+      .image(drop.x * TILE, drop.y * TILE, drop.item)
+      .setOrigin(0, 0)
+      .setDepth(6);
+  }
+
+  pickUpDrop(drop) {
+    const gs = this.gameState;
+    gs.drops[gs.map] = gs.drops[gs.map].filter((d) => d !== drop);
+    const sprite = this.dropSprites[`${drop.x},${drop.y}`];
+    if (sprite) sprite.destroy();
+    delete this.dropSprites[`${drop.x},${drop.y}`];
+
+    gs.items[drop.item] = (gs.items[drop.item] ?? 0) + 1;
+    this.showToast(drop.item === 'shovel' ? 'Got the shovel! You will need it in the next area.' : `Picked up ${drop.item}.`);
+    this.updateHud();
+  }
+
   createTouchControls() {
     // only show on touch devices
     if (!this.sys.game.device.input.touch) return;
@@ -288,6 +456,9 @@ export default class WorldScene extends Phaser.Scene {
 
     // A button = talk / interact (same as Space on a keyboard)
     make(292, 220, 'A', () => this.onAction());
+
+    // F button = pick up / throw (same as F on a keyboard)
+    make(292, 188, 'F', () => this.onGrab());
 
     // save button (replaces the P key on phones)
     const save = make(292, 16, 'SAVE', () => this.saveGame());
@@ -357,7 +528,9 @@ export default class WorldScene extends Phaser.Scene {
     this.tweens.add({ targets: this.toast, alpha: 0, delay: 1200, duration: 400 });
   }
 
-  update() {
+  update(_time, delta) {
+    this.updateRabbit(delta);
+
     if (this.moving || this.transitioning || this.dialogue.isOpen) return;
 
     let dx = 0;
@@ -419,6 +592,8 @@ export default class WorldScene extends Phaser.Scene {
     if (x < 0 || y < 0 || x >= this.map.width || y >= this.map.height) return false;
     // NPCs block the way
     if (this.npcAt(x, y)) return false;
+    // so does a rabbit sitting on a tile
+    if (this.rabbit && rabbitOnMap(this.rabbit) && this.rabbit.x === x && this.rabbit.y === y) return false;
     // any tile painted on the "obstacles" layer blocks movement
     return !this.obstacles || this.obstacles.getTileAt(x, y) === null;
   }
