@@ -12,5 +12,6 @@ new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
+  input: { activePointers: 3 },   // <-- new: allows multi-touch on phones
   scene: [WorldScene],
 });
