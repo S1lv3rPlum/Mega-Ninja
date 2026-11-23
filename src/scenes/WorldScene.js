@@ -53,6 +53,44 @@ export default class WorldScene extends Phaser.Scene {
       .setScrollFactor(0) // stays fixed on screen
       .setDepth(100);
     this.input.keyboard.on('keydown-P', () => this.saveGame());
+
+    // --- Touch controls (phones/tablets) ---
+    this.touchDir = { x: 0, y: 0 };
+    this.createTouchControls();
+  }
+
+  createTouchControls() {
+    // only show on touch devices
+    if (!this.sys.game.device.input.touch) return;
+
+    const make = (x, y, label, onDown) => {
+      const b = this.add
+        .text(x, y, label, {
+          fontSize: '16px', color: '#ffffff', backgroundColor: '#000000aa',
+          fixedWidth: 28, fixedHeight: 28, align: 'center',
+          padding: { top: 6 },
+        })
+        .setOrigin(0.5)
+        .setScrollFactor(0) // stay fixed on screen
+        .setDepth(100)
+        .setAlpha(0.7)
+        .setInteractive();
+      b.on('pointerdown', onDown);
+      b.on('pointerout', () => (this.touchDir = { x: 0, y: 0 }));
+      return b;
+    };
+
+    make(44, 164, '▲', () => (this.touchDir = { x: 0, y: -1 }));
+    make(16, 192, '◀', () => (this.touchDir = { x: -1, y: 0 }));
+    make(72, 192, '▶', () => (this.touchDir = { x: 1, y: 0 }));
+    make(44, 220, '▼', () => (this.touchDir = { x: 0, y: 1 }));
+
+    // lifting any finger stops movement
+    this.input.on('pointerup', () => (this.touchDir = { x: 0, y: 0 }));
+
+    // save button (replaces the P key on phones)
+    const save = make(292, 16, 'SAVE', () => this.saveGame());
+    save.setStyle({ fixedWidth: 44, fontSize: '10px' });
   }
 
   saveGame() {
@@ -75,6 +113,12 @@ export default class WorldScene extends Phaser.Scene {
     else if (this.cursors.right.isDown || this.wasd.D.isDown) dx = 1;
     else if (this.cursors.up.isDown || this.wasd.W.isDown) dy = -1;
     else if (this.cursors.down.isDown || this.wasd.S.isDown) dy = 1;
+
+    // fall back to the on-screen buttons if no key is pressed
+    if (dx === 0 && dy === 0) {
+      dx = this.touchDir.x;
+      dy = this.touchDir.y;
+    }
 
     if (dx !== 0 || dy !== 0) this.tryMove(dx, dy);
   }
