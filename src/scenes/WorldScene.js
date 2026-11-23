@@ -39,6 +39,8 @@ export default class WorldScene extends Phaser.Scene {
     this.cameras.main.fadeIn(300);
     this.moving = false;
     this.transitioning = false;
+    this.plotMarks = {}; // little icons drawn on plots: thirsty / watered / ready
+    this.makeMarkTextures();
 
     // --- Game state: kept in memory between maps, loaded from the save on first entry ---
     let gs = this.registry.get('gameState');
@@ -109,14 +111,15 @@ export default class WorldScene extends Phaser.Scene {
         dialogue: p.dialogue ?? id,
         x,
         y,
-        sprite: this.add.image(x * TILE, y * TILE, p.texture ?? 'npc').setOrigin(0, 0),
+        sprite: this.add.image(x * TILE, y * TILE, p.texture ?? 'npc').setOrigin(0, 0).setDepth(10),
       };
     });
 
     // --- Player (grid-based: tracks a tile position, slides between tiles) ---
     this.player = this.add
       .image(this.tile.x * TILE, this.tile.y * TILE, 'player')
-      .setOrigin(0, 0);
+      .setOrigin(0, 0)
+      .setDepth(10);
 
     // --- Camera follows the player and stays inside the map ---
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
@@ -157,7 +160,7 @@ export default class WorldScene extends Phaser.Scene {
     // --- Farm plots: show saved growth, catch up on time spent away, then keep growing ---
     if (this.crops && this.farmGid !== null) {
       this.crops.filterTiles((t) => t.index > 0).forEach((t) => {
-        this.setPlotVisual(t.x, t.y, getPlot(gs, gs.map, t.x, t.y).stage);
+        this.refreshPlot(t.x, t.y);
       });
     }
     this.tickPlots();
@@ -171,13 +174,65 @@ export default class WorldScene extends Phaser.Scene {
     );
   }
 
-  setPlotVisual(x, y, stage) {
-    if (this.crops && this.farmGid !== null) this.crops.putTileAt(this.farmGid + stage, x, y);
+  // Draws the plot's tile and its status icon:
+  //   blue drop      = growing but thirsty, needs water
+  //   darker, wet    = watered, growing
+  //   yellow sparkle = ready to harvest
+  refreshPlot(x, y) {
+    if (!this.crops || this.farmGid === null) return;
+    const plot = getPlot(this.gameState, this.gameState.map, x, y);
+    this.crops.putTileAt(this.farmGid + plot.stage, x, y);
+
+    const k = `${x},${y}`;
+    if (this.plotMarks[k]) {
+      this.plotMarks[k].destroy();
+      delete this.plotMarks[k];
+    }
+    let texture = null;
+    if (plot.stage >= MAX_STAGE) texture = 'mark-ready';
+    else if (plot.stage >= 1) texture = plot.growsAt === null ? 'mark-dry' : 'mark-wet';
+    if (texture) {
+      this.plotMarks[k] = this.add.image(x * TILE, y * TILE, texture).setOrigin(0, 0).setDepth(5);
+    }
+  }
+
+  // The status icons are drawn in code, so there are no extra image files to manage
+  makeMarkTextures() {
+    const make = (key, draw) => {
+      if (this.textures.exists(key)) return;
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      draw(g);
+      g.generateTexture(key, TILE, TILE);
+      g.destroy();
+    };
+
+    make('mark-dry', (g) => {
+      g.fillStyle(0x0b3d91, 1); // dark outline
+      g.fillTriangle(11, 0, 6, 7, 16, 7);
+      g.fillCircle(11, 9, 5);
+      g.fillStyle(0x5fc0ff, 1); // water drop
+      g.fillTriangle(11, 2, 8, 7, 14, 7);
+      g.fillCircle(11, 9, 3);
+    });
+
+    make('mark-wet', (g) => {
+      g.fillStyle(0x1a3a7a, 0.4); // soaked, darker soil
+      g.fillRect(0, 0, TILE, TILE);
+    });
+
+    make('mark-ready', (g) => {
+      g.fillStyle(0x7a5a00, 1); // dark outline
+      g.fillTriangle(11, 0, 6, 6, 16, 6);
+      g.fillTriangle(11, 12, 6, 6, 16, 6);
+      g.fillStyle(0xfff27a, 1); // sparkle
+      g.fillTriangle(11, 2, 8, 6, 14, 6);
+      g.fillTriangle(11, 10, 8, 6, 14, 6);
+    });
   }
 
   tickPlots() {
     const changed = tick(this.gameState, this.gameState.map, Date.now());
-    changed.forEach((c) => this.setPlotVisual(c.x, c.y, c.stage));
+    changed.forEach((c) => this.refreshPlot(c.x, c.y));
     if (changed.some((c) => c.stage >= MAX_STAGE)) this.showToast('Something is ready to harvest!');
   }
 
@@ -197,7 +252,7 @@ export default class WorldScene extends Phaser.Scene {
     const stage = getPlot(gs, map, x, y).stage;
     const result =
       stage === 0 ? plant(gs, map, x, y) : stage >= MAX_STAGE ? harvest(gs, map, x, y) : water(gs, map, x, y);
-    if (result.ok) this.setPlotVisual(x, y, getPlot(gs, map, x, y).stage);
+    if (result.ok) this.refreshPlot(x, y);
     this.showToast(result.msg);
     this.updateHud();
   }
