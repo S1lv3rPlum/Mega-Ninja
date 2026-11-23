@@ -6,9 +6,18 @@ import dialogueData from '../data/dialogue.json';
 const TILE = 16;
 const MOVE_MS = 140; // time to slide one tile
 
-// NPCs on this map. 'dialogue' is a key in src/data/dialogue.json.
-// (Later these can come from an object layer in Tiled.)
-const NPCS = [{ id: 'elder', x: 17, y: 10, texture: 'npc', dialogue: 'elder' }];
+const START_MAP = 'town';
+const START_TILE = { x: 15, y: 10 };
+
+// To add a map: save it as public/assets/maps/<name>.json and add its name here.
+const MAPS = ['town', 'farm'];
+// To add a tileset: save it as public/assets/tilesets/<name>.png and add its name here.
+// (The name must match the tileset's name inside Tiled.)
+const TILESETS = ['tiles', 'farm-tiles'];
+
+// Tiled stores custom properties as a list of {name, value}; turn that into a plain object
+const readProps = (p) =>
+  Array.isArray(p) ? Object.fromEntries(p.map((o) => [o.name, o.value])) : (p ?? {});
 
 export default class WorldScene extends Phaser.Scene {
   constructor() {
@@ -16,8 +25,8 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('tiles', 'assets/tilesets/tiles.png');
-    this.load.tilemapTiledJSON('town', 'assets/maps/town.json');
+    MAPS.forEach((m) => this.load.tilemapTiledJSON(m, `assets/maps/${m}.json`));
+    TILESETS.forEach((t) => this.load.image(t, `assets/tilesets/${t}.png`));
     this.load.image('player', 'assets/sprites/player.png');
     this.load.image('npc', 'assets/sprites/npc.png');
     this.load.image('dialogue-box', 'assets/ui/dialogue-box.png');
@@ -25,36 +34,82 @@ export default class WorldScene extends Phaser.Scene {
 
   create() {
     this.cameras.main.fadeIn(300);
+    this.moving = false;
+    this.transitioning = false;
 
-    // --- Map (made in Tiled; layer names must match the JSON) ---
-    this.map = this.make.tilemap({ key: 'town' });
-    const tileset = this.map.addTilesetImage('tiles', 'tiles');
-    this.map.createLayer('ground', tileset);
-    this.obstacles = this.map.createLayer('obstacles', tileset);
-
-    // --- Game state (loaded from a save if one exists) ---
-    const saved = SaveManager.load();
-    this.gameState = saved ?? {
-      tile: { x: 15, y: 10 },
-      hp: 20,
-      gold: 0,
-      flags: {},
-    };
-    if (!this.gameState.flags) this.gameState.flags = {};
-    this.tile = { ...this.gameState.tile };
+    // --- Game state: kept in memory between maps, loaded from the save on first entry ---
+    let gs = this.registry.get('gameState');
+    if (!gs) {
+      const saved = SaveManager.load() ?? {};
+      gs = { map: START_MAP, tile: { ...START_TILE }, hp: 20, gold: 0, flags: {}, ...saved };
+      this.registry.set('gameState', gs);
+    }
+    if (!MAPS.includes(gs.map)) {
+      gs.map = START_MAP;
+      gs.tile = { ...START_TILE };
+    }
+    if (!gs.flags) gs.flags = {};
+    this.gameState = gs;
+    this.tile = { ...gs.tile };
     this.facing = { x: 0, y: 1 }; // which way the player is looking (down)
 
+    // --- Map (made in Tiled): every tile layer is drawn; the one named "obstacles" blocks movement ---
+    this.map = this.make.tilemap({ key: gs.map });
+    const tilesets = TILESETS.filter((n) => this.map.tilesets.some((t) => t.name === n)).map((n) =>
+      this.map.addTilesetImage(n, n)
+    );
+    this.obstacles = null;
+    this.map.layers.forEach((l) => {
+      const layer = this.map.createLayer(l.name, tilesets);
+      if (l.name === 'obstacles') this.obstacles = layer;
+    });
+
+    // Object layers ("doors", "npcs") are read straight from the Tiled file
+    const raw = this.cache.tilemap.get(gs.map).data;
+    const objects = (name) =>
+      raw.layers.find((l) => l.type === 'objectgroup' && l.name === name)?.objects ?? [];
+
+    // --- Doors: stepping on one takes you to another map (or another spot on this one) ---
+    this.doors = objects('doors')
+      .map((o) => {
+        const p = readProps(o.properties);
+        const x0 = Math.floor(o.x / TILE);
+        const y0 = Math.floor(o.y / TILE);
+        return {
+          x0,
+          y0,
+          x1: x0 + Math.max(1, Math.round((o.width || TILE) / TILE)) - 1,
+          y1: y0 + Math.max(1, Math.round((o.height || TILE) / TILE)) - 1,
+          toMap: p.toMap ?? gs.map,
+          toX: p.toX,
+          toY: p.toY,
+        };
+      })
+      .filter((d) => {
+        const ok = MAPS.includes(d.toMap) && Number.isInteger(d.toX) && Number.isInteger(d.toY);
+        if (!ok) console.warn('Skipping door with bad toMap/toX/toY:', d);
+        return ok;
+      });
+
     // --- NPCs ---
-    this.npcs = NPCS.map((def) => ({
-      ...def,
-      sprite: this.add.image(def.x * TILE, def.y * TILE, def.texture).setOrigin(0, 0),
-    }));
+    this.npcs = objects('npcs').map((o) => {
+      const p = readProps(o.properties);
+      const x = Math.floor(o.x / TILE);
+      const y = Math.floor(o.y / TILE);
+      const id = p.id ?? o.name;
+      return {
+        id,
+        dialogue: p.dialogue ?? id,
+        x,
+        y,
+        sprite: this.add.image(x * TILE, y * TILE, p.texture ?? 'npc').setOrigin(0, 0),
+      };
+    });
 
     // --- Player (grid-based: tracks a tile position, slides between tiles) ---
     this.player = this.add
       .image(this.tile.x * TILE, this.tile.y * TILE, 'player')
       .setOrigin(0, 0);
-    this.moving = false;
 
     // --- Camera follows the player and stays inside the map ---
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
@@ -129,7 +184,7 @@ export default class WorldScene extends Phaser.Scene {
       this.dialogue.advance();
       return;
     }
-    if (this.moving) return;
+    if (this.moving || this.transitioning) return;
 
     const tx = this.tile.x + this.facing.x;
     const ty = this.tile.y + this.facing.y;
@@ -165,7 +220,7 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   update() {
-    if (this.moving || this.dialogue.isOpen) return;
+    if (this.moving || this.transitioning || this.dialogue.isOpen) return;
 
     let dx = 0;
     let dy = 0;
@@ -199,7 +254,25 @@ export default class WorldScene extends Phaser.Scene {
       duration: MOVE_MS,
       onComplete: () => {
         this.moving = false;
+        this.checkDoor();
       },
+    });
+  }
+
+  checkDoor() {
+    const { x, y } = this.tile;
+    const door = this.doors.find((d) => x >= d.x0 && x <= d.x1 && y >= d.y0 && y <= d.y1);
+    if (door) this.useDoor(door);
+  }
+
+  useDoor(door) {
+    this.transitioning = true;
+    this.touchDir = { x: 0, y: 0 };
+    this.cameras.main.fadeOut(250);
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.gameState.map = door.toMap;
+      this.gameState.tile = { x: door.toX, y: door.toY };
+      this.scene.restart(); // create() builds the new map from gameState
     });
   }
 
@@ -209,6 +282,6 @@ export default class WorldScene extends Phaser.Scene {
     // NPCs block the way
     if (this.npcAt(x, y)) return false;
     // any tile painted on the "obstacles" layer blocks movement
-    return this.obstacles.getTileAt(x, y) === null;
+    return !this.obstacles || this.obstacles.getTileAt(x, y) === null;
   }
 }
