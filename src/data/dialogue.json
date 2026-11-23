@@ -15,7 +15,7 @@
     "lines": [
       "Welcome to the farm! The soil here is perfect for wheat.",
       "Take these seeds. Stand next to a dirt plot, face it, and press Space (or the A button) to plant.",
-      "Fill your watering can at the pump, then water what you plant. Each stage needs a drink, and when it is golden it is ready to pick."
+      "Fill your watering can at the pump, then water what you plant. A blue drop means a plant is thirsty. Dark soil means it has been watered. A yellow sparkle means it is ready to pick."
     ],
     "ask": "I could use {amount} {item}. Bring it to me and I will pay {reward} gold.",
     "notEnough": "You have {have} of the {amount} {item} I need. Come back when you have them.",
