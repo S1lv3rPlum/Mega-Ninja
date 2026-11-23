@@ -1,0 +1,9 @@
+{
+  "farmer": {
+    "requests": [
+      { "item": "wheat", "amount": 5, "reward": 25 },
+      { "item": "wheat", "amount": 10, "reward": 60 },
+      { "item": "wheat", "amount": 20, "reward": 150 }
+    ]
+  }
+}
