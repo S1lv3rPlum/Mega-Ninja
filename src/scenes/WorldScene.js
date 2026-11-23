@@ -2,6 +2,9 @@ import Phaser from 'phaser';
 import { SaveManager } from '../SaveManager.js';
 import DialogueBox from '../DialogueBox.js';
 import dialogueData from '../data/dialogue.json';
+import questsData from '../data/quests.json';
+import { MAX_STAGE, ensureState, getPlot, plant, water, harvest, fillCan, tick } from '../farming.js';
+import { talkToQuestGiver } from '../quests.js';
 
 const TILE = 16;
 const MOVE_MS = 140; // time to slide one tile
@@ -48,7 +51,7 @@ export default class WorldScene extends Phaser.Scene {
       gs.map = START_MAP;
       gs.tile = { ...START_TILE };
     }
-    if (!gs.flags) gs.flags = {};
+    ensureState(gs);
     this.gameState = gs;
     this.tile = { ...gs.tile };
     this.facing = { x: 0, y: 1 }; // which way the player is looking (down)
@@ -59,10 +62,14 @@ export default class WorldScene extends Phaser.Scene {
       this.map.addTilesetImage(n, n)
     );
     this.obstacles = null;
+    this.crops = null;
     this.map.layers.forEach((l) => {
       const layer = this.map.createLayer(l.name, tilesets);
       if (l.name === 'obstacles') this.obstacles = layer;
+      if (l.name === 'crops') this.crops = layer;
     });
+    // gid of the first tile in farm-tiles.png: dirt, sown, sprouts, young, ready, then pump, fence, hay
+    this.farmGid = this.map.tilesets.find((t) => t.name === 'farm-tiles')?.firstgid ?? null;
 
     // Object layers ("doors", "npcs") are read straight from the Tiled file
     const raw = this.cache.tilemap.get(gs.map).data;
@@ -130,7 +137,7 @@ export default class WorldScene extends Phaser.Scene {
 
     // --- Save (P) ---
     this.toast = this.add
-      .text(160, 8, '', { fontSize: '10px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } })
+      .text(160, 30, '', { fontSize: '10px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } })
       .setOrigin(0.5, 0)
       .setScrollFactor(0) // stays fixed on screen
       .setDepth(100);
@@ -139,6 +146,60 @@ export default class WorldScene extends Phaser.Scene {
     // --- Touch controls (phones/tablets) ---
     this.touchDir = { x: 0, y: 0 };
     this.createTouchControls();
+
+    // --- HUD: gold, water, seeds, wheat ---
+    this.hud = this.add
+      .text(4, 4, '', { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 3, y: 2 }, lineSpacing: 1 })
+      .setScrollFactor(0)
+      .setDepth(100);
+    this.updateHud();
+
+    // --- Farm plots: show saved growth, catch up on time spent away, then keep growing ---
+    if (this.crops && this.farmGid !== null) {
+      this.crops.filterTiles((t) => t.index > 0).forEach((t) => {
+        this.setPlotVisual(t.x, t.y, getPlot(gs, gs.map, t.x, t.y).stage);
+      });
+    }
+    this.tickPlots();
+    this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickPlots() });
+  }
+
+  updateHud() {
+    const gs = this.gameState;
+    this.hud.setText(
+      `Gold ${gs.gold}  Water ${gs.can.water}/${gs.can.max}\nSeeds ${gs.items.seeds}  Wheat ${gs.items.wheat}`
+    );
+  }
+
+  setPlotVisual(x, y, stage) {
+    if (this.crops && this.farmGid !== null) this.crops.putTileAt(this.farmGid + stage, x, y);
+  }
+
+  tickPlots() {
+    const changed = tick(this.gameState, this.gameState.map, Date.now());
+    changed.forEach((c) => this.setPlotVisual(c.x, c.y, c.stage));
+    if (changed.some((c) => c.stage >= MAX_STAGE)) this.showToast('Something is ready to harvest!');
+  }
+
+  isPlot(x, y) {
+    return !!this.crops && this.crops.getTileAt(x, y) !== null;
+  }
+
+  isPump(x, y) {
+    if (!this.obstacles || this.farmGid === null) return false;
+    const tile = this.obstacles.getTileAt(x, y);
+    return tile !== null && tile.index === this.farmGid + 5; // 5 = pump in farm-tiles.png
+  }
+
+  farmAt(x, y) {
+    const gs = this.gameState;
+    const map = gs.map;
+    const stage = getPlot(gs, map, x, y).stage;
+    const result =
+      stage === 0 ? plant(gs, map, x, y) : stage >= MAX_STAGE ? harvest(gs, map, x, y) : water(gs, map, x, y);
+    if (result.ok) this.setPlotVisual(x, y, getPlot(gs, map, x, y).stage);
+    this.showToast(result.msg);
+    this.updateHud();
   }
 
   createTouchControls() {
@@ -189,7 +250,14 @@ export default class WorldScene extends Phaser.Scene {
     const tx = this.tile.x + this.facing.x;
     const ty = this.tile.y + this.facing.y;
     const npc = this.npcAt(tx, ty);
-    if (npc) this.talkTo(npc);
+    if (npc) {
+      this.talkTo(npc);
+    } else if (this.isPump(tx, ty)) {
+      this.showToast(fillCan(this.gameState).msg);
+      this.updateHud();
+    } else if (this.isPlot(tx, ty)) {
+      this.farmAt(tx, ty);
+    }
   }
 
   npcAt(x, y) {
@@ -199,6 +267,20 @@ export default class WorldScene extends Phaser.Scene {
   talkTo(npc) {
     const data = dialogueData[npc.dialogue];
     if (!data) return;
+
+    this.touchDir = { x: 0, y: 0 };
+
+    // Quest givers (listed in quests.json) build their lines from the current request
+    const quest = questsData[npc.dialogue];
+    if (quest) {
+      const { lines, afterClose } = talkToQuestGiver(this.gameState, npc.id, data, quest);
+      this.dialogue.open(lines, data.name, () => {
+        const msg = afterClose();
+        if (msg) this.showToast(msg);
+        this.updateHud();
+      });
+      return;
+    }
 
     const flag = `met_${npc.id}`;
     const firstTime = !this.gameState.flags[flag];
@@ -215,6 +297,7 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   showToast(msg) {
+    this.tweens.killTweensOf(this.toast);
     this.toast.setText(msg).setAlpha(1);
     this.tweens.add({ targets: this.toast, alpha: 0, delay: 1200, duration: 400 });
   }
