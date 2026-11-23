@@ -9,5 +9,15 @@
     "repeatLines": [
       "Walk with courage, young ninja."
     ]
+  },
+  "farmer": {
+    "name": "Farmer",
+    "lines": [
+      "Welcome to the farm! The soil here is perfect for wheat.",
+      "I am always short on help. Come back soon, I will have work for you."
+    ],
+    "repeatLines": [
+      "The fields are coming along. Come back soon."
+    ]
   }
 }
