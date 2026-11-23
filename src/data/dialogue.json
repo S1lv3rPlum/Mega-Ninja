@@ -14,8 +14,14 @@
     "name": "Farmer",
     "lines": [
       "Welcome to the farm! The soil here is perfect for wheat.",
-      "I am always short on help. Come back soon, I will have work for you."
+      "Take these seeds. Stand next to a dirt plot, face it, and press Space (or the A button) to plant.",
+      "Fill your watering can at the pump, then water what you plant. Each stage needs a drink, and when it is golden it is ready to pick."
     ],
+    "ask": "I could use {amount} {item}. Bring it to me and I will pay {reward} gold.",
+    "notEnough": "You have {have} of the {amount} {item} I need. Come back when you have them.",
+    "thanks": "That is just what I needed! Here is your {reward} gold.",
+    "nextAsk": "Now I need {amount} {item}. I will pay {reward} gold.",
+    "freeSeeds": "Out of seeds? Take a few. I keep spares for this.",
     "repeatLines": [
       "The fields are coming along. Come back soon."
     ]
