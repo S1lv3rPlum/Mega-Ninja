@@ -76,6 +76,7 @@ export default class TitleScene extends Phaser.Scene {
   startGame() {
     if (this.starting) return;
     this.starting = true;
+    this.registry.set('gameState', null); // WorldScene reloads from the save (or starts fresh)
     this.cameras.main.fadeOut(300);
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('World'));
   }
