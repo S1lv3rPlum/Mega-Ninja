@@ -19,6 +19,8 @@ export function ensureState(gs) {
   if (!gs.items) gs.items = {};
   if (typeof gs.items.seeds !== 'number') gs.items.seeds = 0;
   if (typeof gs.items.wheat !== 'number') gs.items.wheat = 0;
+  if (typeof gs.items.shovel !== 'number') gs.items.shovel = 0;
+  if (!gs.drops) gs.drops = {}; // items lying on the ground: { mapName: [{ x, y, item }] }
   if (!gs.can) gs.can = { water: 0, max: CAN_MAX };
   if (!gs.plots) gs.plots = {};
   if (!gs.quests) gs.quests = {};
@@ -60,6 +62,13 @@ export function harvest(gs, map, x, y, rng = Math.random) {
   gs.items.seeds += seeds;
   setPlot(gs, map, x, y, { stage: 0, growsAt: null });
   return { ok: true, msg: `Harvested wheat! +${seeds} seed${seeds > 1 ? 's' : ''}` };
+}
+
+// The rabbit eats whatever is growing on a plot and leaves bare dirt. Returns true if something was eaten.
+export function eatPlot(gs, map, x, y) {
+  if (getPlot(gs, map, x, y).stage === 0) return false;
+  setPlot(gs, map, x, y, { stage: 0, growsAt: null });
+  return true;
 }
 
 export function fillCan(gs) {
