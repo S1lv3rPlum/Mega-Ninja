@@ -43,5 +43,34 @@
         "You did it! The road is open again. Thank you, hero!"
       ]
     }
+  },
+  "lumberjack": {
+    "name": "Lumberjack",
+    "lines": [
+      "Well, look at that. A ninja in my forest! Mind the branches.",
+      "Trees grow back, but they will not chop themselves. Take this axe. Face a tree and press Space to swing.",
+      "Axes wear out, mind. When it breaks, I can fix it for a bit of wood, or the market sells new ones."
+    ],
+    "ask": "I can always use {amount} {item}. I will pay {reward} gold.",
+    "thanks": "Fine, honest timber! Here is your {reward} gold.",
+    "nextAsk": "Next I need {amount} {item}. That is {reward} gold.",
+    "menu": "What can I do for you?",
+    "broken": "That axe of yours is done for. I can fix it for some wood, or you can buy a new one at the market.",
+    "spare": "No axe, no wood, no coin? Take this old spare. It will not last, but it will get you some timber. Then bring me the wood.",
+    "repeatLines": [
+      "Chop away."
+    ]
+  },
+  "shopkeeper": {
+    "name": "Shopkeeper",
+    "lines": [
+      "Welcome to my stall! Seeds, tools, and a few things you cannot find anywhere else.",
+      "Bring gold and I will bring the goods."
+    ],
+    "menu": "What are you buying?",
+    "farewell": "Come back any time!",
+    "repeatLines": [
+      "Welcome back! What are you buying?"
+    ]
   }
 }
