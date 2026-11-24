@@ -33,7 +33,27 @@
         "type": "tool",
         "tool": "axe",
         "label": "New Axe"
+      },
+      {
+        "id": "pickaxe",
+        "type": "tool",
+        "tool": "pickaxe",
+        "label": "New Pickaxe"
+      },
+      {
+        "id": "fixpick",
+        "type": "repair",
+        "tool": "pickaxe",
+        "label": "Fix Pickaxe"
       }
-    ]
+    ],
+    "sell": {
+      "stone": 2,
+      "copper": 8,
+      "sapphire": 30,
+      "emerald": 50,
+      "ruby": 80,
+      "diamond": 250
+    }
   }
 }
