@@ -1,0 +1,39 @@
+{
+  "general": {
+    "offers": [
+      {
+        "id": "seeds",
+        "type": "item",
+        "item": "seeds",
+        "amount": 5,
+        "label": "5 Seeds",
+        "price": 10
+      },
+      {
+        "id": "pail",
+        "type": "upgrade",
+        "label": "Bigger Pail",
+        "levels": [
+          {
+            "to": 10,
+            "price": 50
+          },
+          {
+            "to": 15,
+            "price": 120
+          },
+          {
+            "to": 20,
+            "price": 250
+          }
+        ]
+      },
+      {
+        "id": "axe",
+        "type": "tool",
+        "tool": "axe",
+        "label": "New Axe"
+      }
+    ]
+  }
+}

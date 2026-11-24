@@ -1,0 +1,76 @@
+{
+  "elder": {
+    "name": "Elder Sora",
+    "lines": [
+      "Ah, a young ninja! I have been expecting you.",
+      "Our village needs a hero, and you carry the name Mega-Ninja.",
+      "Look around the village, then come back and see me. Your journey begins soon."
+    ],
+    "repeatLines": [
+      "Walk with courage, young ninja."
+    ]
+  },
+  "farmer": {
+    "name": "Farmer",
+    "lines": [
+      "Welcome to the farm! The soil here is perfect for wheat.",
+      "Take these seeds. Stand next to a dirt plot, face it, and press Space (or the A button) to plant.",
+      "Fill your watering can at the pump, then water what you plant. A blue drop means a plant is thirsty. Dark soil means it has been watered. A yellow sparkle means it is ready to pick.",
+      "Beware those pesky rabbits, digging holes! Throw them out of the garden, if you can catch them! Face one and press F to pick it up, then press F again to throw it."
+    ],
+    "ask": "I could use {amount} {item}. Bring it to me and I will pay {reward} gold.",
+    "notEnough": "You have {have} of the {amount} {item} I need. Come back when you have them.",
+    "thanks": "That is just what I needed! Here is your {reward} gold.",
+    "nextAsk": "Now I need {amount} {item}. I will pay {reward} gold.",
+    "freeSeeds": "Out of seeds? Take a few. I keep spares for this.",
+    "repeatLines": [
+      "The fields are coming along. Come back soon."
+    ],
+    "ready": "Is that {amount} {item} I see? Wonderful! Will you sell it to me for {reward} gold?"
+  },
+  "villager": {
+    "name": "Villager",
+    "lines": [
+      "Oh no! The road south is buried under a landslide!",
+      "However will we dig all this up? It is a mountain of a problem... well, a hill. A very big hill.",
+      "Somebody will have to find a shovel."
+    ],
+    "repeatLines": [
+      "Still no shovel? Rabbits dig holes all day. Maybe the ones on the farm know where to find one."
+    ],
+    "flagLines": {
+      "landslide_cleared": [
+        "You did it! The road is open again. Thank you, hero!"
+      ]
+    }
+  },
+  "lumberjack": {
+    "name": "Lumberjack",
+    "lines": [
+      "Well, look at that. A ninja in my forest! Mind the branches.",
+      "Trees grow back, but they will not chop themselves. Take this axe. Face a tree and press Space to swing.",
+      "Axes wear out, mind. When it breaks, I can fix it for a bit of wood, or the market sells new ones."
+    ],
+    "ask": "I can always use {amount} {item}. I will pay {reward} gold.",
+    "thanks": "Fine, honest timber! Here is your {reward} gold.",
+    "nextAsk": "Next I need {amount} {item}. That is {reward} gold.",
+    "menu": "What can I do for you?",
+    "broken": "That axe of yours is done for. I can fix it for some wood, or you can buy a new one at the market.",
+    "spare": "No axe, no wood, no coin? Take this old spare. It will not last, but it will get you some timber. Then bring me the wood.",
+    "repeatLines": [
+      "Chop away."
+    ]
+  },
+  "shopkeeper": {
+    "name": "Shopkeeper",
+    "lines": [
+      "Welcome to my stall! Seeds, tools, and a few things you cannot find anywhere else.",
+      "Bring gold and I will bring the goods."
+    ],
+    "menu": "What are you buying?",
+    "farewell": "Come back any time!",
+    "repeatLines": [
+      "Welcome back! What are you buying?"
+    ]
+  }
+}

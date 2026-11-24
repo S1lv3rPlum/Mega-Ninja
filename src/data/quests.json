@@ -1,0 +1,52 @@
+{
+  "farmer": {
+    "firstGift": {
+      "items": {
+        "seeds": 10
+      }
+    },
+    "safetyNet": "seeds",
+    "requests": [
+      {
+        "item": "wheat",
+        "amount": 5,
+        "reward": 25
+      },
+      {
+        "item": "wheat",
+        "amount": 10,
+        "reward": 60
+      },
+      {
+        "item": "wheat",
+        "amount": 20,
+        "reward": 150
+      }
+    ]
+  },
+  "lumberjack": {
+    "firstGift": {
+      "tool": "axe"
+    },
+    "service": {
+      "tool": "axe"
+    },
+    "requests": [
+      {
+        "item": "wood",
+        "amount": 6,
+        "reward": 30
+      },
+      {
+        "item": "wood",
+        "amount": 12,
+        "reward": 80
+      },
+      {
+        "item": "wood",
+        "amount": 20,
+        "reward": 160
+      }
+    ]
+  }
+}

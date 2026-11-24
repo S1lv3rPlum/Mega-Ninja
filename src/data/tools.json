@@ -1,0 +1,26 @@
+{
+  "shovel": {
+    "name": "Shovel",
+    "short": "Shovel",
+    "durability": 20
+  },
+  "axe": {
+    "name": "Axe",
+    "short": "Axe",
+    "durability": 30,
+    "price": 40,
+    "repair": {
+      "wood": 6
+    },
+    "spare": 9
+  },
+  "pickaxe": {
+    "name": "Pickaxe",
+    "short": "Pick",
+    "durability": 30,
+    "price": 60,
+    "repair": {
+      "stone": 3
+    }
+  }
+}
