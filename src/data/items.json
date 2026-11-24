@@ -1,19 +1,85 @@
 {
-  "purse": { "name": "Coin Pouch" },
+  "purse": {
+    "name": "Coin Pouch"
+  },
   "items": {
-    "seeds":    { "name": "Seeds",    "icon": "seeds",  "color": "#c9a24a", "desc": "Plant them in a dirt plot, then keep them watered." },
-    "wheat":    { "name": "Wheat",    "icon": "wheat",  "color": "#e8c84a", "desc": "Harvested from the farm. The farmer pays for it." },
-    "wood":     { "name": "Wood",     "icon": "log",    "color": "#8a5a30", "desc": "Chopped from trees. Sell it or use it to repair an axe." },
-    "stone":    { "name": "Stone",    "icon": "rock",   "color": "#8a8f98", "desc": "Broken out of rocks. Repairs pickaxes." },
-    "copper":   { "name": "Copper",   "icon": "rock",   "color": "#c9774a", "desc": "A streak of copper ore." },
-    "sapphire": { "name": "Sapphire", "icon": "gem",    "color": "#3a6fe0", "desc": "A deep blue gem." },
-    "ruby":     { "name": "Ruby",     "icon": "gem",    "color": "#d63a4a", "desc": "A fiery red gem. Rare." },
-    "emerald":  { "name": "Emerald",  "icon": "gem",    "color": "#2faa5a", "desc": "A bright green gem. Rare." },
-    "diamond":  { "name": "Diamond",  "icon": "gem",    "color": "#bff4ff", "desc": "The rarest gem of all." }
+    "seeds": {
+      "name": "Seeds",
+      "icon": "seeds",
+      "color": "#c9a24a",
+      "desc": "Plant them in a dirt plot, then keep them watered."
+    },
+    "wheat": {
+      "name": "Wheat",
+      "icon": "wheat",
+      "color": "#e8c84a",
+      "desc": "Harvested from the farm. The farmer pays for it. Eat it to heal a heart.",
+      "heal": 2
+    },
+    "wood": {
+      "name": "Wood",
+      "icon": "log",
+      "color": "#8a5a30",
+      "desc": "Chopped from trees. Sell it or use it to repair an axe."
+    },
+    "stone": {
+      "name": "Stone",
+      "icon": "rock",
+      "color": "#8a8f98",
+      "desc": "Broken out of rocks. Repairs pickaxes."
+    },
+    "copper": {
+      "name": "Copper",
+      "icon": "rock",
+      "color": "#c9774a",
+      "desc": "A streak of copper ore."
+    },
+    "sapphire": {
+      "name": "Sapphire",
+      "icon": "gem",
+      "color": "#3a6fe0",
+      "desc": "A deep blue gem."
+    },
+    "ruby": {
+      "name": "Ruby",
+      "icon": "gem",
+      "color": "#d63a4a",
+      "desc": "A fiery red gem. Rare."
+    },
+    "emerald": {
+      "name": "Emerald",
+      "icon": "gem",
+      "color": "#2faa5a",
+      "desc": "A bright green gem. Rare."
+    },
+    "diamond": {
+      "name": "Diamond",
+      "icon": "gem",
+      "color": "#bff4ff",
+      "desc": "The rarest gem of all."
+    }
   },
   "tools": {
-    "shovel":  { "icon": "shovel",  "color": "#b0b6c0", "desc": "Digs up dirt piles." },
-    "axe":     { "icon": "axe",     "color": "#b0b6c0", "desc": "Chops trees. Wears out with use." },
-    "pickaxe": { "icon": "pickaxe", "color": "#b0b6c0", "desc": "Breaks rocks and boulders. Wears out with use." }
+    "shovel": {
+      "icon": "shovel",
+      "color": "#b0b6c0",
+      "desc": "Digs up dirt piles."
+    },
+    "axe": {
+      "icon": "axe",
+      "color": "#b0b6c0",
+      "desc": "Chops trees. Wears out with use."
+    },
+    "pickaxe": {
+      "icon": "pickaxe",
+      "color": "#b0b6c0",
+      "desc": "Breaks rocks and boulders. Wears out with use."
+    }
+  },
+  "weapons": {
+    "sword": {
+      "icon": "sword",
+      "color": "#c9a46a"
+    }
   }
 }

@@ -48,5 +48,30 @@
         "reward": 160
       }
     ]
+  },
+  "sensei": {
+    "requests": [
+      {
+        "item": "wood",
+        "amount": 5,
+        "reward": 0,
+        "give": {
+          "weapon": "sword",
+          "name": "Training Sword"
+        },
+        "ask": "Bring me {amount} {item} from the forest, and I will carve you a training sword.",
+        "thanks": "Fine wood! Hold still... there. A training sword. Face an enemy and press J to swing it, or the B button on a phone. Be careful in the forest. Shadows have been creeping in."
+      },
+      {
+        "item": "stone",
+        "amount": 6,
+        "reward": 40
+      },
+      {
+        "item": "copper",
+        "amount": 3,
+        "reward": 90
+      }
+    ]
   }
 }

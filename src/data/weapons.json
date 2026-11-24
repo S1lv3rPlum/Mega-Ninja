@@ -1,0 +1,3 @@
+{
+  "sword": { "name": "Training Sword", "damage": 2, "cooldownMs": 350, "desc": "A plain wooden blade. Press J to swing (the B button on a phone)." }
+}

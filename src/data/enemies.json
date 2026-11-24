@@ -1,0 +1,13 @@
+{
+  "shadow": {
+    "name": "Shadow Sprout",
+    "texture": "shadow",
+    "hp": 4,
+    "damage": 1,
+    "moveMs": 800,
+    "attackMs": 1300,
+    "sight": 5,
+    "respawnMs": 45000,
+    "gold": 3
+  }
+}

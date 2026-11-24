@@ -80,5 +80,17 @@
       "Swing a pickaxe at a rock to break it. The harder the rock, the more swings it takes. Rocks grow back in a different colour.",
       "See that big cave up north? Rumbling started in there a while back. Something is not right. I would not go in. Not yet."
     ]
+  },
+  "sensei": {
+    "name": "Sensei",
+    "lines": [
+      "Ah, a ninja who farms. Now that is rare. Every ninja should know the way of the blade, even one who grows wheat.",
+      "But I do not hand a sword to just anyone. A true blade begins as honest wood. Show me you can work."
+    ],
+    "ask": "I could use {amount} {item}. I will pay {reward} gold.",
+    "ready": "You have the {item}! Hand over {amount}?",
+    "notEnough": "I need {amount} {item}. You have {have}. Keep at it.",
+    "thanks": "Well done. Here is your {reward} gold.",
+    "nextAsk": "When you are ready, bring me {amount} {item}. I will pay {reward} gold."
   }
 }
