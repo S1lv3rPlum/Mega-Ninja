@@ -25,6 +25,23 @@
     "freeSeeds": "Out of seeds? Take a few. I keep spares for this.",
     "repeatLines": [
       "The fields are coming along. Come back soon."
-    ]
+    ],
+    "ready": "Is that {amount} {item} I see? Wonderful! Will you sell it to me for {reward} gold?"
+  },
+  "villager": {
+    "name": "Villager",
+    "lines": [
+      "Oh no! The road south is buried under a landslide!",
+      "However will we dig all this up? It is a mountain of a problem... well, a hill. A very big hill.",
+      "Somebody will have to find a shovel."
+    ],
+    "repeatLines": [
+      "Still no shovel? Rabbits dig holes all day. Maybe the ones on the farm know where to find one."
+    ],
+    "flagLines": {
+      "landslide_cleared": [
+        "You did it! The road is open again. Thank you, hero!"
+      ]
+    }
   }
 }
