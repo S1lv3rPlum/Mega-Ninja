@@ -72,5 +72,13 @@
     "repeatLines": [
       "Welcome back! What are you buying?"
     ]
+  },
+  "miner": {
+    "name": "Miner",
+    "lines": [
+      "Welcome to the quarry! Every rock here hides something. Grey ones are plain stone, but you will find copper, and if you are lucky, gems.",
+      "Swing a pickaxe at a rock to break it. The harder the rock, the more swings it takes. Rocks grow back in a different colour.",
+      "See that big cave up north? Rumbling started in there a while back. Something is not right. I would not go in. Not yet."
+    ]
   }
 }
