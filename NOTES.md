@@ -103,3 +103,13 @@ without being run in a browser, so test new features on desktop and phone.
 - Miner NPC in the quarry foreshadows trouble in the big cave (north-east). The cave mouth is drawn but blocked: next step is the boss / evil intro and the passage to the new land.
 - Fixed: an empty toast drew a small dark box mid-screen (toast now starts hidden).
 - `make_mining_assets.py` regenerates the placeholder art and quarry map (forest edit runs once).
+
+## Combat, sensei, save slots (update after mining)
+- **Hearts**: 1 heart = 2 hp, `gs.hp` / `gs.maxHp` (default 20 = 10 hearts), drawn top right. Rules in `src/combat.js` (no Phaser, tested in `test_combat.mjs`).
+- **Attack**: J key or B button swings the weapon (`gs.weapon`, defined in `data/weapons.json`) at the tile you face. Slash flash is a placeholder until the real attack sheet arrives.
+- **Enemies** (`src/Enemies.js`, `data/enemies.json`): real-time on the grid. They chase within `sight` tiles, flash red, then strike if still adjacent. Defeated ones respawn after `respawnMs` (saved in `gs.enemies`). Add them in Tiled on an object layer named `enemies` (props: id, type, optional requiresFlag). Forest shadow sprouts need flag `got_sword`.
+- **Fainting**: wake in town with full hp. `data/faint.json` -> `goldLossPercent` (currently 0) and `goldLossFlat` (optional) set the penalty.
+- **Eating**: select food in the bag, press Space or tap EAT. Food = an item in `items.json` with `heal` (hp). Wheat heals 2.
+- **Sensei** (town, NPC id `sensei`): quest giver; first request is 5 wood -> Training Sword (`give: {weapon:'sword'}`), then stone and copper for gold. Requests can override `ask`/`thanks` and give weapons. Armor/spells can reuse the same `give` idea later.
+- **Save slots**: 3 named slots (`src/SaveManager.js`, title screen in `src/scenes/TitleScene.js`). Names are typed in a browser prompt. Old single saves move into slot 1. Autosave on every door and when fainting; bag has SAVE + TITLE to switch players.
+- **Next**: boss in the forest (corrupted treant, two phases, redeemed after defeat, gives the never-empty cave lantern), then crops/foraging, crafting, potions.
