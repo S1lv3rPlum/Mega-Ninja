@@ -17,10 +17,10 @@ const START_MAP = 'town';
 const START_TILE = { x: 15, y: 10 };
 
 // To add a map: save it as public/assets/maps/<name>.json and add its name here.
-const MAPS = ['town', 'farm'];
+const MAPS = ['town', 'farm', 'forest'];
 // To add a tileset: save it as public/assets/tilesets/<name>.png and add its name here.
 // (The name must match the tileset's name inside Tiled.)
-const TILESETS = ['tiles', 'farm-tiles'];
+const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles'];
 
 // Tiled stores custom properties as a list of {name, value}; turn that into a plain object
 const readProps = (p) =>
