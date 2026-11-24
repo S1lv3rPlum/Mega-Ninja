@@ -8,7 +8,9 @@ import { talkToQuestGiver } from '../quests.js';
 import { createRabbit, tickRabbit, catchRabbit, throwRabbit, canCatch, rabbitOnMap } from '../rabbit.js';
 import ChoiceMenu from '../ChoiceMenu.js';
 import toolDefs from '../data/tools.json';
-import { ensureToolState, giveTool, hitTarget, toolLabel } from '../tools.js';
+import { ensureToolState, giveTool, hitTarget, toolLabel, targetReady, isCleared } from '../tools.js';
+import shopData from '../data/shop.json';
+import { talkToShopkeeper } from '../shop.js';
 
 const TILE = 16;
 const MOVE_MS = 140; // time to slide one tile
@@ -40,6 +42,10 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('rabbit', 'assets/sprites/rabbit.png');
     this.load.image('shovel', 'assets/items/shovel.png');
     this.load.image('dirt-pile', 'assets/sprites/dirt-pile.png'); // textures for "targets" objects go here
+    this.load.image('tree', 'assets/sprites/tree.png');
+    this.load.image('stump', 'assets/sprites/stump.png');
+    this.load.image('lumberjack', 'assets/sprites/lumberjack.png'); // textures for NPCs go here
+    this.load.image('shopkeeper', 'assets/sprites/shopkeeper.png');
     this.load.image('dialogue-box', 'assets/ui/dialogue-box.png');
   }
 
@@ -125,20 +131,29 @@ export default class WorldScene extends Phaser.Scene {
       return {
         id,
         dialogue: p.dialogue ?? id,
+        shop: p.shop, // a key in data/shop.json makes this NPC a shopkeeper
         x,
         y,
         sprite: this.add.image(x * TILE, y * TILE, p.texture ?? 'npc').setOrigin(0, 0).setDepth(10),
       };
     });
 
-    // --- Targets: things you work on with a tool (dirt piles now; trees and rocks later) ---
+    // --- Targets: things you work on with a tool (dirt piles, trees, rocks) ---
+    // A target with "respawnMs" (a tree) turns into a stump when cleared and grows back later.
     this.targets = objects('targets')
       .map((o) => {
         const p = readProps(o.properties);
         const id = p.id ?? o.name ?? `${o.x},${o.y}`;
-        if (gs.targets[gs.map]?.[id]?.cleared) return null; // already cleared in an earlier visit
+        const respawnMs = p.respawnMs ?? 0;
+        let active = true;
+        if (isCleared(gs, gs.map, id)) {
+          if (!respawnMs) return null; // cleared for good in an earlier visit
+          active = targetReady(gs, gs.map, id); // grown back while you were away?
+        }
         const x = Math.floor(o.x / TILE);
         const y = Math.floor(o.y / TILE);
+        const texture = p.texture ?? 'dirt-pile';
+        const stump = p.stump ?? 'stump';
         return {
           id,
           x,
@@ -150,7 +165,11 @@ export default class WorldScene extends Phaser.Scene {
           dropAmount: p.dropAmount ?? 1,
           hint: p.hint,
           clearedMsg: p.clearedMsg ?? 'Cleared!',
-          sprite: this.add.image(x * TILE, y * TILE, p.texture ?? 'dirt-pile').setOrigin(0, 0).setDepth(4),
+          respawnMs,
+          texture,
+          stump,
+          active,
+          sprite: this.add.image(x * TILE, y * TILE, active ? texture : stump).setOrigin(0, 0).setDepth(active ? 4 : 3),
         };
       })
       .filter(Boolean);
@@ -231,7 +250,7 @@ export default class WorldScene extends Phaser.Scene {
       });
     }
     this.tickPlots();
-    this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickPlots() });
+    this.time.addEvent({ delay: 1000, loop: true, callback: () => { this.tickPlots(); this.tickTargets(); } });
 
     // --- Rabbit: a garden pest on any map that has plots (starts once you've met the farmer) ---
     this.rabbit = null;
@@ -251,6 +270,9 @@ export default class WorldScene extends Phaser.Scene {
       `Gold ${gs.gold}  Water ${gs.can.water}/${gs.can.max}`,
       `Seeds ${gs.items.seeds}  Wheat ${gs.items.wheat}`,
     ];
+    if (gs.items.wood > 0 || gs.items.stone > 0) {
+      lines[1] += (gs.items.wood > 0 ? `  Wood ${gs.items.wood}` : '') + (gs.items.stone > 0 ? `  Stone ${gs.items.stone}` : '');
+    }
     const tools = Object.keys(gs.tools).map((id) => toolLabel(gs, toolDefs, id));
     if (tools.length > 0) lines.push(tools.join('  '));
     this.hud.setText(lines.join('\n'));
@@ -341,8 +363,22 @@ export default class WorldScene extends Phaser.Scene {
 
   // ---------- Targets (dirt piles, trees, rocks) ----------
 
+  // only standing targets count: a stump can be walked over and used again after it regrows
   targetAt(x, y) {
-    return this.targets.find((t) => t.x === x && t.y === y) ?? null;
+    return this.targets.find((t) => t.active && t.x === x && t.y === y) ?? null;
+  }
+
+  // once a second: regrow any stumps whose time is up (not while you are standing on one)
+  tickTargets() {
+    const gs = this.gameState;
+    this.targets.forEach((t) => {
+      if (t.active || !t.respawnMs) return;
+      if (t.x === this.tile.x && t.y === this.tile.y) return;
+      if (targetReady(gs, gs.map, t.id)) {
+        t.active = true;
+        t.sprite.setTexture(t.texture).setDepth(4);
+      }
+    });
   }
 
   useOnTarget(t) {
@@ -356,8 +392,13 @@ export default class WorldScene extends Phaser.Scene {
     }
 
     if (r.cleared) {
-      this.targets = this.targets.filter((x) => x !== t);
-      this.tweens.add({ targets: t.sprite, alpha: 0, duration: 400, onComplete: () => t.sprite.destroy() });
+      if (t.respawnMs) {
+        t.active = false; // leaves a stump that grows back
+        t.sprite.setTexture(t.stump).setDepth(3);
+      } else {
+        this.targets = this.targets.filter((x) => x !== t);
+        this.tweens.add({ targets: t.sprite, alpha: 0, duration: 400, onComplete: () => t.sprite.destroy() });
+      }
       const gained = r.amount > 0 ? ` (+${r.amount} ${r.drop})` : '';
       this.showToast(r.broke ? `${r.msg} ${t.clearedMsg}${gained}` : `${t.clearedMsg}${gained}`);
       this.updateHud();
@@ -598,28 +639,16 @@ export default class WorldScene extends Phaser.Scene {
 
     this.touchDir = { x: 0, y: 0 };
 
+    // Shopkeepers (an NPC with a "shop" property pointing at data/shop.json)
+    if (npc.shop && shopData[npc.shop]) {
+      this.runConvo(talkToShopkeeper(this.gameState, npc.id, data, shopData[npc.shop], toolDefs), data.name);
+      return;
+    }
+
     // Quest givers (listed in quests.json) build their lines from the current request
     const quest = questsData[npc.dialogue];
     if (quest) {
-      const { lines, afterClose, choice } = talkToQuestGiver(this.gameState, npc.id, data, quest);
-      this.dialogue.open(lines, data.name, () => {
-        const msg = afterClose();
-        if (msg) this.showToast(msg);
-        this.updateHud();
-        if (!choice) return;
-        // the quest giver asks a yes/no question once his lines are done
-        this.choice.open(choice.options, {
-          onSelect: (i) => {
-            if (i !== 0) return;
-            const result = choice.onYes();
-            this.dialogue.open(result.lines, data.name, () => {
-              const m = result.afterClose();
-              if (m) this.showToast(m);
-              this.updateHud();
-            });
-          },
-        });
-      });
+      this.runConvo(talkToQuestGiver(this.gameState, npc.id, data, quest, toolDefs), data.name);
       return;
     }
 
@@ -634,6 +663,25 @@ export default class WorldScene extends Phaser.Scene {
       if (this.gameState.flags[flagName]) lines = flagLines;
     }
     this.dialogue.open(lines, data.name);
+  }
+
+  // Plays a conversation step: lines in the dialogue box, then a toast, then an optional choice menu,
+  // and repeats with whatever the chosen option returns (see quests.js for the step shape).
+  runConvo(step, name) {
+    const next = () => {
+      const msg = step.afterClose ? step.afterClose() : null;
+      if (msg) this.showToast(msg);
+      this.updateHud();
+      if (!step.choice) return;
+      this.choice.open(step.choice.options, {
+        onSelect: (i) => {
+          const result = step.choice.onPick(i);
+          if (result) this.runConvo(result, name);
+        },
+      });
+    };
+    if (step.lines && step.lines.length > 0) this.dialogue.open(step.lines, name, next);
+    else next();
   }
 
   saveGame() {
