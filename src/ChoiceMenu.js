@@ -1,5 +1,5 @@
 const LINE_H = 14;
-const WIDTH = 140;
+const WIDTH = 172;
 
 // A small tappable choice menu (also works with the keyboard).
 // Usage:
