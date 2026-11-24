@@ -82,4 +82,3 @@ Still to do:
 ## Caveats
 Logic modules (farming, quests, rabbit) have been tested in Node. Scene/graphics code is built but was written
 without being run in a browser, so test new features on desktop and phone.
-
