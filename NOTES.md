@@ -82,3 +82,16 @@ Still to do:
 ## Caveats
 Logic modules (farming, quests, rabbit) have been tested in Node. Scene/graphics code is built but was written
 without being run in a browser, so test new features on desktop and phone.
+
+## Bag / Coin Pouch (inventory UI)
+- `src/InventoryScreen.js` (Phaser overlay), `src/inventory.js` (pure logic, no Phaser), `src/data/items.json` (names, icons, colours, descriptions; also the purse name).
+- Open with I or Tab, or the BAG button on phones. Arrows/WASD move, Esc/X/I/CLOSE button close. Tools show a wear bar.
+- HUD now shows only gold (coin icon) and water, plus a warning when a tool is at 25% wear or broken. Everything else lives in the bag.
+- To add a new item: add it to `items.json` (icon = seeds, wheat, log, rock, gem, ...; colour hex) and put a count in `gs.items[id]`. Slots appear automatically once the count is above 0.
+
+## Design notes for upcoming mining and boss work (from Renee)
+- Rocks spawn in RANDOM colours (not fixed per rock). Each colour = a different number of swings and a specific gem drop. Rarer gems spawn less often (weighted). One rock colour drops a DIAMOND (rarest).
+- Boulder blocking the road east of the forest: pickaxe only, many swings (about 12), cleared for good.
+- Pickaxe source: forest boss, something 'evil' that introduces the game's evil and leads up to a main boss. Boss is something to ATTACK (needs the attack key/animation and combat decisions). Shop sells a pickaxe (60g) as a safety net.
+- Princess role still undecided; idea: she asks for a particular gem.
+- Sprite size decision: stay at 16px tiles, 16x24 walking frames (Game Boy / Pokemon scale). Templates are 16x24 (walk) and 24x24 (attack), 1px outline.
