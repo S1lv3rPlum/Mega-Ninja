@@ -47,9 +47,10 @@ export function repairTool(gs, defs, id) {
   return { ok: true, msg: `Your ${name} is good as new.` };
 }
 
-// One swing of a tool at a target: { id, tool, hits, flag?, drop?, dropAmount?, hint? }
+// One swing of a tool at a target: { id, tool, hits, flag?, drop?, dropAmount?, hint?, respawnMs? }
 // Returns { ok, cleared, broke, left, msg }.
-export function hitTarget(gs, defs, map, t) {
+// A target with respawnMs (a tree) grows back that many milliseconds after it is cleared.
+export function hitTarget(gs, defs, map, t, now = Date.now()) {
   if (!gs.targets[map]) gs.targets[map] = {};
   if (!gs.targets[map][t.id]) gs.targets[map][t.id] = { hits: t.hits, cleared: false };
   const state = gs.targets[map][t.id];
@@ -61,6 +62,7 @@ export function hitTarget(gs, defs, map, t) {
   state.hits -= 1;
   if (state.hits <= 0) {
     state.cleared = true;
+    if (t.respawnMs) state.respawnAt = now + t.respawnMs;
     if (t.flag) gs.flags[t.flag] = true;
     const amount = t.drop ? (t.dropAmount ?? 1) : 0;
     if (amount > 0) gs.items[t.drop] = (gs.items[t.drop] ?? 0) + amount;
@@ -68,3 +70,13 @@ export function hitTarget(gs, defs, map, t) {
   }
   return { ok: true, cleared: false, broke: use.broke, left: state.hits, msg: use.msg };
 }
+
+// Has a cleared target that grows back reached its regrow time? If so it is reset (fresh hits) and true is returned.
+export function targetReady(gs, map, id, now = Date.now()) {
+  const state = gs.targets[map]?.[id];
+  if (!state || !state.cleared || !state.respawnAt || now < state.respawnAt) return false;
+  delete gs.targets[map][id];
+  return true;
+}
+
+export const isCleared = (gs, map, id) => !!gs.targets[map]?.[id]?.cleared;
