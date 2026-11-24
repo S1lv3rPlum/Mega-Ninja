@@ -20,14 +20,15 @@ F (or the F button) picks up / throws. P (or the SAVE button) saves to this brow
 - `src/DialogueBox.js`: tap/key-to-advance dialogue with typewriter text
 - `src/SaveManager.js`: localStorage save/load (key `mega-ninja-save`)
 - `src/farming.js`: plot rules (plant, water, grow, harvest), no Phaser
-- `src/quests.js`: quest-giver conversations (farmer), no Phaser
+- `src/quests.js`: quest-giver conversations (farmer, lumberjack), no Phaser. Conversation steps: `{lines, afterClose, choice}`; `WorldScene.runConvo` plays them.
 - `src/rabbit.js`: the garden rabbit's timer state machine, no Phaser
 - `src/tools.js`: tools that wear out (use, repair) and targets you work on with them (dirt pile, trees, rocks), no Phaser
+- `src/shop.js`: market stall offers and buying (seeds, bigger pail, replacement tools), no Phaser. Stock lives in `src/data/shop.json`.
 - `src/ChoiceMenu.js`: tappable / keyboard choice menu, reusable (quest confirm now; shop, battles, inventory later)
 - `src/data/tools.json`: tool durability, shop price, repair materials (axe and pickaxe values are placeholders)
 - `src/data/dialogue.json`, `src/data/quests.json`: all NPC text and quest requests
 - `public/assets/`: maps (Tiled JSON), tilesets, sprites, items, UI. `public/assets/README.md` lists sizes.
-- `make_assets.py`, `make_placeholders.py`, `make_farm_assets.py`: generate the placeholder art and maps
+- `make_assets.py`, `make_placeholders.py`, `make_farm_assets.py`, `make_forest_shop_assets.py`: generate the placeholder art and maps (the last one adds the forest, market stall, and patches town.json and farm.json)
 
 ## Maps (Tiled)
 - Add a map: save `public/assets/maps/<name>.json`, add `<name>` to `MAPS` in `WorldScene.js`.
@@ -37,7 +38,7 @@ F (or the F button) picks up / throws. P (or the SAVE button) saves to this brow
 - Object layer `npcs`: rectangles with properties `id`, `texture` (`npc`), `dialogue` (key in dialogue.json).
 - Object layer `targets`: rectangles with `id` (unique per map), `texture` (must be preloaded in WorldScene), `tool`
   (key in tools.json), `hits` (swings needed). Optional: `flag` (set when cleared), `drop` + `dropAmount` (item gained),
-  `hint` (shown when you lack the tool), `clearedMsg`. Targets block walking until cleared, and cleared state is saved.
+  `hint` (shown when you lack the tool), `clearedMsg`, `respawnMs` (a tree: leaves a stump and grows back; 0 = gone for good). Targets block walking until cleared, and cleared state is saved.
 - Use plain rectangle objects, not "Insert Tile" objects.
 
 ## Game state (saved as one object)
@@ -57,21 +58,28 @@ F (or the F button) picks up / throws. P (or the SAVE button) saves to this brow
 - Town: a treeline across the map (row 15) with a dirt pile in the gap on the south road. The shovel clears it (5 swings).
   The villager NPC explains and hints at the rabbits. The south end of the road has no door yet (forest map comes later).
 - The farmer asks "Hand it over / Not yet" before taking wheat (first use of the choice menu).
+- Walking sprite: `player-walk.png`, 16x24 frames, 3 columns (step, stand, step) x 4 rows (down, left, right, up).
+  Character art templates: 4x size (64x96 frames) sheets of the same layout; separate walk and attack sheets.
+- Market stall (farm map, east of the pump): shopkeeper with `shop: general`. Sells 5 seeds (10g), a bigger watering can in
+  steps (10 for 50g, 15 for 120g, 20 for 250g), and a new axe (40g, only when you have none or yours is broken).
+- Forest (door at the south end of the town road, past the landslide): 28 choppable trees (3 swings, drop 2 wood, grow back
+  after 45 s, shown as stumps meanwhile). Lumberjack gives an axe on first meeting, buys wood (6/30g, 12/80g, 20/160g, then repeats),
+  repairs the axe for 6 wood, and gives a free spare axe (9 uses) if you are stuck (broken axe, no wood, no gold).
 
 ## Next up (to-do list)
-Done: choice menu, tools with wear, the tool-on-target system, the landslide (first target).
-Still to do, roughly in this order:
-1. Shop / bazaar (farm map). Outdoor stall vs interior map is undecided. First stock: a bigger water pail (6 -> more),
-   then tools (buy a replacement axe etc.) and future items. Prices live in a data file. Uses ChoiceMenu.
-2. Forest zone (door at the south end of the town road): choppable trees (targets with tool `axe`, drop `wood`),
-   a lumberjack NPC (like the farmer) who gives an axe and asks for wood; he can also repair tools for materials
-   (`repairTool` already exists). Next drop / boss undecided. Safety net: a free basic axe if stuck.
-3. Mining corner between farm and forest: rocks (tool `pickaxe`, drop `stone`), a pickaxe (source undecided), and a big
-   cave that exits at the far corner of the map into a new, still-unnamed land.
-4. A princess somewhere in the story. Her role is undecided (quest giver, rescue goal, mentor?).
-
-Also still open: walking animations (once there is sprite art), battles and the inventory screen.
+Done: choice menu, tools with wear, tool-on-target system, landslide, market stall, forest + lumberjack, walking sprite.
+Still to do:
+1. Mining corner between farm and forest: rocks (tool `pickaxe`, drop `stone`), a pickaxe (source undecided; `tools.json`
+   has placeholder price and repair), and a big cave that exits at the far corner of the map into a new, unnamed land.
+   The forest has no east exit yet; the farm has no south exit yet.
+2. Forest boss / special drop (undecided).
+3. A princess somewhere in the story. Her role is undecided (quest giver, rescue goal, mentor?).
+4. Attack animation: wire in the attack sheet once the art exists. Open decisions: real-time swings (Zelda) vs separate
+   battle screen (Pokemon); key to attack (suggest J, plus a B button on phones).
+5. NPC sprites: currently single standing images; add walking-sheet support when sheets exist.
+6. Battles, enemies and the inventory screen.
 
 ## Caveats
 Logic modules (farming, quests, rabbit) have been tested in Node. Scene/graphics code is built but was written
 without being run in a browser, so test new features on desktop and phone.
+
