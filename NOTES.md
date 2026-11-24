@@ -95,3 +95,11 @@ without being run in a browser, so test new features on desktop and phone.
 - Pickaxe source: forest boss, something 'evil' that introduces the game's evil and leads up to a main boss. Boss is something to ATTACK (needs the attack key/animation and combat decisions). Shop sells a pickaxe (60g) as a safety net.
 - Princess role still undecided; idea: she asks for a particular gem.
 - Sprite size decision: stay at 16px tiles, 16x24 walking frames (Game Boy / Pokemon scale). Templates are 16x24 (walk) and 24x24 (attack), 1px outline.
+
+## Mining update (quarry, coloured rocks, boulder)
+- New map `quarry` (registered in MAPS; tileset `mine-tiles` in TILESETS). Reached by the forest's east road, which is blocked by a boulder (target `boulder`, 12 pickaxe swings, drops 5 stone, flag `boulder_cleared`, gone for good).
+- Rocks: targets with property `variants = "rocks"` take a random kind from `src/data/rocks.json` (weights make gems rarer; diamond weight 2). Kind is stored in the save (`gs.targets[map][id].variant`) so reloading doesn't re-roll it; when a rock grows back (60 s) it re-rolls. Edit rocks.json to change weights, swings or drops.
+- Shop: sells a pickaxe (60g, only if you have none or it's broken), repairs it for stone ("Fix Pickaxe"), and buys stone/gems (`sell` prices in shop.json; sells the whole stack).
+- Miner NPC in the quarry foreshadows trouble in the big cave (north-east). The cave mouth is drawn but blocked: next step is the boss / evil intro and the passage to the new land.
+- Fixed: an empty toast drew a small dark box mid-screen (toast now starts hidden).
+- `make_mining_assets.py` regenerates the placeholder art and quarry map (forest edit runs once).
