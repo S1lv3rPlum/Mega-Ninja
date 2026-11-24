@@ -8,7 +8,8 @@ import { talkToQuestGiver } from '../quests.js';
 import { createRabbit, tickRabbit, catchRabbit, throwRabbit, canCatch, rabbitOnMap } from '../rabbit.js';
 import ChoiceMenu from '../ChoiceMenu.js';
 import toolDefs from '../data/tools.json';
-import { ensureToolState, giveTool, hitTarget, toolLabel, targetReady, isCleared } from '../tools.js';
+import { ensureToolState, giveTool, hitTarget, toolLabel, targetReady, isCleared, variantFor } from '../tools.js';
+import rocksData from '../data/rocks.json';
 import shopData from '../data/shop.json';
 import { talkToShopkeeper } from '../shop.js';
 import InventoryScreen, { iconKey } from '../InventoryScreen.js';
@@ -21,10 +22,10 @@ const START_MAP = 'town';
 const START_TILE = { x: 15, y: 10 };
 
 // To add a map: save it as public/assets/maps/<name>.json and add its name here.
-const MAPS = ['town', 'farm', 'forest'];
+const MAPS = ['town', 'farm', 'forest', 'quarry'];
 // To add a tileset: save it as public/assets/tilesets/<name>.png and add its name here.
 // (The name must match the tileset's name inside Tiled.)
-const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles'];
+const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles', 'mine-tiles'];
 
 // Tiled stores custom properties as a list of {name, value}; turn that into a plain object
 const readProps = (p) =>
@@ -48,6 +49,9 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('stump', 'assets/sprites/stump.png');
     this.load.image('lumberjack', 'assets/sprites/lumberjack.png'); // textures for NPCs go here
     this.load.image('shopkeeper', 'assets/sprites/shopkeeper.png');
+    ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
+    this.load.image('rubble', 'assets/sprites/rubble.png');
+    this.load.image('boulder', 'assets/sprites/boulder.png');
     this.load.image('dialogue-box', 'assets/ui/dialogue-box.png');
   }
 
@@ -170,11 +174,15 @@ export default class WorldScene extends Phaser.Scene {
           respawnMs,
           texture,
           stump,
+          variants: p.variants, // a key in data/rocks.json: the target is a random kind each time it (re)spawns
           active,
           sprite: this.add.image(x * TILE, y * TILE, active ? texture : stump).setOrigin(0, 0).setDepth(active ? 4 : 3),
         };
       })
       .filter(Boolean);
+    this.targets.forEach((t) => {
+      if (t.active) this.applyVariant(t);
+    });
 
     // --- Player (grid-based: tracks a tile position, slides between tiles) ---
     // The sprite is taller than a tile (16x24), so its feet sit on the bottom edge of its tile.
@@ -217,7 +225,8 @@ export default class WorldScene extends Phaser.Scene {
       .text(160, 42, '', { fontSize: '10px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } })
       .setOrigin(0.5, 0)
       .setScrollFactor(0) // stays fixed on screen
-      .setDepth(100);
+      .setDepth(100)
+      .setAlpha(0); // hidden until there is something to say (an empty toast still draws a dark box)
     this.input.keyboard.on('keydown-P', () => this.saveGame());
     // F = pick up / throw
     this.input.keyboard.on('keydown-F', (event) => {
@@ -395,6 +404,19 @@ export default class WorldScene extends Phaser.Scene {
 
   // ---------- Targets (dirt piles, trees, rocks) ----------
 
+  // Rocks come in random colours: pick (or reload) this one's kind and copy its hits, drop and picture onto it
+  applyVariant(t) {
+    if (!t.variants) return;
+    const gs = this.gameState;
+    const v = variantFor(gs, gs.map, t.id, rocksData[t.variants]);
+    t.hits = v.hits;
+    t.drop = v.drop;
+    t.dropAmount = v.amount;
+    t.texture = v.texture;
+    t.clearedMsg = v.msg;
+    t.sprite.setTexture(v.texture);
+  }
+
   // only standing targets count: a stump can be walked over and used again after it regrows
   targetAt(x, y) {
     return this.targets.find((t) => t.active && t.x === x && t.y === y) ?? null;
@@ -408,6 +430,7 @@ export default class WorldScene extends Phaser.Scene {
       if (t.x === this.tile.x && t.y === this.tile.y) return;
       if (targetReady(gs, gs.map, t.id)) {
         t.active = true;
+        this.applyVariant(t); // a rock grows back as a new random colour
         t.sprite.setTexture(t.texture).setDepth(4);
       }
     });
