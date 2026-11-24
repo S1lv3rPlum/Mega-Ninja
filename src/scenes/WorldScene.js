@@ -6,6 +6,9 @@ import questsData from '../data/quests.json';
 import { MAX_STAGE, ensureState, getPlot, plant, water, harvest, fillCan, tick, eatPlot } from '../farming.js';
 import { talkToQuestGiver } from '../quests.js';
 import { createRabbit, tickRabbit, catchRabbit, throwRabbit, canCatch, rabbitOnMap } from '../rabbit.js';
+import ChoiceMenu from '../ChoiceMenu.js';
+import toolDefs from '../data/tools.json';
+import { ensureToolState, giveTool, hitTarget, toolLabel } from '../tools.js';
 
 const TILE = 16;
 const MOVE_MS = 140; // time to slide one tile
@@ -31,10 +34,12 @@ export default class WorldScene extends Phaser.Scene {
   preload() {
     MAPS.forEach((m) => this.load.tilemapTiledJSON(m, `assets/maps/${m}.json`));
     TILESETS.forEach((t) => this.load.image(t, `assets/tilesets/${t}.png`));
-    this.load.image('player', 'assets/sprites/player.png');
+    // walking sheet: 3 frames across (step, stand, step) x 4 rows (down, left, right, up), 16x24 each
+    this.load.spritesheet('player', 'assets/sprites/player-walk.png', { frameWidth: 16, frameHeight: 24 });
     this.load.image('npc', 'assets/sprites/npc.png');
     this.load.image('rabbit', 'assets/sprites/rabbit.png');
     this.load.image('shovel', 'assets/items/shovel.png');
+    this.load.image('dirt-pile', 'assets/sprites/dirt-pile.png'); // textures for "targets" objects go here
     this.load.image('dialogue-box', 'assets/ui/dialogue-box.png');
   }
 
@@ -59,6 +64,12 @@ export default class WorldScene extends Phaser.Scene {
       gs.tile = { ...START_TILE };
     }
     ensureState(gs);
+    ensureToolState(gs);
+    // older saves kept the shovel as a plain item: turn it into a tool
+    if (gs.items.shovel > 0) {
+      if (!gs.tools.shovel) giveTool(gs, toolDefs, 'shovel');
+      gs.items.shovel = 0;
+    }
     this.gameState = gs;
     this.tile = { ...gs.tile };
     this.facing = { x: 0, y: 1 }; // which way the player is looking (down)
@@ -120,11 +131,46 @@ export default class WorldScene extends Phaser.Scene {
       };
     });
 
+    // --- Targets: things you work on with a tool (dirt piles now; trees and rocks later) ---
+    this.targets = objects('targets')
+      .map((o) => {
+        const p = readProps(o.properties);
+        const id = p.id ?? o.name ?? `${o.x},${o.y}`;
+        if (gs.targets[gs.map]?.[id]?.cleared) return null; // already cleared in an earlier visit
+        const x = Math.floor(o.x / TILE);
+        const y = Math.floor(o.y / TILE);
+        return {
+          id,
+          x,
+          y,
+          tool: p.tool ?? 'shovel',
+          hits: p.hits ?? 3,
+          flag: p.flag,
+          drop: p.drop,
+          dropAmount: p.dropAmount ?? 1,
+          hint: p.hint,
+          clearedMsg: p.clearedMsg ?? 'Cleared!',
+          sprite: this.add.image(x * TILE, y * TILE, p.texture ?? 'dirt-pile').setOrigin(0, 0).setDepth(4),
+        };
+      })
+      .filter(Boolean);
+
     // --- Player (grid-based: tracks a tile position, slides between tiles) ---
+    // The sprite is taller than a tile (16x24), so its feet sit on the bottom edge of its tile.
     this.player = this.add
-      .image(this.tile.x * TILE, this.tile.y * TILE, 'player')
-      .setOrigin(0, 0)
+      .sprite(this.tile.x * TILE, (this.tile.y + 1) * TILE, 'player', 0)
+      .setOrigin(0, 1)
       .setDepth(10);
+    ['down', 'left', 'right', 'up'].forEach((dir, row) => {
+      if (this.anims.exists(`walk-${dir}`)) return;
+      this.anims.create({
+        key: `walk-${dir}`,
+        frames: this.anims.generateFrameNumbers('player', { frames: [row * 3 + 1, row * 3, row * 3 + 1, row * 3 + 2] }),
+        frameRate: 8,
+        repeat: -1,
+      });
+    });
+    this.faceFrame(this.facing);
 
     // --- Camera follows the player and stays inside the map ---
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
@@ -132,6 +178,7 @@ export default class WorldScene extends Phaser.Scene {
 
     // --- Dialogue ---
     this.dialogue = new DialogueBox(this);
+    this.choice = new ChoiceMenu(this);
 
     // --- Input: arrows + WASD to move; Space / Enter / Z to talk; P to save ---
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -145,7 +192,7 @@ export default class WorldScene extends Phaser.Scene {
 
     // --- Save (P) ---
     this.toast = this.add
-      .text(160, 30, '', { fontSize: '10px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } })
+      .text(160, 42, '', { fontSize: '10px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } })
       .setOrigin(0.5, 0)
       .setScrollFactor(0) // stays fixed on screen
       .setDepth(100);
@@ -154,6 +201,17 @@ export default class WorldScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-F', (event) => {
       if (!event.repeat) this.onGrab();
     });
+    // choice menu: up/down (or W/S) to move, Esc / X to cancel (Space / Enter / Z select)
+    const nav = (dir) => (event) => {
+      if (this.choice.isOpen && !event.repeat) this.choice.move(dir);
+    };
+    this.input.keyboard.on('keydown-UP', nav(-1));
+    this.input.keyboard.on('keydown-W', nav(-1));
+    this.input.keyboard.on('keydown-DOWN', nav(1));
+    this.input.keyboard.on('keydown-S', nav(1));
+    const cancelKey = () => this.choice.cancel();
+    this.input.keyboard.on('keydown-ESC', cancelKey);
+    this.input.keyboard.on('keydown-X', cancelKey);
 
     // --- Touch controls (phones/tablets) ---
     this.touchDir = { x: 0, y: 0 };
@@ -189,10 +247,13 @@ export default class WorldScene extends Phaser.Scene {
 
   updateHud() {
     const gs = this.gameState;
-    this.hud.setText(
-      `Gold ${gs.gold}  Water ${gs.can.water}/${gs.can.max}\nSeeds ${gs.items.seeds}  Wheat ${gs.items.wheat}` +
-        (gs.items.shovel > 0 ? '  Shovel' : '')
-    );
+    const lines = [
+      `Gold ${gs.gold}  Water ${gs.can.water}/${gs.can.max}`,
+      `Seeds ${gs.items.seeds}  Wheat ${gs.items.wheat}`,
+    ];
+    const tools = Object.keys(gs.tools).map((id) => toolLabel(gs, toolDefs, id));
+    if (tools.length > 0) lines.push(tools.join('  '));
+    this.hud.setText(lines.join('\n'));
   }
 
   // Draws the plot's tile and its status icon:
@@ -278,6 +339,35 @@ export default class WorldScene extends Phaser.Scene {
     this.updateHud();
   }
 
+  // ---------- Targets (dirt piles, trees, rocks) ----------
+
+  targetAt(x, y) {
+    return this.targets.find((t) => t.x === x && t.y === y) ?? null;
+  }
+
+  useOnTarget(t) {
+    const gs = this.gameState;
+    const r = hitTarget(gs, toolDefs, gs.map, t);
+    this.updateHud();
+
+    if (!r.ok) {
+      this.showToast(r.msg);
+      return;
+    }
+
+    if (r.cleared) {
+      this.targets = this.targets.filter((x) => x !== t);
+      this.tweens.add({ targets: t.sprite, alpha: 0, duration: 400, onComplete: () => t.sprite.destroy() });
+      const gained = r.amount > 0 ? ` (+${r.amount} ${r.drop})` : '';
+      this.showToast(r.broke ? `${r.msg} ${t.clearedMsg}${gained}` : `${t.clearedMsg}${gained}`);
+      this.updateHud();
+    } else {
+      // a little shake, and how many swings are left
+      this.tweens.add({ targets: t.sprite, x: t.sprite.x + 2, duration: 50, yoyo: true, repeat: 2 });
+      this.showToast(r.broke ? r.msg : `${r.left} more to go`);
+    }
+  }
+
   // ---------- Rabbit ----------
 
   updateRabbit(delta) {
@@ -286,7 +376,7 @@ export default class WorldScene extends Phaser.Scene {
 
     // a rabbit in your arms rides above your head
     if (r.phase === 'held') {
-      if (this.rabbitSprite) this.rabbitSprite.setPosition(this.player.x, this.player.y - 9);
+      if (this.rabbitSprite) this.rabbitSprite.setPosition(this.player.x, this.player.y - 31);
       return;
     }
     // the rabbit waits until you've met the farmer, and pauses during dialogue and map changes
@@ -337,7 +427,7 @@ export default class WorldScene extends Phaser.Scene {
 
   // F: throw the rabbit if you're holding it; otherwise pick up the rabbit or an item in front of you
   onGrab() {
-    if (this.dialogue.isOpen || this.moving || this.transitioning) return;
+    if (this.dialogue.isOpen || this.choice.isOpen || this.moving || this.transitioning) return;
 
     const r = this.rabbit;
     if (r && r.phase === 'held') {
@@ -420,8 +510,13 @@ export default class WorldScene extends Phaser.Scene {
     if (sprite) sprite.destroy();
     delete this.dropSprites[`${drop.x},${drop.y}`];
 
-    gs.items[drop.item] = (gs.items[drop.item] ?? 0) + 1;
-    this.showToast(drop.item === 'shovel' ? 'Got the shovel! You will need it in the next area.' : `Picked up ${drop.item}.`);
+    if (toolDefs[drop.item]) {
+      giveTool(gs, toolDefs, drop.item); // tools wear out, so they live in gs.tools
+      this.showToast(`Got the ${drop.item}! Face something big and press Space to use it.`);
+    } else {
+      gs.items[drop.item] = (gs.items[drop.item] ?? 0) + 1;
+      this.showToast(`Picked up ${drop.item}.`);
+    }
     this.updateHud();
   }
 
@@ -467,6 +562,10 @@ export default class WorldScene extends Phaser.Scene {
 
   // Space / Enter / Z / the A button
   onAction() {
+    if (this.choice.isOpen) {
+      this.choice.select();
+      return;
+    }
     if (this.dialogue.isOpen) {
       this.dialogue.advance();
       return;
@@ -476,8 +575,11 @@ export default class WorldScene extends Phaser.Scene {
     const tx = this.tile.x + this.facing.x;
     const ty = this.tile.y + this.facing.y;
     const npc = this.npcAt(tx, ty);
+    const target = this.targetAt(tx, ty);
     if (npc) {
       this.talkTo(npc);
+    } else if (target) {
+      this.useOnTarget(target);
     } else if (this.isPump(tx, ty)) {
       this.showToast(fillCan(this.gameState).msg);
       this.updateHud();
@@ -499,11 +601,24 @@ export default class WorldScene extends Phaser.Scene {
     // Quest givers (listed in quests.json) build their lines from the current request
     const quest = questsData[npc.dialogue];
     if (quest) {
-      const { lines, afterClose } = talkToQuestGiver(this.gameState, npc.id, data, quest);
+      const { lines, afterClose, choice } = talkToQuestGiver(this.gameState, npc.id, data, quest);
       this.dialogue.open(lines, data.name, () => {
         const msg = afterClose();
         if (msg) this.showToast(msg);
         this.updateHud();
+        if (!choice) return;
+        // the quest giver asks a yes/no question once his lines are done
+        this.choice.open(choice.options, {
+          onSelect: (i) => {
+            if (i !== 0) return;
+            const result = choice.onYes();
+            this.dialogue.open(result.lines, data.name, () => {
+              const m = result.afterClose();
+              if (m) this.showToast(m);
+              this.updateHud();
+            });
+          },
+        });
       });
       return;
     }
@@ -513,7 +628,12 @@ export default class WorldScene extends Phaser.Scene {
     this.gameState.flags[flag] = true;
 
     this.touchDir = { x: 0, y: 0 };
-    this.dialogue.open(firstTime ? data.lines : data.repeatLines, data.name);
+    let lines = firstTime ? data.lines : data.repeatLines;
+    // some NPCs say something different once a story flag is set (see "flagLines" in dialogue.json)
+    for (const [flagName, flagLines] of Object.entries(data.flagLines ?? {})) {
+      if (this.gameState.flags[flagName]) lines = flagLines;
+    }
+    this.dialogue.open(lines, data.name);
   }
 
   saveGame() {
@@ -531,7 +651,7 @@ export default class WorldScene extends Phaser.Scene {
   update(_time, delta) {
     this.updateRabbit(delta);
 
-    if (this.moving || this.transitioning || this.dialogue.isOpen) return;
+    if (this.moving || this.transitioning || this.dialogue.isOpen || this.choice.isOpen) return;
 
     let dx = 0;
     let dy = 0;
@@ -554,20 +674,40 @@ export default class WorldScene extends Phaser.Scene {
 
     const nx = this.tile.x + dx;
     const ny = this.tile.y + dy;
-    if (!this.canWalk(nx, ny)) return;
+    if (!this.canWalk(nx, ny)) {
+      this.faceFrame(this.facing); // bumped into something: just turn to face it
+      return;
+    }
 
     this.moving = true;
     this.tile = { x: nx, y: ny };
+    this.player.play(`walk-${this.dirName(this.facing)}`, true);
     this.tweens.add({
       targets: this.player,
       x: nx * TILE,
-      y: ny * TILE,
+      y: (ny + 1) * TILE,
       duration: MOVE_MS,
       onComplete: () => {
         this.moving = false;
+        // keep walking if a direction is still held, otherwise stand still facing that way
+        const held = this.cursors.left.isDown || this.cursors.right.isDown || this.cursors.up.isDown ||
+          this.cursors.down.isDown || this.wasd.A.isDown || this.wasd.D.isDown || this.wasd.W.isDown ||
+          this.wasd.S.isDown || this.touchDir.x !== 0 || this.touchDir.y !== 0;
+        if (!held) this.faceFrame(this.facing);
         this.checkDoor();
       },
     });
+  }
+
+  dirName(f) {
+    return f.y > 0 ? 'down' : f.y < 0 ? 'up' : f.x < 0 ? 'left' : 'right';
+  }
+
+  // stop animating and show the standing pose for a direction
+  faceFrame(f) {
+    const row = { down: 0, left: 1, right: 2, up: 3 }[this.dirName(f)];
+    this.player.anims.stop();
+    this.player.setFrame(row * 3 + 1);
   }
 
   checkDoor() {
@@ -594,6 +734,8 @@ export default class WorldScene extends Phaser.Scene {
     if (this.npcAt(x, y)) return false;
     // so does a rabbit sitting on a tile
     if (this.rabbit && rabbitOnMap(this.rabbit) && this.rabbit.x === x && this.rabbit.y === y) return false;
+    // dirt piles, trees and rocks block the way until they are cleared
+    if (this.targetAt(x, y)) return false;
     // any tile painted on the "obstacles" layer blocks movement
     return !this.obstacles || this.obstacles.getTileAt(x, y) === null;
   }
