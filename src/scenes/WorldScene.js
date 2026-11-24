@@ -11,6 +11,8 @@ import toolDefs from '../data/tools.json';
 import { ensureToolState, giveTool, hitTarget, toolLabel, targetReady, isCleared } from '../tools.js';
 import shopData from '../data/shop.json';
 import { talkToShopkeeper } from '../shop.js';
+import InventoryScreen, { iconKey } from '../InventoryScreen.js';
+import { lowTools } from '../inventory.js';
 
 const TILE = 16;
 const MOVE_MS = 140; // time to slide one tile
@@ -198,6 +200,7 @@ export default class WorldScene extends Phaser.Scene {
     // --- Dialogue ---
     this.dialogue = new DialogueBox(this);
     this.choice = new ChoiceMenu(this);
+    this.bag = new InventoryScreen(this);
 
     // --- Input: arrows + WASD to move; Space / Enter / Z to talk; P to save ---
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -228,9 +231,31 @@ export default class WorldScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-W', nav(-1));
     this.input.keyboard.on('keydown-DOWN', nav(1));
     this.input.keyboard.on('keydown-S', nav(1));
-    const cancelKey = () => this.choice.cancel();
+    const cancelKey = () => {
+      if (this.bag.isOpen) this.bag.close();
+      else this.choice.cancel();
+    };
     this.input.keyboard.on('keydown-ESC', cancelKey);
     this.input.keyboard.on('keydown-X', cancelKey);
+    // I / Tab = open or close the bag; arrows move around in it
+    const toggleBag = (event) => {
+      if (event.repeat) return;
+      event.preventDefault?.();
+      this.toggleBag();
+    };
+    this.input.keyboard.on('keydown-I', toggleBag);
+    this.input.keyboard.on('keydown-TAB', toggleBag);
+    const bagNav = (dx, dy) => (event) => {
+      if (this.bag.isOpen && !event.repeat) this.bag.move(dx, dy);
+    };
+    this.input.keyboard.on('keydown-LEFT', bagNav(-1, 0));
+    this.input.keyboard.on('keydown-A', bagNav(-1, 0));
+    this.input.keyboard.on('keydown-RIGHT', bagNav(1, 0));
+    this.input.keyboard.on('keydown-D', bagNav(1, 0));
+    this.input.keyboard.on('keydown-UP', bagNav(0, -1));
+    this.input.keyboard.on('keydown-W', bagNav(0, -1));
+    this.input.keyboard.on('keydown-DOWN', bagNav(0, 1));
+    this.input.keyboard.on('keydown-S', bagNav(0, 1));
 
     // --- Touch controls (phones/tablets) ---
     this.touchDir = { x: 0, y: 0 };
@@ -241,6 +266,8 @@ export default class WorldScene extends Phaser.Scene {
       .text(4, 4, '', { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 3, y: 2 }, lineSpacing: 1 })
       .setScrollFactor(0)
       .setDepth(100);
+    // little coin icon in front of the gold number (the Coin Pouch)
+    this.hudCoin = this.add.image(12, 9, iconKey(this, 'coin', '#f2c230')).setScrollFactor(0).setDepth(101);
     this.updateHud();
 
     // --- Farm plots: show saved growth, catch up on time spent away, then keep growing ---
@@ -266,16 +293,21 @@ export default class WorldScene extends Phaser.Scene {
 
   updateHud() {
     const gs = this.gameState;
-    const lines = [
-      `Gold ${gs.gold}  Water ${gs.can.water}/${gs.can.max}`,
-      `Seeds ${gs.items.seeds}  Wheat ${gs.items.wheat}`,
-    ];
-    if (gs.items.wood > 0 || gs.items.stone > 0) {
-      lines[1] += (gs.items.wood > 0 ? `  Wood ${gs.items.wood}` : '') + (gs.items.stone > 0 ? `  Stone ${gs.items.stone}` : '');
-    }
-    const tools = Object.keys(gs.tools).map((id) => toolLabel(gs, toolDefs, id));
-    if (tools.length > 0) lines.push(tools.join('  '));
+    // seeds, wheat, wood, stone and tools live in the bag (I key / BAG button); the HUD keeps the essentials
+    const lines = [`   ${gs.gold}`, `Water ${gs.can.water}/${gs.can.max}`];
+    const worn = lowTools(gs, toolDefs).map((t) => (t.dur <= 0 ? `${t.name} broken!` : `${t.name} ${t.dur}/${t.max}!`));
+    if (worn.length > 0) lines.push(worn.join('  '));
     this.hud.setText(lines.join('\n'));
+  }
+
+  toggleBag() {
+    if (this.bag.isOpen) {
+      this.bag.close();
+      return;
+    }
+    if (this.dialogue.isOpen || this.choice.isOpen || this.moving || this.transitioning) return;
+    this.touchDir = { x: 0, y: 0 };
+    this.bag.open();
   }
 
   // Draws the plot's tile and its status icon:
@@ -468,7 +500,7 @@ export default class WorldScene extends Phaser.Scene {
 
   // F: throw the rabbit if you're holding it; otherwise pick up the rabbit or an item in front of you
   onGrab() {
-    if (this.dialogue.isOpen || this.choice.isOpen || this.moving || this.transitioning) return;
+    if (this.bag.isOpen || this.dialogue.isOpen || this.choice.isOpen || this.moving || this.transitioning) return;
 
     const r = this.rabbit;
     if (r && r.phase === 'held') {
@@ -599,10 +631,15 @@ export default class WorldScene extends Phaser.Scene {
     // save button (replaces the P key on phones)
     const save = make(292, 16, 'SAVE', () => this.saveGame());
     save.setStyle({ fixedWidth: 44, fontSize: '10px' });
+
+    // BAG button opens the inventory (the I key on a keyboard)
+    const bagBtn = make(292, 46, 'BAG', () => this.toggleBag());
+    bagBtn.setStyle({ fixedWidth: 44, fontSize: '10px' });
   }
 
   // Space / Enter / Z / the A button
   onAction() {
+    if (this.bag.isOpen) return;
     if (this.choice.isOpen) {
       this.choice.select();
       return;
@@ -699,7 +736,7 @@ export default class WorldScene extends Phaser.Scene {
   update(_time, delta) {
     this.updateRabbit(delta);
 
-    if (this.moving || this.transitioning || this.dialogue.isOpen || this.choice.isOpen) return;
+    if (this.moving || this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen) return;
 
     let dx = 0;
     let dy = 0;
