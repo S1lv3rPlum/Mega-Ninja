@@ -1,5 +1,6 @@
 import itemsData from './data/items.json';
 import toolDefs from './data/tools.json';
+import weaponDefs from './data/weapons.json';
 import { listEntries, moveSelection } from './inventory.js';
 
 // 10x10 pixel icons. '#' = main colour, 'o' = dark outline, 'h' = highlight, '.' = empty.
@@ -12,6 +13,7 @@ const ICONS = {
   shovel:  ['......oo..', '.....o##o.', '......o#o.', '.....o#o..', '....o#o...', '...o#o....', '..ooo.....', '.o###o....', '.o###o....', '..ooo.....'],
   axe:     ['..........', '...oooo...', '..o####o..', '.o#####oo.', '.o###o#o..', '..oo.o#o..', '....o#o...', '...o#o....', '..o#o.....', '..oo......'],
   pickaxe: ['..oooooo..', '.o######o.', 'o##oooo##o', 'oo.o##o.oo', '...o#o....', '...o#o....', '...o#o....', '...o#o....', '...o#o....', '....oo....'],
+  sword:   ['.........o', '........o#o', '.......o#o.', '......o#o..', '.o...o#o...', '..o.o#o....', '...o#o.....', '..oo#o.....', '.o#o.o.....', 'o#o........'],
   coin:    ['..oooooo..', '.o######o.', 'o##hh###oo', 'o#h##.##o.', 'o#h#.o##o.', 'o#h##.##o.', 'o###oo##o.', '.o######o.', '..oooooo..', '..........'],
 };
 
@@ -65,7 +67,7 @@ export default class InventoryScreen {
     if (this.isOpen) return;
     const s = this.scene;
     this.isOpen = true;
-    this.entries = listEntries(s.gameState, itemsData, toolDefs);
+    this.entries = listEntries(s.gameState, itemsData, toolDefs, weaponDefs);
     this.index = Math.min(this.index, Math.max(0, this.entries.length - 1));
 
     const add = (o) => {
@@ -97,7 +99,9 @@ export default class InventoryScreen {
         box.setInteractive();
         box.on('pointerdown', () => this.select(i));
         const img = add(s.add.image(x + SLOT / 2, y + SLOT / 2 - 3, iconKey(s, e.icon, e.color)).setOrigin(0.5).setScale(2));
-        if (e.kind === 'item') {
+        if (e.kind === 'weapon') {
+          // weapons don't wear out: no count, no bar
+        } else if (e.kind === 'item') {
           add(s.add.text(x + SLOT - 3, y + SLOT - 3, String(e.count), { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', stroke: '#000000', strokeThickness: 2 }).setOrigin(1, 1));
         } else {
           const frac = e.max > 0 ? e.dur / e.max : 0;
@@ -114,14 +118,25 @@ export default class InventoryScreen {
     // detail panel
     this.detailName = add(s.add.text(200, 42, '', { fontSize: '10px', fontFamily: 'monospace', color: '#ffe08a' }));
     this.detailSub = add(s.add.text(200, 56, '', { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff' }));
+    this.eatBtn = add(
+      s.add.text(252, 196, 'EAT', { fontSize: '9px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#3a7a3a', padding: { x: 6, y: 3 } }).setOrigin(0.5).setInteractive(),
+    );
+    this.eatBtn.on('pointerdown', () => this.use());
     this.detailDesc = add(s.add.text(200, 72, '', { fontSize: '8px', fontFamily: 'monospace', color: '#c8ccdc', wordWrap: { width: 104 }, lineSpacing: 2 }));
 
     // footer: hint + close button (the button is what phones use)
-    add(s.add.text(20, 214, 'Arrows: move   I / Esc: close', { fontSize: '7px', fontFamily: 'monospace', color: '#8a90a8' }));
+    add(s.add.text(20, 214, 'Arrows: move  Space: eat', { fontSize: '7px', fontFamily: 'monospace', color: '#8a90a8' }));
     const close = add(
       s.add.text(284, 215, 'CLOSE', { fontSize: '9px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#444466', padding: { x: 4, y: 2 } }).setOrigin(0.5).setInteractive(),
     );
     close.on('pointerdown', () => this.close());
+    const quit = add(
+      s.add.text(222, 215, 'SAVE + TITLE', { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#2a4a6a', padding: { x: 4, y: 3 } }).setOrigin(0.5).setInteractive(),
+    );
+    quit.on('pointerdown', () => {
+      this.close();
+      this.scene.quitToTitle();
+    });
 
     if (this.entries.length === 0) {
       add(s.add.text(200, 44, 'Nothing yet.', { fontSize: '8px', fontFamily: 'monospace', color: '#8a90a8' }));
@@ -149,14 +164,19 @@ export default class InventoryScreen {
     this.cursor.setPosition(x, y).setVisible(this.entries.length > 0);
     const e = this.entries[this.index];
     if (!e) {
+      this.eatBtn.setVisible(false);
       this.detailName.setText('');
       this.detailSub.setText('');
       this.detailDesc.setText('');
       return;
     }
     this.detailName.setText(e.name);
-    if (e.kind === 'item') {
-      this.detailSub.setText(`x${e.count}`);
+    this.eatBtn.setVisible(e.kind === 'item' && e.heal > 0);
+    if (e.kind === 'weapon') {
+      this.detailSub.setText(`Damage ${e.damage}`);
+      this.detailDesc.setText(e.desc);
+    } else if (e.kind === 'item') {
+      this.detailSub.setText(e.heal > 0 ? `x${e.count}   heals ${e.heal / 2} heart${e.heal === 2 ? '' : 's'}` : `x${e.count}`);
       this.detailDesc.setText(e.desc);
     } else {
       this.detailSub.setText(e.broken ? 'Broken!' : `Wear ${e.dur}/${e.max}`);
@@ -164,6 +184,17 @@ export default class InventoryScreen {
       if (e.repair) lines.push(`Repair: ${e.repair}`);
       this.detailDesc.setText(lines.join('\n'));
     }
+  }
+
+  // Space / the EAT button: eat the selected food
+  use() {
+    const e = this.entries[this.index];
+    if (!this.isOpen || !e || e.kind !== 'item' || !e.heal) return;
+    const msg = this.scene.eatFood(e.id);
+    // rebuild so counts and the cursor stay right (the stack may be gone now)
+    this.close();
+    this.open();
+    if (msg) this.scene.showToast(msg);
   }
 
   close() {

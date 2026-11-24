@@ -47,7 +47,7 @@ export function talkToQuestGiver(gs, npcId, data, quest, toolDefs = {}) {
   if (!gs.flags[metFlag]) {
     gs.flags[metFlag] = true;
     return {
-      lines: [...data.lines, fill(data.ask, req)],
+      lines: [...data.lines, fill(req.ask ?? data.ask, req)],
       afterClose: () => giveFirstGift(gs, quest, toolDefs),
     };
   }
@@ -84,15 +84,24 @@ export function talkToQuestGiver(gs, npcId, data, quest, toolDefs = {}) {
   return { lines, afterClose };
 }
 
-// Pay for the current request and move on to the next one
+// Pay for the current request and move on to the next one.
+// A request can override its texts ("ask", "thanks") and give a weapon instead of (or as well as) gold:
+//   { item, amount, reward, give: { weapon: 'sword', name: 'Training Sword' } }
 function handOver(gs, state, data, quest, req) {
   gs.items[req.item] -= req.amount;
-  gs.gold += req.reward;
+  gs.gold += req.reward ?? 0;
+  const got = [];
+  if (req.reward > 0) got.push(`${req.reward} gold`);
+  if (req.give?.weapon) {
+    gs.weapon = req.give.weapon;
+    gs.flags[`got_${req.give.weapon}`] = true;
+    got.push(aOrAn(req.give.name ?? req.give.weapon));
+  }
   state.index += 1;
   const next = currentRequest(quest, state.index);
   return {
-    lines: [fill(data.thanks, req), fill(data.nextAsk, next)],
-    afterClose: () => `Received ${req.reward} gold`,
+    lines: [fill(req.thanks ?? data.thanks, req), fill(next.ask ?? data.nextAsk, next)],
+    afterClose: () => (got.length ? `Received ${got.join(' and ')}` : null),
   };
 }
 

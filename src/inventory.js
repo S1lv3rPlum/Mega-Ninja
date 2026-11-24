@@ -3,7 +3,7 @@
 
 const NICE = (id) => id.charAt(0).toUpperCase() + id.slice(1);
 
-export function listEntries(gs, items, toolDefs) {
+export function listEntries(gs, items, toolDefs, weaponDefs = {}) {
   const entries = [];
   const have = gs.items ?? {};
   const known = Object.keys(items.items);
@@ -13,8 +13,13 @@ export function listEntries(gs, items, toolDefs) {
     const n = have[id] ?? 0;
     if (n <= 0) return;
     const d = items.items[id] ?? { name: NICE(id), icon: 'rock', color: '#999999', desc: '' };
-    entries.push({ id, kind: 'item', name: d.name, count: n, icon: d.icon, color: d.color, desc: d.desc });
+    entries.push({ id, kind: 'item', name: d.name, count: n, icon: d.icon, color: d.color, desc: d.desc, heal: d.heal ?? 0 });
   });
+  if (gs.weapon && weaponDefs[gs.weapon]) {
+    const w = weaponDefs[gs.weapon];
+    const d = items.weapons?.[gs.weapon] ?? { icon: 'sword', color: '#c9a46a' };
+    entries.push({ id: gs.weapon, kind: 'weapon', name: w.name, damage: w.damage, icon: d.icon, color: d.color, desc: w.desc });
+  }
   Object.keys(gs.tools ?? {}).forEach((id) => {
     const def = toolDefs[id];
     if (!def) return;
