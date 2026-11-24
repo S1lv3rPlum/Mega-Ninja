@@ -10,6 +10,11 @@ import ChoiceMenu from '../ChoiceMenu.js';
 import toolDefs from '../data/tools.json';
 import { ensureToolState, giveTool, hitTarget, toolLabel, targetReady, isCleared, variantFor } from '../tools.js';
 import rocksData from '../data/rocks.json';
+import itemsData from '../data/items.json';
+import weaponDefs from '../data/weapons.json';
+import faintCfg from '../data/faint.json';
+import Enemies from '../Enemies.js';
+import { ensureCombatState, hurtPlayer as applyHurt, faint as applyFaint, eat } from '../combat.js';
 import shopData from '../data/shop.json';
 import { talkToShopkeeper } from '../shop.js';
 import InventoryScreen, { iconKey } from '../InventoryScreen.js';
@@ -51,6 +56,8 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('shopkeeper', 'assets/sprites/shopkeeper.png');
     ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
     this.load.image('rubble', 'assets/sprites/rubble.png');
+    this.load.image('sensei', 'assets/sprites/sensei.png');
+    this.load.image('shadow', 'assets/sprites/shadow.png');
     this.load.image('boulder', 'assets/sprites/boulder.png');
     this.load.image('dialogue-box', 'assets/ui/dialogue-box.png');
   }
@@ -77,6 +84,9 @@ export default class WorldScene extends Phaser.Scene {
     }
     ensureState(gs);
     ensureToolState(gs);
+    ensureCombatState(gs);
+    this.invulnUntil = 0;
+    this.nextSwing = 0;
     // older saves kept the shovel as a plain item: turn it into a tool
     if (gs.items.shovel > 0) {
       if (!gs.tools.shovel) giveTool(gs, toolDefs, 'shovel');
@@ -201,6 +211,10 @@ export default class WorldScene extends Phaser.Scene {
     });
     this.faceFrame(this.facing);
 
+    // --- Enemies (real-time; an "enemies" object layer in Tiled) ---
+    this.enemies = new Enemies(this);
+    this.enemies.spawn(objects('enemies'), readProps);
+
     // --- Camera follows the player and stays inside the map ---
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
     this.cameras.main.startFollow(this.player, true);
@@ -225,7 +239,7 @@ export default class WorldScene extends Phaser.Scene {
       .text(160, 42, '', { fontSize: '10px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } })
       .setOrigin(0.5, 0)
       .setScrollFactor(0) // stays fixed on screen
-      .setDepth(100)
+      .setDepth(400) // above the bag, so messages from eating show
       .setAlpha(0); // hidden until there is something to say (an empty toast still draws a dark box)
     this.input.keyboard.on('keydown-P', () => this.saveGame());
     // F = pick up / throw
@@ -252,6 +266,9 @@ export default class WorldScene extends Phaser.Scene {
       event.preventDefault?.();
       this.toggleBag();
     };
+    this.input.keyboard.on('keydown-J', (event) => {
+      if (!event.repeat) this.attack();
+    });
     this.input.keyboard.on('keydown-I', toggleBag);
     this.input.keyboard.on('keydown-TAB', toggleBag);
     const bagNav = (dx, dy) => (event) => {
@@ -277,7 +294,13 @@ export default class WorldScene extends Phaser.Scene {
       .setDepth(100);
     // little coin icon in front of the gold number (the Coin Pouch)
     this.hudCoin = this.add.image(12, 9, iconKey(this, 'coin', '#f2c230')).setScrollFactor(0).setDepth(101);
+    this.createHearts();
     this.updateHud();
+    const faintMsg = this.registry.get('faintMsg');
+    if (faintMsg) {
+      this.registry.set('faintMsg', null);
+      this.time.delayedCall(700, () => this.dialogue.open([faintMsg], 'Town'));
+    }
 
     // --- Farm plots: show saved growth, catch up on time spent away, then keep growing ---
     if (this.crops && this.farmGid !== null) {
@@ -307,7 +330,97 @@ export default class WorldScene extends Phaser.Scene {
     const worn = lowTools(gs, toolDefs).map((t) => (t.dur <= 0 ? `${t.name} broken!` : `${t.name} ${t.dur}/${t.max}!`));
     if (worn.length > 0) lines.push(worn.join('  '));
     this.hud.setText(lines.join('\n'));
+    this.updateHearts();
   }
+
+  // ---------- Hearts, attacking, fainting, eating ----------
+
+  createHearts() {
+    this.hearts = [];
+    const n = Math.ceil(this.gameState.maxHp / 2);
+    for (let i = 0; i < n; i++) {
+      this.hearts.push(this.add.image(268 - (n - i) * 10, 6, 'heart-full').setOrigin(0, 0).setScrollFactor(0).setDepth(101));
+    }
+  }
+
+  updateHearts() {
+    if (!this.hearts) return;
+    const hp = this.gameState.hp;
+    this.hearts.forEach((h, i) => {
+      const v = hp - i * 2;
+      h.setTexture(v >= 2 ? 'heart-full' : v === 1 ? 'heart-half' : 'heart-empty');
+    });
+  }
+
+  // J / the B button: swing the weapon at the tile in front of you
+  attack() {
+    if (this.bag.isOpen || this.dialogue.isOpen || this.choice.isOpen || this.moving || this.transitioning) return;
+    const gs = this.gameState;
+    const w = weaponDefs[gs.weapon];
+    if (!w) {
+      this.showToast('You have no weapon yet.');
+      return;
+    }
+    const now = this.time.now;
+    if (now < this.nextSwing) return;
+    this.nextSwing = now + w.cooldownMs;
+    this.touchDir = { x: 0, y: 0 };
+
+    const { x: fx, y: fy } = this.facing;
+    const tx = this.tile.x + fx;
+    const ty = this.tile.y + fy;
+    // slash flash on the tile in front, and a little lunge
+    const angle = fx > 0 ? 0 : fy > 0 ? 90 : fx < 0 ? 180 : 270;
+    const slash = this.add.image(tx * TILE + 8, ty * TILE + 8, 'slash').setAngle(angle).setDepth(12);
+    this.tweens.add({ targets: slash, alpha: 0, duration: 160, onComplete: () => slash.destroy() });
+    this.tweens.add({ targets: this.player, x: this.player.x + fx * 3, y: this.player.y + fy * 3, duration: 60, yoyo: true });
+
+    const e = this.enemies.at(tx, ty);
+    if (e) this.enemies.hit(e, w.damage, fx, fy);
+  }
+
+  hurtPlayer(amount) {
+    const now = this.time.now;
+    if (now < this.invulnUntil || this.transitioning) return;
+    this.invulnUntil = now + 1000;
+    const r = applyHurt(this.gameState, amount);
+    this.cameras.main.shake(120, 0.004);
+    this.tweens.add({ targets: this.player, alpha: 0.3, duration: 80, yoyo: true, repeat: 4, onComplete: () => this.player.setAlpha(1) });
+    this.updateHud();
+    if (r.fainted) this.faintNow();
+  }
+
+  // out of hearts: wake up in town (faint.json decides what it costs)
+  faintNow() {
+    this.transitioning = true;
+    this.touchDir = { x: 0, y: 0 };
+    this.cameras.main.fadeOut(700);
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      const r = applyFaint(this.gameState, faintCfg, START_MAP, START_TILE);
+      this.registry.set('faintMsg', r.msg);
+      SaveManager.save(this.gameState);
+      this.scene.restart();
+    });
+  }
+
+  // Save and go back to the title screen (to switch to another save slot)
+  quitToTitle() {
+    this.gameState.tile = { ...this.tile };
+    SaveManager.save(this.gameState);
+    this.transitioning = true;
+    this.cameras.main.fadeOut(300);
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.registry.set('gameState', null);
+      this.scene.start('Title');
+    });
+  }
+
+  eatFood(id) {
+    const r = eat(this.gameState, itemsData.items, id);
+    this.updateHud();
+    return r.msg;
+  }
+
 
   toggleBag() {
     if (this.bag.isOpen) {
@@ -358,6 +471,31 @@ export default class WorldScene extends Phaser.Scene {
       g.fillStyle(0x5fc0ff, 1); // water drop
       g.fillTriangle(11, 2, 8, 7, 14, 7);
       g.fillCircle(11, 9, 3);
+    });
+
+    // hearts (full / half / empty) for the health bar, and the sword-slash flash
+    const heart = (g, fill, leftOnly) => {
+      g.fillStyle(fill, 1);
+      g.fillCircle(2.5, 2.5, 2.5);
+      if (!leftOnly) g.fillCircle(6.5, 2.5, 2.5);
+      g.fillRect(1, 2, leftOnly ? 3.5 : 7, 2);
+      g.fillTriangle(0, 3, leftOnly ? 4.5 : 9, 3, 4.5, 8);
+    };
+    make('heart-full', (g) => heart(g, 0xe03a4a, false));
+    make('heart-empty', (g) => heart(g, 0x4a3a4a, false));
+    make('heart-half', (g) => {
+      heart(g, 0x4a3a4a, false);
+      heart(g, 0xe03a4a, true);
+    });
+    make('slash', (g) => {
+      g.lineStyle(3, 0xffffff, 1);
+      g.beginPath();
+      g.arc(2, 8, 11, -0.9, 0.9);
+      g.strokePath();
+      g.lineStyle(1, 0xbfe6ff, 1);
+      g.beginPath();
+      g.arc(2, 8, 8, -0.8, 0.8);
+      g.strokePath();
     });
 
     make('mark-wet', (g) => {
@@ -648,6 +786,9 @@ export default class WorldScene extends Phaser.Scene {
     // A button = talk / interact (same as Space on a keyboard)
     make(292, 220, 'A', () => this.onAction());
 
+    // B button = swing your weapon (the J key on a keyboard)
+    make(258, 220, 'B', () => this.attack());
+
     // F button = pick up / throw (same as F on a keyboard)
     make(292, 188, 'F', () => this.onGrab());
 
@@ -662,7 +803,10 @@ export default class WorldScene extends Phaser.Scene {
 
   // Space / Enter / Z / the A button
   onAction() {
-    if (this.bag.isOpen) return;
+    if (this.bag.isOpen) {
+      this.bag.use(); // Space in the bag eats the selected food
+      return;
+    }
     if (this.choice.isOpen) {
       this.choice.select();
       return;
@@ -758,6 +902,7 @@ export default class WorldScene extends Phaser.Scene {
 
   update(_time, delta) {
     this.updateRabbit(delta);
+    if (!(this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen)) this.enemies.update(_time);
 
     if (this.moving || this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen) return;
 
@@ -831,6 +976,7 @@ export default class WorldScene extends Phaser.Scene {
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.gameState.map = door.toMap;
       this.gameState.tile = { x: door.toX, y: door.toY };
+      SaveManager.save(this.gameState); // autosave on every map change
       this.scene.restart(); // create() builds the new map from gameState
     });
   }
@@ -842,6 +988,8 @@ export default class WorldScene extends Phaser.Scene {
     if (this.npcAt(x, y)) return false;
     // so does a rabbit sitting on a tile
     if (this.rabbit && rabbitOnMap(this.rabbit) && this.rabbit.x === x && this.rabbit.y === y) return false;
+    // so does an enemy
+    if (this.enemies && this.enemies.at(x, y)) return false;
     // dirt piles, trees and rocks block the way until they are cleared
     if (this.targetAt(x, y)) return false;
     // any tile painted on the "obstacles" layer blocks movement

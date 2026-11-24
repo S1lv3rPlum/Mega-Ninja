@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { SaveManager } from '../SaveManager.js';
 
+const ROW_Y = [124, 152, 180];
+
 export default class TitleScene extends Phaser.Scene {
   constructor() {
     super('Title');
@@ -9,74 +11,113 @@ export default class TitleScene extends Phaser.Scene {
   preload() {
     this.load.image('title-bg', 'assets/ui/title-bg.png');
     this.load.image('title-logo', 'assets/ui/title-logo.png');
-    this.load.image('button', 'assets/ui/button.png');
   }
 
   create() {
     this.cameras.main.fadeIn(300);
     this.starting = false;
-    this.confirming = false;
+    this.selected = 0;
+    this.confirmDel = -1;
 
     this.add.image(0, 0, 'title-bg').setOrigin(0, 0);
 
-    // Logo: shrink to fit if it's big, and smooth it (pixel-perfect scaling
-    // can look jagged on a high-resolution logo)
+    // Logo: shrink to fit and smooth it (pixel-perfect scaling can look jagged on a big logo)
     this.textures.get('title-logo').setFilter(Phaser.Textures.FilterMode.LINEAR);
-    const logo = this.add.image(160, 70, 'title-logo');
-    logo.setScale(Math.min(1, 280 / logo.width, 100 / logo.height));
+    const logo = this.add.image(160, 56, 'title-logo');
+    logo.setScale(Math.min(1, 280 / logo.width, 76 / logo.height));
 
-    const hasSave = SaveManager.hasSave();
-
-    if (hasSave) {
-      this.makeButton(150, 'Continue', () => this.startGame());
-      this.newGameBtn = this.makeButton(182, 'New Game', () => this.onNewGame(true));
-      this.primaryAction = () => this.startGame();
-    } else {
-      this.newGameBtn = this.makeButton(160, 'New Game', () => this.onNewGame(false));
-      this.primaryAction = () => this.onNewGame(false);
-    }
-
-    // Enter / Space also pick the top button
-    this.input.keyboard.on('keydown-ENTER', () => this.primaryAction());
-    this.input.keyboard.on('keydown-SPACE', () => this.primaryAction());
-  }
-
-  makeButton(y, label, onClick) {
-    const img = this.add.image(160, y, 'button').setInteractive({ useHandCursor: true });
-    const text = this.add
-      .text(160, y, label, { fontSize: '10px', color: '#ffffff' })
+    this.slots = SaveManager.list();
+    this.rows = this.slots.map((s, i) => this.makeRow(s, i));
+    this.add
+      .text(160, 212, 'Tap a slot to play. Empty slot = new game.', { fontSize: '8px', color: '#dddddd' })
       .setOrigin(0.5);
-    img.on('pointerover', () => img.setTint(0xcccccc));
-    img.on('pointerout', () => img.clearTint());
-    img.on('pointerdown', onClick);
-    return { img, text };
+    this.highlight();
+
+    // keyboard: up/down to pick a slot, Enter/Space to play, Delete to erase it
+    this.input.keyboard.on('keydown-UP', () => this.move(-1));
+    this.input.keyboard.on('keydown-DOWN', () => this.move(1));
+    this.input.keyboard.on('keydown-ENTER', () => this.choose(this.selected));
+    this.input.keyboard.on('keydown-SPACE', () => this.choose(this.selected));
+    this.input.keyboard.on('keydown-DELETE', () => this.askDelete(this.selected));
+    this.input.keyboard.on('keydown-BACKSPACE', () => this.askDelete(this.selected));
   }
 
-  onNewGame(hasSave) {
-    if (!hasSave) return this.startNew();
+  makeRow(s, i) {
+    const y = ROW_Y[i];
+    const box = this.add
+      .rectangle(160, y, 236, 24, 0x14142a, 0.92)
+      .setStrokeStyle(2, 0xffffff)
+      .setInteractive({ useHandCursor: true });
+    box.on('pointerdown', () => {
+      this.selected = i;
+      this.highlight();
+      this.choose(i);
+    });
+    const title = s.exists ? `${s.slot}. ${s.name}` : `${s.slot}. - Empty -`;
+    const label = this.add.text(52, y, title, { fontSize: '10px', color: s.exists ? '#ffffff' : '#9a9ab0' }).setOrigin(0, 0.5);
+    const info = s.exists
+      ? this.add.text(232, y, s.started ? `${s.gold ?? 0} gold` : 'new', { fontSize: '8px', color: '#ffe08a' }).setOrigin(1, 0.5)
+      : null;
+    let del = null;
+    if (s.exists) {
+      del = this.add
+        .text(262, y, 'DEL', { fontSize: '8px', color: '#ffffff', backgroundColor: '#6a2a2a', padding: { x: 3, y: 2 } })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+      del.on('pointerdown', () => this.askDelete(i));
+    }
+    return { box, label, info, del };
+  }
 
-    // Existing save: ask for a second tap before erasing it
-    if (!this.confirming) {
-      this.confirming = true;
-      this.newGameBtn.text.setText('Erase save? Tap again').setColor('#ff8888');
-      this.time.delayedCall(3000, () => {
-        this.confirming = false;
-        this.newGameBtn.text.setText('New Game').setColor('#ffffff');
-      });
+  move(d) {
+    this.selected = (this.selected + d + this.rows.length) % this.rows.length;
+    this.highlight();
+  }
+
+  highlight() {
+    this.rows.forEach((r, i) => r.box.setStrokeStyle(2, i === this.selected ? 0xffe08a : 0xffffff));
+  }
+
+  choose(i) {
+    if (this.starting) return;
+    const s = this.slots[i];
+    if (s.exists) {
+      SaveManager.select(s.slot);
+      this.startGame();
       return;
     }
-    this.startNew();
+    // empty slot: ask for a name (the browser's own text box, so phones get their keyboard)
+    const typed = window.prompt('Name this save (up to 12 letters):', `Player ${s.slot}`);
+    if (typed === null) return; // cancelled
+    const name = typed.trim().slice(0, 12) || `Player ${s.slot}`;
+    SaveManager.create(s.slot, name);
+    this.startGame();
   }
 
-  startNew() {
-    SaveManager.clear();
-    this.startGame();
+  // erasing needs a second tap within 3 seconds
+  askDelete(i) {
+    const s = this.slots[i];
+    const row = this.rows[i];
+    if (!s || !s.exists || !row.del) return;
+    if (this.confirmDel === i) {
+      SaveManager.remove(s.slot);
+      this.scene.restart();
+      return;
+    }
+    this.confirmDel = i;
+    row.del.setText('SURE?').setBackgroundColor('#c03030');
+    this.time.delayedCall(3000, () => {
+      if (this.confirmDel === i && row.del && row.del.active) {
+        this.confirmDel = -1;
+        row.del.setText('DEL').setBackgroundColor('#6a2a2a');
+      }
+    });
   }
 
   startGame() {
     if (this.starting) return;
     this.starting = true;
-    this.registry.set('gameState', null); // WorldScene reloads from the save (or starts fresh)
+    this.registry.set('gameState', null); // WorldScene loads from the chosen slot (or starts fresh)
     this.cameras.main.fadeOut(300);
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('World'));
   }
