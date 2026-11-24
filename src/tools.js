@@ -80,3 +80,28 @@ export function targetReady(gs, map, id, now = Date.now()) {
 }
 
 export const isCleared = (gs, map, id) => !!gs.targets[map]?.[id]?.cleared;
+
+// ---------- Variants: a target that comes in random kinds (rocks of different colours) ----------
+// table = an array from data/rocks.json: [{ id, weight, hits, drop, amount, texture, msg }, ...]
+// Rarer kinds have a smaller weight. `rnd` is injectable so tests can pick.
+export function rollVariant(table, rnd = Math.random) {
+  const total = table.reduce((n, v) => n + v.weight, 0);
+  let r = rnd() * total;
+  for (const v of table) {
+    r -= v.weight;
+    if (r < 0) return v;
+  }
+  return table[table.length - 1];
+}
+
+// The kind this target is right now. Rolled once and kept in the save (so reloading doesn't re-roll it);
+// when a rock grows back its old state is deleted, so the next call rolls a new colour.
+export function variantFor(gs, map, id, table, rnd = Math.random) {
+  if (!gs.targets[map]) gs.targets[map] = {};
+  const state = gs.targets[map][id];
+  const known = state?.variant ? table.find((v) => v.id === state.variant) : null;
+  if (known) return known;
+  const v = rollVariant(table, rnd);
+  gs.targets[map][id] = { hits: v.hits, cleared: false, variant: v.id };
+  return v;
+}
