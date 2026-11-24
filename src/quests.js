@@ -10,8 +10,10 @@ export const fill = (template, values) =>
 export const currentRequest = (quest, index) =>
   quest.requests[Math.min(index, quest.requests.length - 1)];
 
-// Returns { lines, afterClose }. Show the lines in the dialogue box; call afterClose() when it closes.
+// Returns { lines, afterClose, choice? }. Show the lines in the dialogue box; call afterClose() when it closes.
 // afterClose() returns a short message to show (or null).
+// If `choice` is present, show choice.options after the dialogue; if the player picks the first one,
+// call choice.onYes(), which returns another { lines, afterClose } to show.
 export function talkToQuestGiver(gs, npcId, data, quest) {
   if (!gs.quests[npcId]) gs.quests[npcId] = { index: 0 };
   const state = gs.quests[npcId];
@@ -32,15 +34,24 @@ export function talkToQuestGiver(gs, npcId, data, quest) {
 
   const have = gs.items[req.item] ?? 0;
 
-  // Turning in the request
+  // Enough for the request: ask first, then hand it over when the player says yes
   if (have >= req.amount) {
-    gs.items[req.item] -= req.amount;
-    gs.gold += req.reward;
-    state.index += 1;
-    const next = currentRequest(quest, state.index);
     return {
-      lines: [fill(data.thanks, req), fill(data.nextAsk, next)],
-      afterClose: () => `Received ${req.reward} gold`,
+      lines: [fill(data.ready, req)],
+      afterClose: () => null,
+      choice: {
+        options: ['Hand it over', 'Not yet'],
+        onYes: () => {
+          gs.items[req.item] -= req.amount;
+          gs.gold += req.reward;
+          state.index += 1;
+          const next = currentRequest(quest, state.index);
+          return {
+            lines: [fill(data.thanks, req), fill(data.nextAsk, next)],
+            afterClose: () => `Received ${req.reward} gold`,
+          };
+        },
+      },
     };
   }
 
