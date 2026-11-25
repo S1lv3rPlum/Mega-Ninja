@@ -35,7 +35,7 @@ const START_MAP = 'town';
 const START_TILE = { x: 15, y: 10 };
 
 // To add a map: save it as public/assets/maps/<name>.json and add its name here.
-const MAPS = ['town', 'farm', 'forest', 'quarry'];
+const MAPS = ['town', 'farm', 'forest', 'quarry', 'cave'];
 // To add a tileset: save it as public/assets/tilesets/<name>.png and add its name here.
 // (The name must match the tileset's name inside Tiled.)
 const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles', 'mine-tiles'];
@@ -74,6 +74,8 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('sensei', 'assets/sprites/sensei.png');
     this.load.image('shadow', 'assets/sprites/shadow.png');
     this.load.image('boulder', 'assets/sprites/boulder.png');
+    this.load.image('bat', 'assets/sprites/bat.png');
+    this.load.image('sealed-door', 'assets/sprites/sealed-door.png');
     this.load.image('dialogue-box', 'assets/ui/dialogue-box.png');
   }
 
@@ -153,6 +155,8 @@ export default class WorldScene extends Phaser.Scene {
           toMap: p.toMap ?? gs.map,
           toX: p.toX,
           toY: p.toY,
+          requiresItem: p.requiresItem, // e.g. 'lantern': the door will not open without it
+          lockedMsg: p.lockedMsg ?? 'It is locked.',
         };
       })
       .filter((d) => {
@@ -279,6 +283,10 @@ export default class WorldScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
     this.cameras.main.startFollow(this.player, true);
 
+    // --- Dark maps (a map property "dark" = true in Tiled): only a lantern-sized circle around you is lit ---
+    this.darkRT = null;
+    if (readProps(raw.properties).dark) this.createDarkness();
+
     // --- Dialogue ---
     this.dialogue = new DialogueBox(this);
     this.choice = new ChoiceMenu(this);
@@ -376,6 +384,8 @@ export default class WorldScene extends Phaser.Scene {
     }
     this.tickPlots();
     this.time.addEvent({ delay: 1000, loop: true, callback: () => { this.tickPlots(); this.tickTargets(); } });
+
+    if (this.darkRT) this.showToast('The Heartwood Lantern lights the way.');
 
     // --- Co-op: see the other players, share the world ---
     this.remoteSprites = {};
@@ -1143,6 +1153,7 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   update(_time, delta) {
+    this.updateDarkness(_time);
     this.updateRabbit(delta);
     if (!(this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen)) {
       this.enemies.update(_time);
@@ -1166,6 +1177,34 @@ export default class WorldScene extends Phaser.Scene {
     }
 
     if (dx !== 0 || dy !== 0) this.tryMove(dx, dy);
+  }
+
+  // ---------- Darkness (the cave) ----------
+
+  createDarkness() {
+    if (!this.textures.exists('lantern-light')) {
+      const c = this.textures.createCanvas('lantern-light', 160, 160);
+      const ctx = c.getContext();
+      const g = ctx.createRadialGradient(80, 80, 10, 80, 80, 80);
+      g.addColorStop(0, 'rgba(255,255,255,1)');
+      g.addColorStop(0.5, 'rgba(255,255,255,0.9)');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 160, 160);
+      c.refresh();
+    }
+    this.darkRT = this.add.renderTexture(0, 0, 320, 240).setOrigin(0, 0).setScrollFactor(0).setDepth(90);
+    this.lightImg = this.make.image({ key: 'lantern-light', add: false }).setOrigin(0.5, 0.5);
+  }
+
+  updateDarkness(time) {
+    if (!this.darkRT) return;
+    const cam = this.cameras.main;
+    this.darkRT.clear();
+    this.darkRT.fill(0x05030c, 0.94);
+    const flicker = 1 + Math.sin(time / 170) * 0.025 + Math.sin(time / 53) * 0.015; // a gentle lantern flicker
+    this.lightImg.setScale(flicker);
+    this.darkRT.erase(this.lightImg, this.player.x + 8 - cam.scrollX, this.player.y - 12 - cam.scrollY);
   }
 
   // ---------- Walking NPCs ----------
@@ -1232,6 +1271,8 @@ export default class WorldScene extends Phaser.Scene {
     const ny = this.tile.y + dy;
     if (!this.canWalk(nx, ny)) {
       this.faceFrame(this.facing); // bumped into something: just turn to face it
+      const locked = this.lockedDoorAt(nx, ny);
+      if (locked && !this.toast.alpha) this.showToast(locked.lockedMsg);
       return;
     }
 
@@ -1267,6 +1308,11 @@ export default class WorldScene extends Phaser.Scene {
     this.player.setFrame(row * 3 + 1);
   }
 
+  lockedDoorAt(x, y) {
+    const d = this.doors.find((o) => x >= o.x0 && x <= o.x1 && y >= o.y0 && y <= o.y1);
+    return d && d.requiresItem && !(this.gameState.items[d.requiresItem] > 0) ? d : null;
+  }
+
   checkDoor() {
     const { x, y } = this.tile;
     const door = this.doors.find((d) => x >= d.x0 && x <= d.x1 && y >= d.y0 && y <= d.y1);
@@ -1290,6 +1336,8 @@ export default class WorldScene extends Phaser.Scene {
     if (x < 0 || y < 0 || x >= this.map.width || y >= this.map.height) return false;
     // NPCs block the way
     if (this.npcAt(x, y)) return false;
+    // a door that needs an item you do not have
+    if (this.lockedDoorAt(x, y)) return false;
     // so does a rabbit sitting on a tile
     if (this.rabbit && rabbitOnMap(this.rabbit) && this.rabbit.x === x && this.rabbit.y === y) return false;
     // so does an enemy
