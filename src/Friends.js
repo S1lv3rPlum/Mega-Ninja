@@ -4,6 +4,7 @@ import toolDefs from './data/tools.json';
 import { giveTool } from './tools.js';
 import { Coop } from './Coop.js';
 import { rabbitOnMap, canCatch, throwRabbit } from './rabbit.js';
+import { ensureJournal, claimRewards } from './journal.js';
 import { ensurePets, befriend, setCompanion, renamePet, releasePet, isFull, hasTreat, companionPet, cleanPetName } from './pets.js';
 
 const TILE = 16;
@@ -16,6 +17,7 @@ export default class Friends {
     this.sprite = null;
     this.sprite_id = null;
     ensurePets(scene.gameState);
+    ensureJournal(scene.gameState);
   }
 
   // called after the map is built: put the companion next to the player
@@ -122,6 +124,8 @@ export default class Friends {
     }
     this.refresh();
     s.showToast(`${r.pet.name} is your friend now!`);
+    const rewards = claimRewards(gs, itemsData.items);
+    rewards.forEach((m, i) => s.time.delayedCall(2200 * (i + 1), () => s.showToast(m)));
     s.updateHud();
   }
 
@@ -130,15 +134,15 @@ export default class Friends {
     const s = this.scene;
     if (s.choice.isOpen || s.dialogue.isOpen || s.bag.isOpen || s.moving || s.transitioning) return;
     const gs = s.gameState;
-    if (gs.pets.length === 0) {
-      s.showToast('No friends yet. Offer a treat to a bunny, a sprout or a bat!');
-      return;
-    }
     const opts = gs.pets.map((p) => `${p.name}${p.level ? ` Lv${p.level}` : ''}${p.id === gs.companion ? ' (with you)' : ''}`);
-    opts.push('Close');
+    opts.push('Friend Journal', 'Close');
     s.choice.open(opts, {
       onSelect: (i) => {
         if (i < gs.pets.length) this.openPet(gs.pets[i]);
+        else if (i === gs.pets.length) {
+          claimRewards(gs, itemsData.items).forEach((m) => s.showToast(m)); // (an old save may already have earned one)
+          s.bag.openJournal();
+        }
       },
     });
   }

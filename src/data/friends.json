@@ -5,62 +5,75 @@
       "name": "Garden Rabbit",
       "baseName": "Bunny",
       "texture": "rabbit",
-      "treat": "carrot"
+      "treat": "carrot",
+      "hint": "Hops around the farm and its garden."
     },
     "shadow": {
       "name": "Shadow Sprout",
       "baseName": "Sprout",
       "texture": "shadow",
       "tint": "#9dffb0",
-      "treat": "herb"
+      "treat": "herb",
+      "hint": "Lurks in the forest, once the shadow lifts."
     },
     "bat": {
       "name": "Cave Bat",
       "baseName": "Bat",
       "texture": "bat",
-      "treat": "pumpkin"
+      "treat": "pumpkin",
+      "hint": "Hangs in the dark cave."
     },
     "moth": {
       "name": "Crystal Moth",
       "baseName": "Glimmer",
       "texture": "moth",
-      "treat": "crystal"
+      "treat": "crystal",
+      "hint": "Glimmers in the Crystal Caverns."
     },
     "snowfox": {
       "name": "Snow Fox",
       "baseName": "Frosty",
       "texture": "snowfox",
-      "treat": "frostberry"
+      "treat": "frostberry",
+      "hint": "Prowls the Snowy Peaks."
     },
     "crab": {
       "name": "Tide Crab",
       "baseName": "Pinchy",
       "texture": "crab",
-      "treat": "seaweed"
+      "treat": "seaweed",
+      "hint": "Scuttles around the Sunken Ruins."
     },
     "sandlizard": {
       "name": "Sand Lizard",
       "baseName": "Dune",
       "texture": "sandlizard",
-      "treat": "cactus-fruit"
+      "treat": "cactus-fruit",
+      "hint": "Basks in the hot desert."
     },
     "firefly": {
       "name": "Glow Firefly",
       "baseName": "Spark",
       "texture": "firefly",
-      "treat": "glowcap"
+      "treat": "glowcap",
+      "hint": "Glows on the farm, in the forest and the school garden.",
+      "when": "Only out at night."
     },
     "owl": {
       "name": "Moon Owl",
       "baseName": "Hoot",
       "texture": "owl",
-      "treat": "moonbloom"
+      "treat": "moonbloom",
+      "hint": "Perches in the town and the forest.",
+      "when": "Only out at night."
     },
     "moonhare": {
       "name": "Moon Hare",
       "baseName": "Luna",
       "texture": "moonhare",
-      "treat": "moonbloom"
+      "treat": "moonbloom",
+      "hint": "Hops in the town, farm and forest.",
+      "when": "Only out at night."
     }
   }
 }

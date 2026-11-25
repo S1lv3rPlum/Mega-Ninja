@@ -27,6 +27,8 @@ export function befriend(gs, kindId, name, defs) {
   while (gs.pets.some((p) => p.id === `${kindId}${n}`)) n += 1;
   const pet = { id: `${kindId}${n}`, kind: kindId, name: cleanPetName(name, kind.baseName) };
   gs.pets.push(pet);
+  if (!gs.journal) gs.journal = {};
+  gs.journal[kindId] = true; // the Friend Journal remembers every kind you have met (journal.js)
   if (!gs.companion) gs.companion = pet.id;
   return { ok: true, pet };
 }

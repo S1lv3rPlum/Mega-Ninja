@@ -235,3 +235,9 @@ without being run in a browser, so test new features on desktop and phone.
 - `gs.ninja` holds the colour (saved; co-op sends it as `nj` in presence, so each player is seen in their own colour; two players with the same colour get the blue tint so you can tell them apart).
 - A save that has not chosen yet is asked once at the start ("Which ninja are you?"). The Ninja Tailor in the town (`make_tailor.py`, role `wardrobe`) changes it any time.
 - To add a colour: one entry in `NINJA_COLORS`. Tests: `test_ninja.mjs`.
+
+## Friend Journal
+- `src/journal.js` + `gs.journal` (kind -> true). `befriend()` in pets.js records every kind; `ensureJournal` backfills old saves.
+- Open it from the Friends menu ("Friend Journal") or the JOURNAL button in the bag. It's a mode of InventoryScreen (`openJournal`), so key routing is unchanged.
+- Unmet kinds show a black silhouette + "?" with a hint (`hint`/`when` in friends.json). Saying goodbye never erases a page.
+- Rewards (journal.js REWARDS): 3 friends -> 2 healing potions, 6 -> 2 greater potions, 10 -> 3 elixirs; claimed once via flags `journal_reward_<n>`.
