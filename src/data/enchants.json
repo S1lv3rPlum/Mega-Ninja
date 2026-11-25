@@ -1,0 +1,27 @@
+{
+  "ember-gem": {
+    "name": "Ember Gem",
+    "slot": "weapon",
+    "damage": 1
+  },
+  "greater-ember-gem": {
+    "name": "Greater Ember Gem",
+    "slot": "weapon",
+    "damage": 2
+  },
+  "ward-gem": {
+    "name": "Ward Gem",
+    "slot": "armor",
+    "defense": 1
+  },
+  "greater-ward-gem": {
+    "name": "Greater Ward Gem",
+    "slot": "armor",
+    "defense": 2
+  },
+  "swift-scroll": {
+    "name": "Swift Scroll",
+    "slot": "weapon",
+    "cooldownMul": 0.75
+  }
+}

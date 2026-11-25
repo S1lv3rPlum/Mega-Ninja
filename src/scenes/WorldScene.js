@@ -22,6 +22,14 @@ import { missingForDoor, openDoor } from '../door.js';
 import { ensureCombatState, hurtPlayer as applyHurt, faint as applyFaint, eat } from '../combat.js';
 import shopData from '../data/shop.json';
 import { talkToShopkeeper } from '../shop.js';
+import { talkToCrafter } from '../craft.js';
+import { hitDummy, sparBonus, talkSparMaster, talkLibrarian, talkFeeder, rest, talkHeadmaster } from '../school.js';
+import { enchantBonus, talkEnchanter } from '../enchant.js';
+import enchantDefs from '../data/enchants.json';
+import { petStats, petTick, newFightState, talkTrainer } from '../petfight.js';
+import { companionPet } from '../pets.js';
+import petArmorDefs from '../data/petarmor.json';
+import recipeData from '../data/recipes.json';
 import InventoryScreen, { iconKey } from '../InventoryScreen.js';
 import { lowTools } from '../inventory.js';
 import { Coop } from '../Coop.js';
@@ -36,7 +44,7 @@ const TILE = 16;
 // NPCs that have walking animation: for each name here, public/assets/sprites/<name>-walk.png is a sheet laid out
 // exactly like the player's (3 frames across: step, stand, step; 4 rows: down, left, right, up; each frame 16x24).
 // To give an NPC animation: add its texture name here, drop in <name>-walk.png, and give the NPC a walkRadius.
-const NPC_WALK_SHEETS = ['npc'];
+const NPC_WALK_SHEETS = ['npc', 'student1', 'student2', 'student3'];
 const DIRS = ['down', 'left', 'right', 'up'];
 const MOVE_MS = 140; // time to slide one tile
 
@@ -44,10 +52,10 @@ const START_MAP = 'town';
 const START_TILE = { x: 15, y: 10 };
 
 // To add a map: save it as public/assets/maps/<name>.json and add its name here.
-const MAPS = ['town', 'farm', 'forest', 'quarry', 'cave', 'crystal', 'market', 'peaks', 'ruins', 'desert', 'bazaar'];
+const MAPS = ['town', 'farm', 'forest', 'quarry', 'cave', 'crystal', 'market', 'peaks', 'ruins', 'desert', 'bazaar', 'school', 'kitchen', 'potions', 'library', 'sparring', 'dorm1', 'dorm2', 'garden', 'barn', 'upper', 'dojo', 'workshop'];
 // To add a tileset: save it as public/assets/tilesets/<name>.png and add its name here.
 // (The name must match the tileset's name inside Tiled.)
-const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles', 'mine-tiles', 'crystal-tiles', 'market-tiles', 'snow-tiles', 'ruins-tiles', 'desert-tiles', 'bazaar-tiles'];
+const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles', 'mine-tiles', 'crystal-tiles', 'market-tiles', 'snow-tiles', 'ruins-tiles', 'desert-tiles', 'bazaar-tiles', 'school-tiles'];
 
 // Tiled stores custom properties as a list of {name, value}; turn that into a plain object
 const readProps = (p) =>
@@ -74,6 +82,8 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('stump', 'assets/sprites/stump.png');
     this.load.image('lumberjack', 'assets/sprites/lumberjack.png'); // textures for NPCs go here
     this.load.image('shopkeeper', 'assets/sprites/shopkeeper.png');
+    ['cook', 'trainer', 'enchanter', 'student1', 'student2', 'student3', 'bookshelf', 'bed', 'dummy'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
+    this.load.image('alchemist', 'assets/sprites/alchemist.png');
     ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond', 'crystal', 'sun'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
     this.load.image('rubble', 'assets/sprites/rubble.png');
     ['treant-boss', 'treant-good', 'sapling', 'sign', 'bat-queen', 'moth', 'hexsmith', 'hexcreature', 'hexcharm', 'yeti', 'snowfox', 'frostimp', 'snow-bush', 'snow-bush-bare', 'serpent', 'jelly', 'crab', 'kelp', 'kelp-bare', 'rune-off', 'rune-on', 'ruinsdoor', 'ruinsdoor-open', 'scorpion', 'sandlizard', 'scorpionking', 'cactus-fruit', 'cactus-fruit-bare', 'princess', 'bzsmith', 'bzspice', 'bzgem', 'waystone-off', 'waystone-on'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
@@ -229,6 +239,9 @@ export default class WorldScene extends Phaser.Scene {
         passable: !!p.passable, // once its openFlag is set you can walk through it (the stone door)
         dialogue: isOpen && p.openDialogue ? p.openDialogue : p.dialogue ?? id,
         shop: p.shop, // a key in data/shop.json makes this NPC a shopkeeper
+        role: p.role, // school: book, librarian, sparmaster, dummy, bed, feeder (see src/school.js)
+        books: p.books ? String(p.books).split(',') : null,
+        craft: p.craft, // 'kitchen' or 'potions': a key in data/recipes.json (the school's cook and alchemist)
         smith: p.smith, // a weapon smith: orders weapons from data/weapons.json
         x,
         y,
@@ -498,6 +511,12 @@ export default class WorldScene extends Phaser.Scene {
     }
   }
 
+  rebuildHearts() {
+    if (this.hearts) this.hearts.forEach((h) => h.destroy());
+    this.createHearts();
+    this.updateHearts();
+  }
+
   updateHearts() {
     if (!this.hearts) return;
     const hp = this.gameState.hp;
@@ -505,6 +524,34 @@ export default class WorldScene extends Phaser.Scene {
       const v = hp - i * 2;
       h.setTexture(v >= 2 ? 'heart-full' : v === 1 ? 'heart-half' : 'heart-empty');
     });
+  }
+
+  // A trained friend fights beside you with small hits, and gets tired (never hurt) after a while (see petfight.js)
+  updatePetFight() {
+    const gs = this.gameState;
+    const pet = companionPet(gs);
+    const spr = this.friends && this.friends.sprite;
+    if (!pet || !spr) return;
+    const stats = petStats(pet, petArmorDefs);
+    if (!stats) return;
+    if (!this.petFight) this.petFight = {};
+    const st = (this.petFight[pet.id] ??= newFightState());
+    const px = Math.round(spr.x / TILE);
+    const py = Math.round(spr.y / TILE);
+    const target = this.enemies.list.find((e) => !e.dead && !e.def.tame && Math.abs(e.x - px) <= 1 && Math.abs(e.y - py) <= 1);
+    const r = petTick(st, stats, Date.now(), !!target);
+    if (st.tiredUntil) spr.setTint(0x8c8cb4);
+    if (r === 'rested') {
+      spr.clearTint();
+      this.showToast(`${pet.name} is rested and ready!`);
+    }
+    if ((r === 'attack' || r === 'attack-tired') && target) {
+      this.enemies.hit(target, stats.dmg, Math.sign(target.x - px), Math.sign(target.y - py));
+      const fx = this.add.image(target.x * TILE + 8, target.y * TILE + 8, 'slash').setDepth(12).setScale(0.7);
+      this.tweens.add({ targets: fx, alpha: 0, duration: 160, onComplete: () => fx.destroy() });
+      this.tweens.add({ targets: spr, y: spr.y - 3, duration: 70, yoyo: true });
+      if (r === 'attack-tired') this.showToast(`${pet.name} is tired and needs a rest.`);
+    }
   }
 
   // J / the B button: swing the weapon at the tile in front of you
@@ -518,7 +565,8 @@ export default class WorldScene extends Phaser.Scene {
     }
     const now = this.time.now;
     if (now < this.nextSwing) return;
-    this.nextSwing = now + w.cooldownMs;
+    const ench = enchantBonus(gs, enchantDefs);
+    this.nextSwing = now + w.cooldownMs * ench.cooldownMul;
     this.touchDir = { x: 0, y: 0 };
 
     const { x: fx, y: fy } = this.facing;
@@ -530,16 +578,21 @@ export default class WorldScene extends Phaser.Scene {
     this.tweens.add({ targets: slash, alpha: 0, duration: 160, onComplete: () => slash.destroy() });
     this.tweens.add({ targets: this.player, x: this.player.x + fx * 3, y: this.player.y + fy * 3, duration: 60, yoyo: true });
 
+    const dmg = w.damage + sparBonus(gs) + enchantBonus(gs, enchantDefs).damage; // sparring class +1, Ember gems
     const e = this.enemies.at(tx, ty);
-    if (e) this.enemies.hit(e, w.damage, fx, fy);
-    else if (this.boss && this.boss.occupies(tx, ty)) this.boss.hit(w.damage);
+    const dummy = !e && this.npcs.find((n) => n.role === 'dummy' && n.x === tx && n.y === ty);
+    if (dummy) {
+      this.showToast(hitDummy(gs).msg);
+      this.tweens.add({ targets: dummy.sprite, x: dummy.sprite.x + 2, duration: 50, yoyo: true, repeat: 2 });
+    } else if (e) this.enemies.hit(e, dmg, fx, fy);
+    else if (this.boss && this.boss.occupies(tx, ty)) this.boss.hit(dmg);
   }
 
   hurtPlayer(amount) {
     const now = this.time.now;
     if (now < this.invulnUntil || this.transitioning) return;
     this.invulnUntil = now + 1000;
-    const r = applyHurt(this.gameState, reduceDamage(amount, armorDefs[this.gameState.armor]));
+    const r = applyHurt(this.gameState, reduceDamage(amount, { defense: (armorDefs[this.gameState.armor]?.defense ?? 0) + enchantBonus(this.gameState, enchantDefs).defense }));
     this.cameras.main.shake(120, 0.004);
     this.tweens.add({ targets: this.player, alpha: 0.3, duration: 80, yoyo: true, repeat: 4, onComplete: () => this.player.setAlpha(1) });
     this.updateHud();
@@ -1042,7 +1095,7 @@ export default class WorldScene extends Phaser.Scene {
     // an animated NPC turns to look at you
     if (npc.sheet && !npc.moving) this.standNpc(npc, this.dirName({ x: -this.facing.x, y: -this.facing.y }));
 
-    if (npc.giveItem && this.gameState.flags[npc.giveWhen] && !this.gameState.flags[`gave_${npc.id}`]) {
+    if (npc.giveItem && (!npc.giveWhen || this.gameState.flags[npc.giveWhen]) && !this.gameState.flags[`gave_${npc.id}`]) {
       this.gameState.flags[`gave_${npc.id}`] = true;
       const gs = this.gameState;
       gs.items[npc.giveItem] = (gs.items[npc.giveItem] ?? 0) + 1;
@@ -1055,6 +1108,34 @@ export default class WorldScene extends Phaser.Scene {
       this.showToast('The rune glows!');
       this.refreshOpenNpcs();
       this.checkRuneDoors();
+      return;
+    }
+    if (npc.role === 'headmaster') {
+      const step = talkHeadmaster(this.gameState, data);
+      this.runConvo(step, data.name);
+      return;
+    }
+    if (npc.role === 'enchanter') {
+      this.runConvo(talkEnchanter(this.gameState, npc.id, data, { enchantDefs, itemDefs: itemsData.items, recipes: recipeData.enchant }), data.name);
+      return;
+    }
+    if (npc.role === 'trainer') {
+      this.runConvo(talkTrainer(this.gameState, npc.id, data, { friendDefs, itemDefs: itemsData.items, armorRecipes: recipeData.petarmor, armorDefs: petArmorDefs }), data.name);
+      return;
+    }
+    if (npc.role === 'sparmaster') { this.runConvo(talkSparMaster(this.gameState, data), data.name); return; }
+    if (npc.role === 'dummy') { this.showToast(hitDummy(this.gameState).msg); return; }
+    if (npc.role === 'bed') { this.runConvo(rest(this.gameState, data), data.name); return; }
+    if (npc.role === 'feeder') { this.runConvo(talkFeeder(this.gameState, npc.id, data), data.name); return; }
+    if (npc.role === 'librarian') {
+      const step = talkLibrarian(this.gameState, data, npc.books ?? []);
+      const orig = step.afterClose;
+      step.afterClose = () => { const m = orig ? orig() : null; this.rebuildHearts(); return m; };
+      this.runConvo(step, data.name);
+      return;
+    }
+    if (npc.craft && recipeData[npc.craft]) {
+      this.runConvo(talkToCrafter(this.gameState, npc.id, data, recipeData[npc.craft], itemsData.items), data.name);
       return;
     }
     if (npc.smith) {
@@ -1347,6 +1428,7 @@ export default class WorldScene extends Phaser.Scene {
     this.updateRabbit(delta);
     if (!(this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen)) {
       this.enemies.update(_time);
+      this.updatePetFight();
       if (this.boss) this.boss.update(_time);
       this.updateWalkers(_time);
     }

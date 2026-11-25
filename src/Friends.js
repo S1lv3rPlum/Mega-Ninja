@@ -134,7 +134,7 @@ export default class Friends {
       s.showToast('No friends yet. Offer a treat to a bunny, a sprout or a bat!');
       return;
     }
-    const opts = gs.pets.map((p) => `${p.name}${p.id === gs.companion ? ' (with you)' : ''}`);
+    const opts = gs.pets.map((p) => `${p.name}${p.level ? ` Lv${p.level}` : ''}${p.id === gs.companion ? ' (with you)' : ''}`);
     opts.push('Close');
     s.choice.open(opts, {
       onSelect: (i) => {

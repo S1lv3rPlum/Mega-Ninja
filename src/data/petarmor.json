@@ -1,0 +1,17 @@
+{
+  "padded-vest": {
+    "name": "Padded Vest",
+    "stamina": 4,
+    "damage": 0
+  },
+  "copper-mail": {
+    "name": "Copper Pet Mail",
+    "stamina": 8,
+    "damage": 0
+  },
+  "crystal-plate": {
+    "name": "Crystal Plate",
+    "stamina": 12,
+    "damage": 1
+  }
+}

@@ -1,0 +1,187 @@
+{
+  "kitchen": {
+    "offers": [
+      {
+        "id": "bread",
+        "out": "bread",
+        "amount": 1,
+        "needs": {
+          "wheat": 2
+        }
+      },
+      {
+        "id": "carrot-stew",
+        "out": "carrot-stew",
+        "amount": 1,
+        "needs": {
+          "carrot": 2,
+          "herb": 1
+        }
+      },
+      {
+        "id": "pumpkin-soup",
+        "out": "pumpkin-soup",
+        "amount": 1,
+        "needs": {
+          "pumpkin": 1,
+          "herb": 1
+        }
+      },
+      {
+        "id": "frost-pie",
+        "out": "frost-pie",
+        "amount": 1,
+        "needs": {
+          "frostberry": 2,
+          "wheat": 1
+        }
+      },
+      {
+        "id": "sea-roll",
+        "out": "sea-roll",
+        "amount": 1,
+        "needs": {
+          "seaweed": 2,
+          "wheat": 1
+        }
+      },
+      {
+        "id": "cactus-salad",
+        "out": "cactus-salad",
+        "amount": 1,
+        "needs": {
+          "cactus-fruit": 2,
+          "herb": 1
+        }
+      },
+      {
+        "id": "ninja-feast",
+        "out": "ninja-feast",
+        "amount": 1,
+        "needs": {
+          "pumpkin": 1,
+          "carrot": 1,
+          "frostberry": 1,
+          "seaweed": 1,
+          "cactus-fruit": 1
+        }
+      }
+    ]
+  },
+  "petarmor": {
+    "offers": [
+      {
+        "id": "padded-vest",
+        "out": "padded-vest",
+        "amount": 1,
+        "needs": {
+          "wood": 2,
+          "herb": 2
+        }
+      },
+      {
+        "id": "copper-mail",
+        "out": "copper-mail",
+        "amount": 1,
+        "needs": {
+          "copper": 3,
+          "herb": 1
+        }
+      },
+      {
+        "id": "crystal-plate",
+        "out": "crystal-plate",
+        "amount": 1,
+        "needs": {
+          "crystal": 3,
+          "sapphire": 1
+        }
+      }
+    ]
+  },
+  "enchant": {
+    "offers": [
+      {
+        "id": "ember-gem",
+        "out": "ember-gem",
+        "amount": 1,
+        "needs": {
+          "ruby": 1,
+          "crystal": 2
+        }
+      },
+      {
+        "id": "greater-ember-gem",
+        "out": "greater-ember-gem",
+        "amount": 1,
+        "needs": {
+          "ruby": 2,
+          "diamond": 1,
+          "crystal": 3
+        }
+      },
+      {
+        "id": "ward-gem",
+        "out": "ward-gem",
+        "amount": 1,
+        "needs": {
+          "sapphire": 1,
+          "crystal": 2
+        }
+      },
+      {
+        "id": "greater-ward-gem",
+        "out": "greater-ward-gem",
+        "amount": 1,
+        "needs": {
+          "sapphire": 2,
+          "diamond": 1,
+          "crystal": 3
+        }
+      },
+      {
+        "id": "swift-scroll",
+        "out": "swift-scroll",
+        "amount": 1,
+        "needs": {
+          "emerald": 1,
+          "crystal": 1,
+          "herb": 2
+        }
+      }
+    ]
+  },
+  "potions": {
+    "offers": [
+      {
+        "id": "healing-potion",
+        "out": "healing-potion",
+        "amount": 1,
+        "needs": {
+          "herb": 2,
+          "frostberry": 1
+        }
+      },
+      {
+        "id": "greater-potion",
+        "out": "greater-potion",
+        "amount": 1,
+        "needs": {
+          "herb": 3,
+          "seaweed": 1,
+          "sapphire": 1
+        }
+      },
+      {
+        "id": "elixir",
+        "out": "elixir",
+        "amount": 1,
+        "needs": {
+          "herb": 3,
+          "crystal": 2,
+          "ruby": 1
+        }
+      }
+    ]
+  }
+}

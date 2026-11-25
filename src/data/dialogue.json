@@ -485,5 +485,431 @@
     "repeatLines": [
       "The waystone glows softly. A Waystone Charm can bring you back here."
     ]
+  },
+  "schoolsign": {
+    "name": "Sign",
+    "lines": [
+      "NINJA SCHOOL. Acceptance by Moon Crest only.",
+      "Grow. Befriend. Fight. Then come. (The sensei says the Moon Crest is the proof.)"
+    ],
+    "repeatLines": [
+      "NINJA SCHOOL. Acceptance by Moon Crest only."
+    ]
+  },
+  "headmaster": {
+    "name": "Headmaster",
+    "lines": [
+      "The Moon Crest! You carried it all this way. You have grown food, made friends and faced bosses. That is the life experience a ninja needs.",
+      "Here is your acceptance letter. Look around: kitchen, potion lab, library, sparring hall, the dorms, and the garden out back."
+    ],
+    "repeatLines": [
+      "Welcome back, student."
+    ],
+    "needLine": "Finish the first-year classes and the stairs will open for you. Still to do:",
+    "okLines": [
+      "You have done every first-year class! Cooked, brewed, read and sparred.",
+      "The stairs in the hall are open. Upstairs are the Pet Dojo and the Enchanting Workshop."
+    ],
+    "upperLines": [
+      "The stairs are open to you. Upstairs, the Pet Dojo teaches friends to fight. The Enchanting Workshop opens soon."
+    ]
+  },
+  "cook": {
+    "name": "Cook",
+    "lines": [
+      "Welcome to the school kitchen! Bring me what you grow and I will cook something that heals."
+    ],
+    "repeatLines": [
+      "Welcome to the school kitchen! Bring me what you grow and I will cook something that heals."
+    ],
+    "menu": "What shall I cook?",
+    "farewell": "Eat well, ninja!"
+  },
+  "alchemist": {
+    "name": "Alchemist",
+    "lines": [
+      "Herbs, berries and a little gem dust. That is all a good potion needs."
+    ],
+    "repeatLines": [
+      "Herbs, berries and a little gem dust. That is all a good potion needs."
+    ],
+    "menu": "What shall I brew?",
+    "farewell": "Drink carefully!"
+  },
+  "gardensign": {
+    "name": "Sign",
+    "lines": [
+      "SCHOOL GARDEN. Please do not feed the pond.",
+      "The barn is at the end of the path. The animals there are happy as they are, but they love snacks."
+    ],
+    "repeatLines": [
+      "SCHOOL GARDEN. Please do not feed the pond.",
+      "The barn is at the end of the path. The animals there are happy as they are, but they love snacks."
+    ]
+  },
+  "sparmaster": {
+    "name": "Sparring Master",
+    "lines": [
+      "So you want to fight like a ninja. Good. Footwork first, sword second, ego never.",
+      "Hit the practice dummies with your sword (J). Every 10 good hits is one lesson. Pass 5 lessons and come back to me."
+    ],
+    "repeatLines": [
+      "You have passed my class. Come and practice any time."
+    ],
+    "progress": "Lessons complete: {n} of {total}. Keep hitting the dummies. Ten hits is one lesson.",
+    "passLines": [
+      "Five lessons. Your stance is solid and your cuts are clean.",
+      "You pass! Your sword will hit harder from now on. Go and prove it."
+    ]
+  },
+  "dummy": {
+    "name": "Dummy",
+    "lines": [
+      "A straw training dummy. It has been hit a lot and never complains."
+    ],
+    "repeatLines": [
+      "A straw training dummy. It has been hit a lot and never complains."
+    ]
+  },
+  "librarian": {
+    "name": "Librarian",
+    "lines": [
+      "Shh! Welcome to the library. Take any book you like and read it where it stands.",
+      "Read every book and I will have something for you."
+    ],
+    "repeatLines": [
+      "You have read it all. I have nothing left to teach you. Well, maybe a few more volumes next year."
+    ],
+    "progress": "Books read: {n} of {total}. There is a surprise when you have read them all.",
+    "doneLines": [
+      "You read every single book! Nobody has ever done that.",
+      "Here is something better than a bookmark: a stronger heart. Knowledge is good for you."
+    ]
+  },
+  "book1": {
+    "name": "Book",
+    "lines": [
+      "\"A Ninja's Guide to Not Falling Off Things\"",
+      "Chapter 1: Look down. Chapter 2: Do not look down. Chapter 3: You have fallen off something. See Chapter 1."
+    ],
+    "repeatLines": [
+      "\"A Ninja's Guide to Not Falling Off Things\"",
+      "Chapter 1: Look down. Chapter 2: Do not look down. Chapter 3: You have fallen off something. See Chapter 1."
+    ]
+  },
+  "book2": {
+    "name": "Book",
+    "lines": [
+      "\"Cooking With Fire (And Other Mistakes)\"",
+      "Rule one: a burnt pumpkin is still a pumpkin. Rule two: it is not. The Ninja Feast needs one treat from every land."
+    ],
+    "repeatLines": [
+      "\"Cooking With Fire (And Other Mistakes)\"",
+      "Rule one: a burnt pumpkin is still a pumpkin. Rule two: it is not. The Ninja Feast needs one treat from every land."
+    ]
+  },
+  "book3": {
+    "name": "Book",
+    "lines": [
+      "\"The Secret Life of Rabbits\"",
+      "Rabbits love carrots, but every creature has a favourite treat. Face them and offer it. The patient ninja gets a friend."
+    ],
+    "repeatLines": [
+      "\"The Secret Life of Rabbits\"",
+      "Rabbits love carrots, but every creature has a favourite treat. Face them and offer it. The patient ninja gets a friend."
+    ]
+  },
+  "book4": {
+    "name": "Book",
+    "lines": [
+      "\"Bats Are Just Tiny Dragons With Opinions\"",
+      "They live in dark caves and dislike being called cute. A crystal lantern helps. Their queen is not as nice as she looks."
+    ],
+    "repeatLines": [
+      "\"Bats Are Just Tiny Dragons With Opinions\"",
+      "They live in dark caves and dislike being called cute. A crystal lantern helps. Their queen is not as nice as she looks."
+    ]
+  },
+  "book5": {
+    "name": "Book",
+    "lines": [
+      "\"Ice, Ice, Ninja\"",
+      "The thin ice at the Snowy Peaks will not hold you. A pair of frost boots, made from frostberries, will."
+    ],
+    "repeatLines": [
+      "\"Ice, Ice, Ninja\"",
+      "The thin ice at the Snowy Peaks will not hold you. A pair of frost boots, made from frostberries, will."
+    ]
+  },
+  "book6": {
+    "name": "Book",
+    "lines": [
+      "\"Moon Crest Mysteries\"",
+      "The crest came in two halves, one from the cold and one from the deep. Whole, it points north, to where the moon touches the mountain."
+    ],
+    "repeatLines": [
+      "\"Moon Crest Mysteries\"",
+      "The crest came in two halves, one from the cold and one from the deep. Whole, it points north, to where the moon touches the mountain."
+    ]
+  },
+  "book7": {
+    "name": "Book",
+    "lines": [
+      "\"101 Uses for a Shovel\"",
+      "1. Digging. 2. Digging again. 3. Moving a landslide. 4. Hitting a rock. (Not recommended.) 5. Digging."
+    ],
+    "repeatLines": [
+      "\"101 Uses for a Shovel\"",
+      "1. Digging. 2. Digging again. 3. Moving a landslide. 4. Hitting a rock. (Not recommended.) 5. Digging."
+    ]
+  },
+  "book8": {
+    "name": "Book",
+    "lines": [
+      "\"Enchanting for Beginners, Volume 1 of 12\"",
+      "Volume 1 only explains how to hold the book. Volumes 2 to 12 are in the Enchanting Workshop upstairs. Gems and scrolls can add power to a weapon or armor."
+    ],
+    "repeatLines": [
+      "\"Enchanting for Beginners, Volume 1 of 12\"",
+      "Volume 1 only explains how to hold the book. Volumes 2 to 12 are in the Enchanting Workshop upstairs. Gems and scrolls can add power to a weapon or armor."
+    ]
+  },
+  "student1": {
+    "name": "Student",
+    "lines": [
+      "I am studying to be a ninja. Today I learned how to stand very still. It is harder than it looks.",
+      "Now I am practicing standing very still near the cook."
+    ],
+    "repeatLines": [
+      "I am studying to be a ninja. Today I learned how to stand very still. It is harder than it looks.",
+      "Now I am practicing standing very still near the cook."
+    ]
+  },
+  "student2": {
+    "name": "Student",
+    "lines": [
+      "The sparring master said I have good form. I think he says that to everyone."
+    ],
+    "repeatLines": [
+      "The sparring master said I have good form. I think he says that to everyone."
+    ]
+  },
+  "student3": {
+    "name": "Student",
+    "lines": [
+      "I hear you came all the way here with the Moon Crest! Everyone is talking about you."
+    ],
+    "repeatLines": [
+      "I hear you came all the way here with the Moon Crest! Everyone is talking about you."
+    ]
+  },
+  "student4": {
+    "name": "Student",
+    "lines": [
+      "The potions here taste awful, but they work. Mostly."
+    ],
+    "repeatLines": [
+      "The potions here taste awful, but they work. Mostly."
+    ]
+  },
+  "student5": {
+    "name": "Student",
+    "lines": [
+      "Shh, I am reading. Well, I am pretending to read. The books are very long."
+    ],
+    "repeatLines": [
+      "Shh, I am reading. Well, I am pretending to read. The books are very long."
+    ]
+  },
+  "student6": {
+    "name": "Student",
+    "lines": [
+      "The garden is my favourite part of the school. I have named every flower."
+    ],
+    "repeatLines": [
+      "The garden is my favourite part of the school. I have named every flower."
+    ]
+  },
+  "sleeper1": {
+    "name": "Sleepy Student",
+    "lines": [
+      "Zzz... five more minutes... zzz..."
+    ],
+    "repeatLines": [
+      "Zzz... five more minutes... zzz..."
+    ]
+  },
+  "sleeper2": {
+    "name": "Sleepy Student",
+    "lines": [
+      "Mmm... I was not asleep. I was resting my eyes. Zzz..."
+    ],
+    "repeatLines": [
+      "Mmm... I was not asleep. I was resting my eyes. Zzz..."
+    ]
+  },
+  "bed": {
+    "name": "Bed",
+    "lines": [
+      "A soft bed. You take a short nap."
+    ],
+    "repeatLines": [
+      "A soft bed. You take a short nap."
+    ]
+  },
+  "barnkeeper": {
+    "name": "Barn Keeper",
+    "lines": [
+      "These animals live here and they are very well fed. You can pet them or give them a snack.",
+      "They are not for taming. They belong to the school. But they like visitors."
+    ],
+    "repeatLines": [
+      "Say hello to the animals. They love snacks."
+    ]
+  },
+  "animal_rabbit": {
+    "name": "Barn Rabbit",
+    "lines": [
+      "A rabbit twitches its nose at you."
+    ],
+    "repeatLines": [
+      "A rabbit twitches its nose at you."
+    ],
+    "petLine": "You scratch its ears. It thumps its foot happily.",
+    "fedLines": [
+      "It nibbles it happily.",
+      "The rabbit does a little jump."
+    ]
+  },
+  "animal_moth": {
+    "name": "Barn Moth",
+    "lines": [
+      "A big fluffy moth rests on a hay bale."
+    ],
+    "repeatLines": [
+      "A big fluffy moth rests on a hay bale."
+    ],
+    "petLine": "Its wings flutter. Dust sparkles in the air.",
+    "fedLines": [
+      "It sips it daintily.",
+      "The moth glows a little brighter."
+    ]
+  },
+  "animal_snowfox": {
+    "name": "Barn Fox",
+    "lines": [
+      "A small white fox curls up in the hay."
+    ],
+    "repeatLines": [
+      "A small white fox curls up in the hay."
+    ],
+    "petLine": "It leans into your hand and yawns.",
+    "fedLines": [
+      "It gobbles it up.",
+      "The fox wags its tail."
+    ]
+  },
+  "animal_sandlizard": {
+    "name": "Barn Lizard",
+    "lines": [
+      "A sleepy lizard is sunning itself under a lamp."
+    ],
+    "repeatLines": [
+      "A sleepy lizard is sunning itself under a lamp."
+    ],
+    "petLine": "It blinks slowly. It likes you.",
+    "fedLines": [
+      "It snaps it up.",
+      "The lizard puffs out its chest."
+    ]
+  },
+  "animal_crab": {
+    "name": "Barn Crab",
+    "lines": [
+      "A crab sits in a bucket of water, waving a claw."
+    ],
+    "repeatLines": [
+      "A crab sits in a bucket of water, waving a claw."
+    ],
+    "petLine": "It clicks its claws in a happy rhythm.",
+    "fedLines": [
+      "It scuttles off with it.",
+      "The crab waves a claw at you."
+    ]
+  },
+  "upstairssign": {
+    "name": "Sign",
+    "lines": [
+      "SECOND YEAR. Left: Pet Dojo. Right: Enchanting Workshop."
+    ],
+    "repeatLines": [
+      "SECOND YEAR. Left: Pet Dojo. Right: Enchanting Workshop."
+    ]
+  },
+  "trainer": {
+    "name": "Pet Trainer",
+    "lines": [
+      "Welcome to the Pet Dojo! A friend that has learned to fight is a good friend to have.",
+      "Your friend will never be hurt. If it gets tired it just rests a while. Train it with its favourite treats, and it can wear armor too.",
+      "Bring your friend along first: open the friends menu and choose Come with me."
+    ],
+    "repeatLines": [
+      "Welcome to the Pet Dojo! A friend that has learned to fight is a good friend to have.",
+      "Your friend will never be hurt. If it gets tired it just rests a while. Train it with its favourite treats, and it can wear armor too.",
+      "Bring your friend along first: open the friends menu and choose Come with me."
+    ],
+    "menu": "What shall we work on?",
+    "farewell": "Be kind to your friend!"
+  },
+  "enchanter": {
+    "name": "Enchanter",
+    "lines": [
+      "Welcome to the Enchanting Workshop! Gems and scrolls hold a little magic. Set one into your weapon or armor and it is yours.",
+      "Each piece of gear has room for one enchantment. A new one replaces the old, and the old one comes back to you.",
+      "Ember Gems add damage, Ward Gems add defense, and the Swift Scroll makes your swings faster. The greater gems need a diamond."
+    ],
+    "repeatLines": [
+      "Welcome to the Enchanting Workshop! Gems and scrolls hold a little magic. Set one into your weapon or armor and it is yours.",
+      "Each piece of gear has room for one enchantment. A new one replaces the old, and the old one comes back to you.",
+      "Ember Gems add damage, Ward Gems add defense, and the Swift Scroll makes your swings faster. The greater gems need a diamond."
+    ],
+    "menu": "What shall we make?",
+    "farewell": "May your blade stay sharp!"
+  },
+  "student7": {
+    "name": "Student",
+    "lines": [
+      "I tried to enchant my lunch. It glowed for an hour and then got very cold."
+    ],
+    "repeatLines": [
+      "I tried to enchant my lunch. It glowed for an hour and then got very cold."
+    ]
+  },
+  "student8": {
+    "name": "Student",
+    "lines": [
+      "Training pets is hard work. I trained a snail once. It is still in training."
+    ],
+    "repeatLines": [
+      "Training pets is hard work. I trained a snail once. It is still in training."
+    ]
+  },
+  "wkshelf": {
+    "name": "Shelf",
+    "lines": [
+      "Shelves of dusty scrolls. All of them say \"volume 2\" on the spine."
+    ],
+    "repeatLines": [
+      "Shelves of dusty scrolls. All of them say \"volume 2\" on the spine."
+    ]
+  },
+  "student9": {
+    "name": "Student",
+    "lines": [
+      "Did you hear the Pet Dojo trainer? He gave his own pet a tiny vest."
+    ],
+    "repeatLines": [
+      "Did you hear the Pet Dojo trainer? He gave his own pet a tiny vest."
+    ]
   }
 }

@@ -3,6 +3,7 @@ import toolDefs from './data/tools.json';
 import weaponDefs from './data/weapons.json';
 import armorDefs from './data/armor.json';
 import { listEntries, moveSelection } from './inventory.js';
+import enchantDefs from './data/enchants.json';
 
 // 10x10 pixel icons. '#' = main colour, 'o' = dark outline, 'h' = highlight, '.' = empty.
 const ICONS = {
@@ -75,7 +76,7 @@ export default class InventoryScreen {
     if (this.isOpen) return;
     const s = this.scene;
     this.isOpen = true;
-    this.entries = listEntries(s.gameState, itemsData, toolDefs, weaponDefs, armorDefs);
+    this.entries = listEntries(s.gameState, itemsData, toolDefs, weaponDefs, armorDefs, enchantDefs);
     this.index = Math.min(this.index, Math.max(0, this.entries.length - 1));
 
     const add = (o) => {

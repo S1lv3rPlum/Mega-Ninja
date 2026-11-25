@@ -185,6 +185,130 @@
       "icon": "crest",
       "color": "#7fffe6",
       "desc": "A charm that hums near waystones. Open the bag and press Space to travel to any waystone you have lit."
+    },
+    "bread": {
+      "name": "Bread",
+      "icon": "wheat",
+      "color": "#d9a45a",
+      "desc": "Warm, fresh bread. Eat it to heal.",
+      "heal": 3
+    },
+    "carrot-stew": {
+      "name": "Carrot Stew",
+      "icon": "carrot",
+      "color": "#e8801f",
+      "desc": "A hearty stew. Eat it to heal.",
+      "heal": 5
+    },
+    "pumpkin-soup": {
+      "name": "Pumpkin Soup",
+      "icon": "pumpkin",
+      "color": "#f0a030",
+      "desc": "Smooth and sweet. Eat it to heal.",
+      "heal": 6
+    },
+    "frost-pie": {
+      "name": "Frost Pie",
+      "icon": "gem",
+      "color": "#8fd8ff",
+      "desc": "A cold, tart pie. Eat it to heal.",
+      "heal": 6
+    },
+    "sea-roll": {
+      "name": "Sea Roll",
+      "icon": "leaf",
+      "color": "#3fb88a",
+      "desc": "Salty and chewy. Eat it to heal.",
+      "heal": 6
+    },
+    "cactus-salad": {
+      "name": "Cactus Salad",
+      "icon": "leaf",
+      "color": "#f05aa0",
+      "desc": "Crisp and juicy. Eat it to heal.",
+      "heal": 6
+    },
+    "ninja-feast": {
+      "name": "Ninja Feast",
+      "icon": "crest",
+      "color": "#ffd45e",
+      "desc": "A feast from every land. Eat it to heal a lot.",
+      "heal": 12
+    },
+    "healing-potion": {
+      "name": "Healing Potion",
+      "icon": "gem",
+      "color": "#ff6b7a",
+      "desc": "A red potion. Drink it to heal.",
+      "heal": 8
+    },
+    "greater-potion": {
+      "name": "Greater Potion",
+      "icon": "gem",
+      "color": "#ff3b5c",
+      "desc": "A strong potion. Drink it to heal a lot.",
+      "heal": 14
+    },
+    "elixir": {
+      "name": "Elixir",
+      "icon": "gem",
+      "color": "#ffd45e",
+      "desc": "A golden elixir. Drink it to heal fully.",
+      "heal": 99
+    },
+    "acceptance-letter": {
+      "name": "Acceptance Letter",
+      "icon": "crest",
+      "color": "#f4ead0",
+      "desc": "Your letter from the Ninja School. Proof that you have earned your place."
+    },
+    "padded-vest": {
+      "name": "Padded Vest",
+      "icon": "armor",
+      "color": "#c9a36a",
+      "desc": "Pet armor. Your friend gets tired later when it wears this. Fit it at the Pet Dojo."
+    },
+    "copper-mail": {
+      "name": "Copper Pet Mail",
+      "icon": "armor",
+      "color": "#d98a4e",
+      "desc": "Pet armor. A big boost to a friend's stamina. Fit it at the Pet Dojo."
+    },
+    "crystal-plate": {
+      "name": "Crystal Plate",
+      "icon": "armor",
+      "color": "#9be8ff",
+      "desc": "The best pet armor. Lots of stamina and a little extra bite. Fit it at the Pet Dojo."
+    },
+    "ember-gem": {
+      "name": "Ember Gem",
+      "icon": "gem",
+      "color": "#ff7a3a",
+      "desc": "An enchantment for your weapon: +1 damage. Set it at the Enchanting Workshop."
+    },
+    "greater-ember-gem": {
+      "name": "Greater Ember Gem",
+      "icon": "gem",
+      "color": "#ff4a1a",
+      "desc": "A strong enchantment for your weapon: +2 damage. Set it at the Enchanting Workshop."
+    },
+    "ward-gem": {
+      "name": "Ward Gem",
+      "icon": "gem",
+      "color": "#4a8cff",
+      "desc": "An enchantment for your armor: +1 defense. Set it at the Enchanting Workshop."
+    },
+    "greater-ward-gem": {
+      "name": "Greater Ward Gem",
+      "icon": "gem",
+      "color": "#2a5cff",
+      "desc": "A strong enchantment for your armor: +2 defense. Set it at the Enchanting Workshop."
+    },
+    "swift-scroll": {
+      "name": "Swift Scroll",
+      "icon": "crest",
+      "color": "#9dffb0",
+      "desc": "An enchantment for your weapon: swings 25% faster. Set it at the Enchanting Workshop."
     }
   },
   "tools": {

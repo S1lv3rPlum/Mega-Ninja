@@ -3,7 +3,10 @@
 
 const NICE = (id) => id.charAt(0).toUpperCase() + id.slice(1);
 
-export function listEntries(gs, items, toolDefs, weaponDefs = {}) {
+import { enchantOf, enchantText } from './enchant.js';
+
+export function listEntries(gs, items, toolDefs, weaponDefs = {}, armorDefs = {}, enchantDefs = {}) {
+  const enchLine = (slot) => { const e = enchantDefs[enchantOf(gs, slot)]; return e ? `\nEnchanted: ${e.name} (${enchantText(e)})` : ''; };
   const entries = [];
   const have = gs.items ?? {};
   const known = Object.keys(items.items);
@@ -18,7 +21,12 @@ export function listEntries(gs, items, toolDefs, weaponDefs = {}) {
   if (gs.weapon && weaponDefs[gs.weapon]) {
     const w = weaponDefs[gs.weapon];
     const d = items.weapons?.[gs.weapon] ?? { icon: 'sword', color: '#c9a46a' };
-    entries.push({ id: gs.weapon, kind: 'weapon', name: w.name, damage: w.damage, icon: d.icon, color: d.color, desc: w.desc });
+    entries.push({ id: gs.weapon, kind: 'weapon', name: w.name, damage: w.damage, icon: d.icon, color: d.color, desc: w.desc + enchLine('weapon') });
+  }
+  if (gs.armor && armorDefs[gs.armor]) {
+    const a = armorDefs[gs.armor];
+    const d = items.armor?.[gs.armor] ?? { icon: 'armor', color: '#c9a46a' };
+    entries.push({ id: gs.armor, kind: 'armor', name: a.name, defense: a.defense, icon: d.icon, color: d.color, desc: a.desc + enchLine('armor') });
   }
   Object.keys(gs.tools ?? {}).forEach((id) => {
     const def = toolDefs[id];
