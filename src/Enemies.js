@@ -1,4 +1,5 @@
 import enemyDefs from './data/enemies.json';
+import { markEarned } from './bossGifts.js';
 import { chooseStep, damageEnemy, isAdjacent } from './combat.js';
 
 const TILE = 16;
@@ -26,6 +27,12 @@ export default class Enemies {
       const x = Math.floor(o.x / TILE);
       const y = Math.floor(o.y / TILE);
       const rec = { id, def, home: { x, y }, x, y, hp: def.hp, moving: false, nextMove: 0, nextAttack: 0, dead: false, respawnAt: 0, sprite: null };
+      rec.nightOnly = !!p.nightOnly; // only out after dark (the night friends)
+      if (rec.nightOnly && !this.scene.isNight && !(saved && saved.respawnAt > now)) {
+        rec.hidden = true; // asleep until night falls
+        this.list.push(rec);
+        return;
+      }
       if (saved && saved.respawnAt > now) {
         rec.dead = true;
         rec.respawnAt = saved.respawnAt;
@@ -85,11 +92,26 @@ export default class Enemies {
     this.list.forEach((e) => {
       if (e.def.summon && !e.dead && e.def.sight >= Math.abs(e.x - s.tile.x) + Math.abs(e.y - s.tile.y)) this.summonTick(e, time);
       if (e.dead) {
-        if (now >= e.respawnAt && this.free(e.home.x, e.home.y, e)) this.revive(e); // (Infinity = never)
+        if (now >= e.respawnAt && (!e.nightOnly || s.isNight) && this.free(e.home.x, e.home.y, e)) this.revive(e); // (Infinity = never)
         return;
       }
-      if (e.moving) return;
+      if (e.hidden || e.moving) return;
       const me = { x: e.x, y: e.y };
+      if (e.def.harmless) {
+        // a gentle creature: it wanders about, never chases and never attacks
+        if (time < e.nextMove) return;
+        e.nextMove = time + e.def.moveMs * (0.8 + Math.random() * 1.2);
+        const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        const d = dirs[Math.floor(Math.random() * 4)];
+        const nx = e.x + d[0];
+        const ny = e.y + d[1];
+        if (Math.abs(nx - e.home.x) > 3 || Math.abs(ny - e.home.y) > 3 || !this.free(nx, ny, e)) return;
+        e.moving = true;
+        e.x = nx;
+        e.y = ny;
+        s.tweens.add({ targets: e.sprite, x: nx * TILE, y: ny * TILE, duration: 300, onComplete: () => (e.moving = false) });
+        return;
+      }
       if (isAdjacent(me, s.tile)) {
         if (time >= e.nextAttack) {
           e.nextAttack = time + e.def.attackMs;
@@ -120,6 +142,28 @@ export default class Enemies {
         const dy = Math.sign(s.tile.y - e.y);
         s.tweens.add({ targets: e.sprite, x: e.sprite.x + dx * 5, y: e.sprite.y + dy * 5, duration: 70, yoyo: true });
         s.hurtPlayer(e.def.damage);
+      }
+    });
+  }
+
+  // dusk and dawn: the night friends come out of hiding, or go back to sleep
+  applyDayNight(isNight) {
+    this.list.forEach((e) => {
+      if (!e.nightOnly) return;
+      if (isNight && e.hidden) {
+        e.hidden = false;
+        if (e.dead) return; // (it respawns normally)
+        e.x = e.home.x;
+        e.y = e.home.y;
+        e.sprite = this.makeSprite(e);
+        e.sprite.setAlpha(0);
+        this.scene.tweens.add({ targets: e.sprite, alpha: 1, duration: 800 });
+      } else if (!isNight && !e.hidden) {
+        e.hidden = true;
+        const spr = e.sprite;
+        e.sprite = null;
+        e.moving = false;
+        if (spr) this.scene.tweens.add({ targets: spr, alpha: 0, duration: 800, onComplete: () => spr.destroy() });
       }
     });
   }
@@ -174,6 +218,7 @@ export default class Enemies {
     const s = this.scene;
     const gs = s.gameState;
     gs.flags[e.def.flag] = true;
+    markEarned(gs, e.def.flag); // this reward is yours already: no gift later
     const r = e.def.reward;
     if (r) {
       gs.items[r.item] = (gs.items[r.item] ?? 0) + 1;
@@ -225,7 +270,7 @@ export default class Enemies {
   // the other player's record was cleared (it grew back there): grow back here when its time is up
   reviveRemote(id) {
     const e = this.list.find((x) => x.id === id);
-    if (e && e.dead && !e.noRespawn && Date.now() >= e.respawnAt && this.free(e.home.x, e.home.y, e)) this.revive(e);
+    if (e && e.dead && !e.noRespawn && Date.now() >= e.respawnAt && (!e.nightOnly || this.scene.isNight) && this.free(e.home.x, e.home.y, e)) this.revive(e);
   }
 
   revive(e) {

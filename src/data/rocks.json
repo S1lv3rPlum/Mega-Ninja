@@ -82,6 +82,24 @@
       "amount": 1,
       "texture": "bush",
       "msg": "Picked an herb!"
+    },
+    {
+      "id": "nt_moon",
+      "weight": 8,
+      "hits": 1,
+      "drop": "moonbloom-seeds",
+      "amount": 1,
+      "texture": "bush",
+      "msg": "Found moonbloom seeds!"
+    },
+    {
+      "id": "nt_glow",
+      "weight": 8,
+      "hits": 1,
+      "drop": "glowcap-seeds",
+      "amount": 1,
+      "texture": "bush",
+      "msg": "Found glowcap spores!"
     }
   ],
   "forageForest": [
@@ -120,6 +138,24 @@
       "amount": 3,
       "texture": "bush",
       "msg": "Found wheat seeds!"
+    },
+    {
+      "id": "nt_moon",
+      "weight": 8,
+      "hits": 1,
+      "drop": "moonbloom-seeds",
+      "amount": 1,
+      "texture": "bush",
+      "msg": "Found moonbloom seeds!"
+    },
+    {
+      "id": "nt_glow",
+      "weight": 8,
+      "hits": 1,
+      "drop": "glowcap-seeds",
+      "amount": 1,
+      "texture": "bush",
+      "msg": "Found glowcap spores!"
     }
   ],
   "caveRocks": [

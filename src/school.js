@@ -64,20 +64,22 @@ export function rest(gs, data) {
 
 // Feeding the barn animals (they are only for looking at and feeding, not for taming)
 const FOODS = [['carrot', 'a carrot'], ['wheat', 'some wheat'], ['herb', 'an herb']];
+const NIGHT_FOODS = [['moonbloom', 'a moonbloom'], ['glowcap', 'a glowcap']]; // only listed when you carry some
 export function talkFeeder(gs, npcId, data) {
   const first = !gs.flags[`met_${npcId}`];
   gs.flags[`met_${npcId}`] = true;
   return { lines: first ? [...data.lines] : [data.repeatLines?.[0] ?? data.lines[0]], afterClose: () => null, choice: menu() };
 
   function menu() {
-    const options = FOODS.map(([item, label]) => ({ label: `Feed ${label} (${gs.items[item] ?? 0})`, disabled: (gs.items[item] ?? 0) <= 0 }));
+    const foods = [...FOODS, ...NIGHT_FOODS.filter(([item]) => (gs.items[item] ?? 0) > 0)];
+    const options = foods.map(([item, label]) => ({ label: `Feed ${label} (${gs.items[item] ?? 0})`, disabled: (gs.items[item] ?? 0) <= 0 }));
     options.push({ label: 'Just pet it', disabled: false }, { label: 'Leave', disabled: false });
     return {
       options,
       onPick: (i) => {
-        if (i === FOODS.length + 1) return { lines: [], afterClose: () => null };
-        if (i === FOODS.length) return { lines: [data.petLine], afterClose: () => null, choice: menu() };
-        const [item] = FOODS[i];
+        if (i === foods.length + 1) return { lines: [], afterClose: () => null };
+        if (i === foods.length) return { lines: [data.petLine], afterClose: () => null, choice: menu() };
+        const [item] = foods[i];
         gs.items[item] -= 1;
         const k = (gs.flags[`fed_${npcId}`] ?? 0) + 1;
         gs.flags[`fed_${npcId}`] = k;

@@ -37,6 +37,30 @@
       "baseName": "Pinchy",
       "texture": "crab",
       "treat": "seaweed"
+    },
+    "sandlizard": {
+      "name": "Sand Lizard",
+      "baseName": "Dune",
+      "texture": "sandlizard",
+      "treat": "cactus-fruit"
+    },
+    "firefly": {
+      "name": "Glow Firefly",
+      "baseName": "Spark",
+      "texture": "firefly",
+      "treat": "glowcap"
+    },
+    "owl": {
+      "name": "Moon Owl",
+      "baseName": "Hoot",
+      "texture": "owl",
+      "treat": "moonbloom"
+    },
+    "moonhare": {
+      "name": "Moon Hare",
+      "baseName": "Luna",
+      "texture": "moonhare",
+      "treat": "moonbloom"
     }
   }
 }

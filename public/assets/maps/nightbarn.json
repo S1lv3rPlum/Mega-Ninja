@@ -1,0 +1,544 @@
+{
+  "compressionlevel": -1,
+  "height": 9,
+  "width": 13,
+  "infinite": false,
+  "orientation": "orthogonal",
+  "renderorder": "right-down",
+  "tiledversion": "1.10.2",
+  "tileheight": 16,
+  "tilewidth": 16,
+  "type": "map",
+  "version": "1.10",
+  "nextlayerid": 6,
+  "nextobjectid": 5000,
+  "tilesets": [
+    {
+      "columns": 17,
+      "firstgid": 1,
+      "image": "../tilesets/school-tiles.png",
+      "imageheight": 16,
+      "imagewidth": 272,
+      "margin": 0,
+      "name": "school-tiles",
+      "spacing": 0,
+      "tilecount": 17,
+      "tileheight": 16,
+      "tilewidth": 16
+    }
+  ],
+  "properties": [
+    {
+      "name": "dark",
+      "type": "bool",
+      "value": true
+    }
+  ],
+  "layers": [
+    {
+      "data": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        14,
+        14,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        14,
+        14,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        14,
+        14,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        14,
+        14,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        14,
+        14,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        7,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "height": 9,
+      "width": 13,
+      "id": 1,
+      "name": "ground",
+      "opacity": 1,
+      "type": "tilelayer",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "data": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        14,
+        14,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        14,
+        14,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        14,
+        14,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        14,
+        14,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        14,
+        14,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        0,
+        14,
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "height": 9,
+      "width": 13,
+      "id": 2,
+      "name": "obstacles",
+      "opacity": 1,
+      "type": "tilelayer",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "draworder": "topdown",
+      "id": 3,
+      "name": "doors",
+      "objects": [
+        {
+          "height": 16,
+          "id": 4022,
+          "name": "to-garden",
+          "properties": [
+            {
+              "name": "toMap",
+              "type": "string",
+              "value": "garden"
+            },
+            {
+              "name": "toX",
+              "type": "int",
+              "value": 10
+            },
+            {
+              "name": "toY",
+              "type": "int",
+              "value": 4
+            }
+          ],
+          "rotation": 0,
+          "type": "",
+          "visible": true,
+          "width": 16,
+          "x": 96,
+          "y": 128
+        }
+      ],
+      "opacity": 1,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "draworder": "topdown",
+      "id": 4,
+      "name": "npcs",
+      "objects": [
+        {
+          "height": 16,
+          "id": 4016,
+          "name": "barn_owl",
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "nbarn_owl"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "owl"
+            },
+            {
+              "name": "dialogue",
+              "type": "string",
+              "value": "animal_owl"
+            },
+            {
+              "name": "role",
+              "type": "string",
+              "value": "feeder"
+            }
+          ],
+          "rotation": 0,
+          "type": "",
+          "visible": true,
+          "width": 16,
+          "x": 32,
+          "y": 48
+        },
+        {
+          "height": 16,
+          "id": 4017,
+          "name": "barn_moonhare",
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "nbarn_moonhare"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "moonhare"
+            },
+            {
+              "name": "dialogue",
+              "type": "string",
+              "value": "animal_moonhare"
+            },
+            {
+              "name": "role",
+              "type": "string",
+              "value": "feeder"
+            }
+          ],
+          "rotation": 0,
+          "type": "",
+          "visible": true,
+          "width": 16,
+          "x": 64,
+          "y": 48
+        },
+        {
+          "height": 16,
+          "id": 4018,
+          "name": "barn_firefly",
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "nbarn_firefly"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "firefly"
+            },
+            {
+              "name": "dialogue",
+              "type": "string",
+              "value": "animal_firefly"
+            },
+            {
+              "name": "role",
+              "type": "string",
+              "value": "feeder"
+            }
+          ],
+          "rotation": 0,
+          "type": "",
+          "visible": true,
+          "width": 16,
+          "x": 96,
+          "y": 48
+        },
+        {
+          "height": 16,
+          "id": 4019,
+          "name": "barn_bat",
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "nbarn_bat"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "bat"
+            },
+            {
+              "name": "dialogue",
+              "type": "string",
+              "value": "animal_bat"
+            },
+            {
+              "name": "role",
+              "type": "string",
+              "value": "feeder"
+            }
+          ],
+          "rotation": 0,
+          "type": "",
+          "visible": true,
+          "width": 16,
+          "x": 128,
+          "y": 48
+        },
+        {
+          "height": 16,
+          "id": 4020,
+          "name": "barn_shadow",
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "nbarn_shadow"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "shadow"
+            },
+            {
+              "name": "dialogue",
+              "type": "string",
+              "value": "animal_shadow"
+            },
+            {
+              "name": "role",
+              "type": "string",
+              "value": "feeder"
+            }
+          ],
+          "rotation": 0,
+          "type": "",
+          "visible": true,
+          "width": 16,
+          "x": 160,
+          "y": 48
+        },
+        {
+          "height": 16,
+          "id": 4021,
+          "name": "nightkeeper",
+          "properties": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "nightkeeper"
+            },
+            {
+              "name": "texture",
+              "type": "string",
+              "value": "student3"
+            },
+            {
+              "name": "dialogue",
+              "type": "string",
+              "value": "nightkeeper"
+            }
+          ],
+          "rotation": 0,
+          "type": "",
+          "visible": true,
+          "width": 16,
+          "x": 160,
+          "y": 96
+        }
+      ],
+      "opacity": 1,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    }
+  ]
+}

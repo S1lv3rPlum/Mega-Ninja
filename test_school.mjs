@@ -27,7 +27,7 @@ const f = talkFeeder(gs, 'barn_rabbit', dlg.animal_rabbit);
 assert.ok(f.choice.options[0].label.includes('(1)'));
 f.choice.onPick(0); assert.equal(gs.items.carrot, 0); assert.equal(gs.flags.fed_barn_rabbit, 1);
 // the maps and their doors all connect
-const rooms = ['school','kitchen','potions','library','sparring','dorm1','dorm2','garden','barn','upper','dojo','workshop','town'];
+const rooms = ['school','kitchen','potions','library','sparring','dorm1','dorm2','garden','barn','upper','dojo','workshop','nightbarn','town'];
 const maps = Object.fromEntries(rooms.map((m) => [m, JSON.parse(readFileSync(`public/assets/maps/${m}.json`))]));
 const books = [];
 for (const [name, m] of Object.entries(maps)) {

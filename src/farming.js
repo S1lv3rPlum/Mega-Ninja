@@ -51,7 +51,7 @@ export function plant(gs, map, x, y, cropId = 'wheat', crops = DEFAULT_CROPS) {
   if (!crop || (gs.items[crop.seed] ?? 0) < 1) return { ok: false, msg: 'You have no seeds.' };
   gs.items[crop.seed] -= 1;
   setPlot(gs, map, x, y, { stage: 1, growsAt: null, crop: cropId });
-  return { ok: true, msg: `Planted ${crop.name.toLowerCase()}. It needs water.` };
+  return { ok: true, msg: `Planted ${crop.name.toLowerCase()}. It needs water${crop.nightOnly ? ', and it only grows at night' : ''}.` };
 }
 
 export function water(gs, map, x, y, now = Date.now(), crops = DEFAULT_CROPS) {
@@ -91,13 +91,15 @@ export function fillCan(gs) {
 }
 
 // Advance any plots on this map whose timer has finished. Returns the plots that changed.
-export function tick(gs, map, now = Date.now()) {
+// A crop with nightOnly: true (moonbloom, glowcap) only moves on to its next stage while it is night.
+export function tick(gs, map, now = Date.now(), crops = DEFAULT_CROPS, night = true) {
   const changed = [];
   const plots = gs.plots[map];
   if (!plots) return changed;
   for (const k of Object.keys(plots)) {
     const p = plots[k];
-    if (p.growsAt !== null && now >= p.growsAt && p.stage < MAX_STAGE) {
+    const crop = crops[p.crop ?? 'wheat'] ?? DEFAULT_CROPS.wheat;
+    if (p.growsAt !== null && now >= p.growsAt && p.stage < MAX_STAGE && (night || !crop.nightOnly)) {
       p.stage += 1;
       p.growsAt = null;
       const [x, y] = k.split(',').map(Number);

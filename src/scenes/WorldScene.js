@@ -25,6 +25,7 @@ import { talkToShopkeeper } from '../shop.js';
 import { talkToCrafter } from '../craft.js';
 import { hitDummy, sparBonus, talkSparMaster, talkLibrarian, talkFeeder, rest, talkHeadmaster } from '../school.js';
 import { enchantBonus, talkEnchanter } from '../enchant.js';
+import { OUTDOOR, phaseAt, darkness, skyColor, toHex, isNightPhase, forcedPhase, cycleFrom } from '../daynight.js';
 import enchantDefs from '../data/enchants.json';
 import { petStats, petTick, newFightState, talkTrainer } from '../petfight.js';
 import { companionPet } from '../pets.js';
@@ -52,7 +53,7 @@ const START_MAP = 'town';
 const START_TILE = { x: 15, y: 10 };
 
 // To add a map: save it as public/assets/maps/<name>.json and add its name here.
-const MAPS = ['town', 'farm', 'forest', 'quarry', 'cave', 'crystal', 'market', 'peaks', 'ruins', 'desert', 'bazaar', 'school', 'kitchen', 'potions', 'library', 'sparring', 'dorm1', 'dorm2', 'garden', 'barn', 'upper', 'dojo', 'workshop'];
+const MAPS = ['town', 'farm', 'forest', 'quarry', 'cave', 'crystal', 'market', 'peaks', 'ruins', 'desert', 'bazaar', 'school', 'kitchen', 'potions', 'library', 'sparring', 'dorm1', 'dorm2', 'garden', 'barn', 'upper', 'dojo', 'workshop', 'nightbarn'];
 // To add a tileset: save it as public/assets/tilesets/<name>.png and add its name here.
 // (The name must match the tileset's name inside Tiled.)
 const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles', 'mine-tiles', 'crystal-tiles', 'market-tiles', 'snow-tiles', 'ruins-tiles', 'desert-tiles', 'bazaar-tiles', 'school-tiles'];
@@ -82,14 +83,14 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('stump', 'assets/sprites/stump.png');
     this.load.image('lumberjack', 'assets/sprites/lumberjack.png'); // textures for NPCs go here
     this.load.image('shopkeeper', 'assets/sprites/shopkeeper.png');
-    ['cook', 'trainer', 'enchanter', 'student1', 'student2', 'student3', 'bookshelf', 'bed', 'dummy'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
+    ['firefly', 'owl', 'moonhare', 'cook', 'trainer', 'enchanter', 'student1', 'student2', 'student3', 'bookshelf', 'bed', 'dummy'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
     this.load.image('alchemist', 'assets/sprites/alchemist.png');
     ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond', 'crystal', 'sun'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
     this.load.image('rubble', 'assets/sprites/rubble.png');
     ['treant-boss', 'treant-good', 'sapling', 'sign', 'bat-queen', 'moth', 'hexsmith', 'hexcreature', 'hexcharm', 'yeti', 'snowfox', 'frostimp', 'snow-bush', 'snow-bush-bare', 'serpent', 'jelly', 'crab', 'kelp', 'kelp-bare', 'rune-off', 'rune-on', 'ruinsdoor', 'ruinsdoor-open', 'scorpion', 'sandlizard', 'scorpionking', 'cactus-fruit', 'cactus-fruit-bare', 'princess', 'bzsmith', 'bzspice', 'bzgem', 'waystone-off', 'waystone-on'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
     this.load.image('bush', 'assets/sprites/bush.png');
     this.load.image('bush-bare', 'assets/sprites/bush-bare.png');
-    ['carrot', 'pumpkin', 'frostberry', 'seaweed', 'cactus-fruit'].forEach((c) => [2, 3, 4].forEach((n) => this.load.image(`crop-${c}-${n}`, `assets/sprites/crop-${c}-${n}.png`)));
+    ['carrot', 'pumpkin', 'frostberry', 'seaweed', 'cactus-fruit', 'moonbloom', 'glowcap'].forEach((c) => [2, 3, 4].forEach((n) => this.load.image(`crop-${c}-${n}`, `assets/sprites/crop-${c}-${n}.png`)));
     this.load.image('sensei', 'assets/sprites/sensei.png');
     this.load.image('shadow', 'assets/sprites/shadow.png');
     this.load.image('boulder', 'assets/sprites/boulder.png');
@@ -316,6 +317,10 @@ export default class WorldScene extends Phaser.Scene {
     this.faceFrame(this.facing);
 
     // --- Enemies (real-time; an "enemies" object layer in Tiled) ---
+    // --- Day and night (outdoor maps are tinted; the night friends only come out after dark) ---
+    this.forcedPhase = forcedPhase(window.location.search);
+    this.cycleMs = cycleFrom(window.location.search);
+    this.isNight = isNightPhase(this.phaseNow());
     this.enemies = new Enemies(this);
     this.enemies.spawn(objects('enemies'), readProps);
 
@@ -336,6 +341,7 @@ export default class WorldScene extends Phaser.Scene {
     this.darkRT = null;
     if (readProps(raw.properties).dark) this.createDarkness();
     this.thinIceGid = readProps(raw.properties).thinIceGid ?? 0;
+    this.createDayNight();
 
     // --- Dialogue ---
     this.dialogue = new DialogueBox(this);
@@ -732,7 +738,7 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   tickPlots() {
-    const changed = tick(this.gameState, this.gameState.map, Date.now());
+    const changed = tick(this.gameState, this.gameState.map, Date.now(), cropsData, isNightPhase(this.phaseNow()));
     changed.forEach((c) => this.refreshPlot(c.x, c.y));
     if (changed.some((c) => c.stage >= MAX_STAGE)) this.showToast('Something is ready to harvest!');
   }
@@ -1425,6 +1431,7 @@ export default class WorldScene extends Phaser.Scene {
 
   update(_time, delta) {
     this.updateDarkness(_time);
+    this.updateDayNight(_time);
     this.updateRabbit(delta);
     if (!(this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen)) {
       this.enemies.update(_time);
@@ -1449,6 +1456,62 @@ export default class WorldScene extends Phaser.Scene {
     }
 
     if (dx !== 0 || dy !== 0) this.tryMove(dx, dy);
+  }
+
+  // ---------- Day and night (see daynight.js) ----------
+
+  phaseNow() {
+    return this.forcedPhase ?? phaseAt(Date.now(), this.cycleMs);
+  }
+
+  createDayNight() {
+    this.dayOverlay = null;
+    this.nightBugs = [];
+    this.waystoneGlows = [];
+    this.dnTick = 0;
+    if (!OUTDOOR.includes(this.gameState.map)) return;
+    this.dayOverlay = this.add.rectangle(0, 0, 320, 240, 0xffffff).setOrigin(0, 0).setScrollFactor(0).setDepth(90).setBlendMode(Phaser.BlendModes.MULTIPLY);
+    // fireflies drifting about after dark
+    const W = this.map.widthInPixels;
+    const H = this.map.heightInPixels;
+    for (let i = 0; i < 14; i++) {
+      const b = this.add.rectangle(Math.random() * W, Math.random() * H, 2, 2, 0xfff08a).setDepth(92).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
+      this.tweens.add({ targets: b, x: b.x + (Math.random() * 40 - 20), y: b.y + (Math.random() * 30 - 15), duration: 2500 + Math.random() * 2500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.nightBugs.push({ obj: b, seed: Math.random() * 6 });
+    }
+    // lit waystones shine at night
+    if (!this.textures.exists('glow')) {
+      const cv = this.textures.createCanvas('glow', 32, 32);
+      const ctx = cv.getContext();
+      const gr = ctx.createRadialGradient(16, 16, 1, 16, 16, 16);
+      gr.addColorStop(0, 'rgba(150,255,235,0.9)');
+      gr.addColorStop(1, 'rgba(150,255,235,0)');
+      ctx.fillStyle = gr;
+      ctx.fillRect(0, 0, 32, 32);
+      cv.refresh();
+    }
+    this.npcs.filter((n) => String(n.id).startsWith('waystone')).forEach((n) => {
+      const g = this.add.image(n.x * TILE + 8, n.y * TILE + 8, 'glow').setDepth(91).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
+      this.waystoneGlows.push({ img: g, npc: n });
+    });
+    this.dnTick = 0;
+    this.updateDayNight(this.time.now, true);
+  }
+
+  updateDayNight(time, first = false) {
+    const night = isNightPhase(this.phaseNow());
+    if (night !== this.isNight) {
+      this.isNight = night;
+      this.enemies.applyDayNight(night);
+      if (OUTDOOR.includes(this.gameState.map)) this.showToast(night ? 'Night falls. Creatures are stirring...' : 'The sun rises.');
+    }
+    if (!this.dayOverlay || (!first && time < this.dnTick)) return;
+    this.dnTick = time + 120;
+    const phase = this.phaseNow();
+    this.dayOverlay.setFillStyle(toHex(skyColor(phase)));
+    const d = darkness(phase);
+    this.nightBugs.forEach((b, i) => b.obj.setAlpha(d * (0.45 + 0.55 * Math.sin(time / 320 + b.seed))));
+    this.waystoneGlows.forEach((g) => g.img.setAlpha(this.gameState.flags[g.npc.openFlag] ? d * 0.8 : 0));
   }
 
   // ---------- Darkness (the cave) ----------

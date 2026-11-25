@@ -911,5 +911,96 @@
     "repeatLines": [
       "Did you hear the Pet Dojo trainer? He gave his own pet a tiny vest."
     ]
+  },
+  "nightsign": {
+    "name": "Sign",
+    "lines": [
+      "NIGHT BARN. Bring a light. These friends only come out after dark.",
+      "They love moonblooms and glowcaps, which only grow at night."
+    ],
+    "repeatLines": [
+      "NIGHT BARN. Bring a light. These friends only come out after dark.",
+      "They love moonblooms and glowcaps, which only grow at night."
+    ]
+  },
+  "nightkeeper": {
+    "name": "Night Keeper",
+    "lines": [
+      "Shh, the animals here are shy. They sleep all day and wake at dusk.",
+      "You cannot take them home, but out in the world you may find wild ones at night. Bring them a moonbloom or a glowcap."
+    ],
+    "repeatLines": [
+      "Quietly now. Say hello to the night animals."
+    ]
+  },
+  "animal_owl": {
+    "name": "Barn Owl",
+    "lines": [
+      "A round owl blinks slowly at you from a rafter."
+    ],
+    "repeatLines": [
+      "A round owl blinks slowly at you from a rafter."
+    ],
+    "petLine": "It lets out a soft hoot.",
+    "fedLines": [
+      "It swallows it whole and hoots.",
+      "The owl ruffles its feathers happily."
+    ]
+  },
+  "animal_moonhare": {
+    "name": "Barn Hare",
+    "lines": [
+      "A pale hare with a tiny crescent mark sits very still."
+    ],
+    "repeatLines": [
+      "A pale hare with a tiny crescent mark sits very still."
+    ],
+    "petLine": "Its nose twitches. It likes you.",
+    "fedLines": [
+      "It nibbles it carefully.",
+      "The hare does a quiet little hop."
+    ]
+  },
+  "animal_firefly": {
+    "name": "Barn Firefly",
+    "lines": [
+      "A firefly drifts through the dark, glowing softly."
+    ],
+    "repeatLines": [
+      "A firefly drifts through the dark, glowing softly."
+    ],
+    "petLine": "It lands on your finger for a moment.",
+    "fedLines": [
+      "It glows brighter.",
+      "The firefly does a happy loop."
+    ]
+  },
+  "animal_bat": {
+    "name": "Barn Bat",
+    "lines": [
+      "A small bat hangs upside-down, watching you."
+    ],
+    "repeatLines": [
+      "A small bat hangs upside-down, watching you."
+    ],
+    "petLine": "It squeaks politely.",
+    "fedLines": [
+      "It nibbles it upside-down.",
+      "The bat flaps once, happily."
+    ]
+  },
+  "animal_shadow": {
+    "name": "Barn Sprout",
+    "lines": [
+      "A little shadow sprout sways in the dark."
+    ],
+    "repeatLines": [
+      "A little shadow sprout sways in the dark."
+    ],
+    "petLine": "It leans against your hand.",
+    "fedLines": [
+      "It wiggles its leaves.",
+      "The sprout glows a faint green."
+    ]
   }
 }

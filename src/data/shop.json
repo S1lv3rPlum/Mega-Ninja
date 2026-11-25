@@ -18,6 +18,22 @@
         "price": 20
       },
       {
+        "id": "moonbloom-seeds",
+        "type": "item",
+        "item": "moonbloom-seeds",
+        "amount": 3,
+        "label": "3 Moonbloom Seeds",
+        "price": 30
+      },
+      {
+        "id": "glowcap-seeds",
+        "type": "item",
+        "item": "glowcap-seeds",
+        "amount": 3,
+        "label": "3 Glowcap Spores",
+        "price": 30
+      },
+      {
         "id": "pail",
         "type": "upgrade",
         "label": "Bigger Pail",
@@ -67,7 +83,9 @@
       "herb": 3,
       "crystal": 12,
       "frostberry": 5,
-      "seaweed": 4
+      "seaweed": 4,
+      "sunstone": 15,
+      "cactus-fruit": 5
     }
   },
   "hexcreature": {
@@ -115,6 +133,78 @@
       "emerald": 65,
       "ruby": 100,
       "diamond": 320
+    }
+  },
+  "bzspice": {
+    "offers": [
+      {
+        "id": "carrot",
+        "type": "item",
+        "item": "carrot",
+        "amount": 3,
+        "label": "3 Carrots",
+        "price": 18
+      },
+      {
+        "id": "herb",
+        "type": "item",
+        "item": "herb",
+        "amount": 3,
+        "label": "3 Herbs",
+        "price": 12
+      },
+      {
+        "id": "pumpkin",
+        "type": "item",
+        "item": "pumpkin",
+        "amount": 1,
+        "label": "1 Pumpkin",
+        "price": 50
+      },
+      {
+        "id": "crystal",
+        "type": "item",
+        "item": "crystal",
+        "amount": 1,
+        "label": "1 Glow Crystal",
+        "price": 30
+      },
+      {
+        "id": "frostberry",
+        "type": "item",
+        "item": "frostberry",
+        "amount": 3,
+        "label": "3 Frostberries",
+        "price": 18
+      },
+      {
+        "id": "seaweed",
+        "type": "item",
+        "item": "seaweed",
+        "amount": 3,
+        "label": "3 Seaweed",
+        "price": 15
+      },
+      {
+        "id": "cactus-fruit",
+        "type": "item",
+        "item": "cactus-fruit",
+        "amount": 3,
+        "label": "3 Cactus Fruit",
+        "price": 15
+      }
+    ],
+    "sell": {}
+  },
+  "bzgem": {
+    "offers": [],
+    "sell": {
+      "sunstone": 25,
+      "crystal": 22,
+      "sapphire": 45,
+      "emerald": 70,
+      "ruby": 110,
+      "diamond": 340
     }
   }
 }

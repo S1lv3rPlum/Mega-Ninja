@@ -309,6 +309,30 @@
       "icon": "crest",
       "color": "#9dffb0",
       "desc": "An enchantment for your weapon: swings 25% faster. Set it at the Enchanting Workshop."
+    },
+    "moonbloom-seeds": {
+      "name": "Moonbloom Seeds",
+      "icon": "seeds",
+      "color": "#9fb8ff",
+      "desc": "Plant in a farm plot. It only grows at night. A treat for owls and moon hares."
+    },
+    "glowcap-seeds": {
+      "name": "Glowcap Spores",
+      "icon": "seeds",
+      "color": "#7dffb0",
+      "desc": "Plant in a farm plot. It only grows at night. A treat for fireflies."
+    },
+    "moonbloom": {
+      "name": "Moonbloom",
+      "icon": "leaf",
+      "color": "#bcd6ff",
+      "desc": "A pale flower that only blooms at night. Owls and moon hares love it."
+    },
+    "glowcap": {
+      "name": "Glowcap",
+      "icon": "leaf",
+      "color": "#7dffb0",
+      "desc": "A glowing mushroom that only grows at night. Fireflies love it."
     }
   },
   "tools": {

@@ -181,5 +181,93 @@
       "The Sea Serpent sinks back into the pool with a bubbling sigh, and the dark whisper drifts out of her like smoke.",
       "Behind her, half of a silver crest glimmers on a ledge. The other half is missing, torn away."
     ]
+  },
+  "scorpion": {
+    "name": "Scorpion",
+    "texture": "scorpion",
+    "hp": 4,
+    "damage": 2,
+    "moveMs": 520,
+    "attackMs": 1300,
+    "sight": 7,
+    "respawnMs": 40000,
+    "gold": 6
+  },
+  "sandlizard": {
+    "name": "Sand Lizard",
+    "texture": "sandlizard",
+    "hp": 3,
+    "damage": 1,
+    "moveMs": 450,
+    "attackMs": 1300,
+    "sight": 5,
+    "respawnMs": 40000,
+    "gold": 5,
+    "tame": "sandlizard"
+  },
+  "scorpionking": {
+    "name": "Scorpion King",
+    "texture": "scorpionking",
+    "hp": 34,
+    "damage": 3,
+    "moveMs": 560,
+    "attackMs": 1400,
+    "sight": 14,
+    "respawnMs": 31536000000,
+    "gold": 120,
+    "boss": true,
+    "flag": "scorpionking_defeated",
+    "summon": {
+      "type": "scorpion",
+      "everyMs": 7500,
+      "max": 2
+    },
+    "reward": {
+      "item": "moon-crest-half-2",
+      "msg": "The Scorpion King is beaten! You got the other half of the Moon Crest!"
+    },
+    "defeatLines": [
+      "The Scorpion King collapses in the sand and the dark whisper hisses out of him like steam.",
+      "Around his neck, on a cord, hangs the other half of the silver crest. He lets you take it."
+    ]
+  },
+  "firefly": {
+    "name": "Glow Firefly",
+    "texture": "firefly",
+    "hp": 2,
+    "damage": 0,
+    "moveMs": 1100,
+    "attackMs": 99999,
+    "sight": 0,
+    "respawnMs": 60000,
+    "gold": 0,
+    "tame": "firefly",
+    "harmless": true
+  },
+  "owl": {
+    "name": "Moon Owl",
+    "texture": "owl",
+    "hp": 2,
+    "damage": 0,
+    "moveMs": 1100,
+    "attackMs": 99999,
+    "sight": 0,
+    "respawnMs": 60000,
+    "gold": 0,
+    "tame": "owl",
+    "harmless": true
+  },
+  "moonhare": {
+    "name": "Moon Hare",
+    "texture": "moonhare",
+    "hp": 2,
+    "damage": 0,
+    "moveMs": 1100,
+    "attackMs": 99999,
+    "sight": 0,
+    "respawnMs": 60000,
+    "gold": 0,
+    "tame": "moonhare",
+    "harmless": true
   }
 }

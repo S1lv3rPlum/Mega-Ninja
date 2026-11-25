@@ -58,5 +58,27 @@
       1,
       2
     ]
+  },
+  "moonbloom": {
+    "name": "Moonbloom",
+    "seed": "moonbloom-seeds",
+    "item": "moonbloom",
+    "growMs": 20000,
+    "seedsBack": [
+      1,
+      2
+    ],
+    "nightOnly": true
+  },
+  "glowcap": {
+    "name": "Glowcap",
+    "seed": "glowcap-seeds",
+    "item": "glowcap",
+    "growMs": 20000,
+    "seedsBack": [
+      1,
+      2
+    ],
+    "nightOnly": true
   }
 }
