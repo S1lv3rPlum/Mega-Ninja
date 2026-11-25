@@ -16,6 +16,9 @@ import weaponDefs from '../data/weapons.json';
 import faintCfg from '../data/faint.json';
 import Enemies from '../Enemies.js';
 import Boss from '../Boss.js';
+import Golem from '../Golem.js';
+import doorCfg from '../data/sealed-door.json';
+import { missingForDoor, openDoor } from '../door.js';
 import { ensureCombatState, hurtPlayer as applyHurt, faint as applyFaint, eat } from '../combat.js';
 import shopData from '../data/shop.json';
 import { talkToShopkeeper } from '../shop.js';
@@ -74,7 +77,7 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('sensei', 'assets/sprites/sensei.png');
     this.load.image('shadow', 'assets/sprites/shadow.png');
     this.load.image('boulder', 'assets/sprites/boulder.png');
-    this.load.image('bat', 'assets/sprites/bat.png');
+    ['bat', 'golem', 'golem-ball', 'golem-good', 'pebble', 'sealed-door-open'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
     this.load.image('sealed-door', 'assets/sprites/sealed-door.png');
     this.load.image('dialogue-box', 'assets/ui/dialogue-box.png');
   }
@@ -106,10 +109,18 @@ export default class WorldScene extends Phaser.Scene {
     // co-op: the shared world (farm, rocks, boulders, the treant) comes from the cloud before the map is built
     if (Coop.active) Coop.prepare(gs);
     // a co-op friend freed the treant before you got there: the lantern is waiting for you too
+    const pending = [];
     if (gs.flags.treant_defeated && !(gs.items.lantern > 0)) {
       gs.items.lantern = 1;
-      this.registry.set('pendingMsg', 'The treant is free thanks to your friends! He leaves you the Heartwood Lantern.');
+      pending.push('The treant was freed by your friends! He left you the Heartwood Lantern.');
     }
+    // the golem was calmed by a friend before you got here: the Crest Stone is yours too (once)
+    if (gs.flags.golem_defeated && !gs.flags.got_crest) {
+      gs.flags.got_crest = true;
+      gs.items['crest-stone'] = (gs.items['crest-stone'] ?? 0) + 1;
+      pending.push('Granite was calmed by your friends! He gave you a Crest Stone too.');
+    }
+    if (pending.length) this.registry.set('pendingMsg', pending);
     this.invulnUntil = 0;
     this.nextSwing = 0;
     // older saves kept the shovel as a plain item: turn it into a tool
@@ -172,7 +183,8 @@ export default class WorldScene extends Phaser.Scene {
       const y = Math.floor(o.y / TILE);
       const id = p.id ?? o.name;
       // a walking NPC with a <texture>-walk sheet gets a 16x24 animated sprite (feet on the bottom of its tile)
-      const tex = p.texture ?? 'npc';
+      const isOpen = !!(p.openFlag && gs.flags[p.openFlag]);
+      const tex = isOpen ? p.openTexture ?? p.texture ?? 'npc' : p.texture ?? 'npc';
       const sheet = (p.walkRadius ?? 0) > 0 && this.textures.exists(`${tex}-walk`) ? `${tex}-walk` : null;
       let sprite;
       if (sheet) {
@@ -192,7 +204,11 @@ export default class WorldScene extends Phaser.Scene {
       return {
         id,
         sheet,
-        dialogue: p.dialogue ?? id,
+        // an NPC with openFlag (a flag name) changes texture and dialogue once that flag is set (see the cave's stone door)
+        openFlag: p.openFlag,
+        openTexture: p.openTexture,
+        openDialogue: p.openDialogue,
+        dialogue: isOpen && p.openDialogue ? p.openDialogue : p.dialogue ?? id,
         shop: p.shop, // a key in data/shop.json makes this NPC a shopkeeper
         x,
         y,
@@ -273,7 +289,7 @@ export default class WorldScene extends Phaser.Scene {
     // --- The forest boss (an object on a "boss" layer) ---
     this.boss = null;
     const bossObj = objects('boss')[0];
-    if (bossObj) this.boss = new Boss(this, bossObj);
+    if (bossObj) this.boss = readProps(bossObj.properties).kind === 'golem' ? new Golem(this, bossObj) : new Boss(this, bossObj);
     // the forest is darkened by the shadow until the treant is freed
     if (gs.map === 'forest' && gs.flags.got_sword && !gs.flags.treant_defeated) {
       this.targets.forEach((t) => t.sprite.setTint(0x8a7aaa));
@@ -402,7 +418,7 @@ export default class WorldScene extends Phaser.Scene {
     const pendingMsg = this.registry.get('pendingMsg');
     if (pendingMsg) {
       this.registry.set('pendingMsg', null);
-      this.time.delayedCall(900, () => this.dialogue.open([pendingMsg], 'Gnarl'));
+      this.time.delayedCall(900, () => this.dialogue.open([].concat(pendingMsg), ''));
     }
 
     // --- Rabbit: a garden pest on any map that has plots (starts once you've met the farmer) ---
@@ -962,7 +978,7 @@ export default class WorldScene extends Phaser.Scene {
     const tx = this.tile.x + this.facing.x;
     const ty = this.tile.y + this.facing.y;
     // the treant is weak to the axe: Space with a working axe swings it at the boss
-    if (this.boss && this.boss.occupies(tx, ty) && this.boss.axeHit()) return;
+    if (this.boss && this.boss.occupies(tx, ty) && (this.boss.toolHit?.() ?? this.boss.axeHit())) return;
     const npc = this.npcAt(tx, ty);
     const target = this.targetAt(tx, ty);
     if (npc) {
@@ -987,6 +1003,10 @@ export default class WorldScene extends Phaser.Scene {
     if (!data) return;
 
     this.touchDir = { x: 0, y: 0 };
+    if (npc.id === 'sealeddoor' && !this.gameState.flags[doorCfg.flag]) {
+      this.sealedDoor(npc, data);
+      return;
+    }
     // an animated NPC turns to look at you
     if (npc.sheet && !npc.moving) this.standNpc(npc, this.dirName({ x: -this.facing.x, y: -this.facing.y }));
 
@@ -1014,6 +1034,57 @@ export default class WorldScene extends Phaser.Scene {
       if (this.gameState.flags[flagName]) lines = flagLines;
     }
     this.dialogue.open(lines, data.name);
+  }
+
+  // The cave's stone door: needs a ruby, sapphire, emerald and the Crest Stone (data/sealed-door.json); they are used up.
+  sealedDoor(npc, data) {
+    const gs = this.gameState;
+    const names = Object.fromEntries(Object.entries(itemsData.items).map(([id, it]) => [id, it.name]));
+    const missing = missingForDoor(gs, doorCfg, names);
+    const first = !gs.flags.met_sealeddoor;
+    gs.flags.met_sealeddoor = true;
+    const lines = [...(first ? data.lines : data.repeatLines)];
+    if (missing.length > 0) {
+      lines.push(`You still need: ${missing.join(', ')}.`);
+      this.runConvo({ lines }, data.name);
+      return;
+    }
+    lines.push('You are carrying everything the door asks for.');
+    this.runConvo(
+      {
+        lines,
+        choice: {
+          options: ['Place them', 'Not yet'],
+          onPick: (i) => {
+            if (i !== 0) return null;
+            const r = openDoor(gs, doorCfg, names);
+            if (!r.ok) return { lines: ['Something is missing.'] };
+            this.refreshOpenNpcs();
+            this.cameras.main.flash(400, 255, 255, 255);
+            this.cameras.main.shake(900, 0.006);
+            this.saveQuiet();
+            return {
+              lines: [
+                'One by one the gems sink into the sockets and glow. The Crest Stone clicks into place.',
+                'The stone door grinds open on a dark passage.',
+              ],
+              afterClose: () => 'The stone door is open!',
+            };
+          },
+        },
+      },
+      data.name
+    );
+  }
+
+  // NPCs with an openFlag switch to their "open" look when the flag is set (also called when a co-op friend opens it)
+  refreshOpenNpcs() {
+    const gs = this.gameState;
+    this.npcs.forEach((n) => {
+      if (!n.openFlag || !gs.flags[n.openFlag]) return;
+      if (n.openTexture) n.sprite.setTexture(n.openTexture);
+      if (n.openDialogue) n.dialogue = n.openDialogue;
+    });
   }
 
   // Plays a conversation step: lines in the dialogue box, then a toast, then an optional choice menu,
@@ -1099,12 +1170,14 @@ export default class WorldScene extends Phaser.Scene {
       } else if (section === 'targets' && a === gs.map) {
         const t = this.targets.find((o) => o.id === b);
         if (t) this.syncTargetVisual(t);
-      } else if (path === 'flags/treant_defeated') {
+      } else if (this.boss && path === `flags/${this.boss.flag}`) {
         freed = true;
+      } else if (this.npcs.some((n) => n.openFlag && path === `flags/${n.openFlag}`)) {
+        this.refreshOpenNpcs();
       }
     });
-    if (freed && gs.map === 'forest' && this.boss && !this.boss.good && !this.transitioning) {
-      this.showToast('The treant has been freed!');
+    if (freed && this.boss && !this.boss.good && !this.transitioning) {
+      this.showToast(`${this.boss.name ?? 'The boss'} has been beaten by a friend!`);
       this.time.delayedCall(1500, () => {
         if (this.transitioning) return;
         this.transitioning = true;
