@@ -20,5 +20,16 @@
     "sight": 9,
     "respawnMs": 0,
     "gold": 0
+  },
+  "bat": {
+    "name": "Cave Bat",
+    "texture": "bat",
+    "hp": 3,
+    "damage": 1,
+    "moveMs": 450,
+    "attackMs": 1100,
+    "sight": 6,
+    "respawnMs": 40000,
+    "gold": 4
   }
 }

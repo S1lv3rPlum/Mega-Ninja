@@ -113,9 +113,30 @@
     ],
     "flagLines": {
       "treant_defeated": [
-        "Your Heartwood Lantern glows warmly. From deep inside the cave, something rumbles.",
-        "The way in is still blocked. (To be continued...)"
+        "Your Heartwood Lantern glows warmly.",
+        "The cave mouth is just north of here. Watch out for bats!"
       ]
     }
+  },
+  "wanderer": {
+    "name": "Wanderer",
+    "lines": [
+      "Just stretching my legs. I never stay in one place for long.",
+      "If you ever see a rabbit near the farm, that is not my fault."
+    ],
+    "repeatLines": [
+      "Nice day for a walk, isn't it?"
+    ]
+  },
+  "sealeddoor": {
+    "name": "Stone Door",
+    "lines": [
+      "A huge stone door, carved with a ninja crest.",
+      "Three round sockets sit empty beneath it. It will not budge.",
+      "Whatever sleeps beyond must wait... (To be continued)"
+    ],
+    "repeatLines": [
+      "The door is sealed tight. Three empty sockets wait below the crest."
+    ]
   }
 }
