@@ -261,6 +261,15 @@
       "amount": 1,
       "texture": "snow-bush",
       "msg": "Found a pumpkin seed!"
+    },
+    {
+      "id": "seed-frostberry-seeds",
+      "weight": 20,
+      "hits": 1,
+      "drop": "frostberry-seeds",
+      "amount": 1,
+      "texture": "snow-bush",
+      "msg": "Found frostberry seeds!"
     }
   ],
   "forageRuins": [
@@ -290,6 +299,109 @@
       "amount": 2,
       "texture": "kelp",
       "msg": "Found carrot seeds!"
+    },
+    {
+      "id": "seed-seaweed-seeds",
+      "weight": 20,
+      "hits": 1,
+      "drop": "seaweed-seeds",
+      "amount": 1,
+      "texture": "kelp",
+      "msg": "Found kelp spores!"
+    }
+  ],
+  "forageDesert": [
+    {
+      "id": "d1",
+      "weight": 60,
+      "hits": 1,
+      "drop": "cactus-fruit",
+      "amount": 2,
+      "texture": "cactus-fruit",
+      "msg": "Picked cactus fruit!"
+    },
+    {
+      "id": "d2",
+      "weight": 25,
+      "hits": 1,
+      "drop": "herb",
+      "amount": 2,
+      "texture": "cactus-fruit",
+      "msg": "Picked some herbs!"
+    },
+    {
+      "id": "d3",
+      "weight": 15,
+      "hits": 1,
+      "drop": "pumpkin-seeds",
+      "amount": 1,
+      "texture": "cactus-fruit",
+      "msg": "Found a pumpkin seed!"
+    },
+    {
+      "id": "seed-cactus-fruit-seeds",
+      "weight": 20,
+      "hits": 1,
+      "drop": "cactus-fruit-seeds",
+      "amount": 1,
+      "texture": "cactus-fruit",
+      "msg": "Found cactus seeds!"
+    }
+  ],
+  "desertRocks": [
+    {
+      "id": "sun",
+      "weight": 40,
+      "hits": 4,
+      "drop": "sunstone",
+      "amount": 2,
+      "texture": "rock-sun",
+      "msg": "Sunstones!"
+    },
+    {
+      "id": "copper",
+      "weight": 22,
+      "hits": 4,
+      "drop": "copper",
+      "amount": 2,
+      "texture": "rock-copper",
+      "msg": "Copper ore!"
+    },
+    {
+      "id": "ruby",
+      "weight": 14,
+      "hits": 7,
+      "drop": "ruby",
+      "amount": 1,
+      "texture": "rock-ruby",
+      "msg": "A ruby!"
+    },
+    {
+      "id": "emerald",
+      "weight": 12,
+      "hits": 6,
+      "drop": "emerald",
+      "amount": 1,
+      "texture": "rock-emerald",
+      "msg": "An emerald!"
+    },
+    {
+      "id": "diamond",
+      "weight": 8,
+      "hits": 8,
+      "drop": "diamond",
+      "amount": 1,
+      "texture": "rock-diamond",
+      "msg": "A DIAMOND!"
+    },
+    {
+      "id": "grey",
+      "weight": 4,
+      "hits": 3,
+      "drop": "stone",
+      "amount": 2,
+      "texture": "rock-grey",
+      "msg": "Rock smashed!"
     }
   ]
 }

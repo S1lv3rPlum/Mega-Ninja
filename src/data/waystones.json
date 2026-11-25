@@ -1,0 +1,66 @@
+[
+  {
+    "id": "town",
+    "label": "Town",
+    "map": "town",
+    "x": 15,
+    "y": 9,
+    "flag": "waystone_town"
+  },
+  {
+    "id": "farm",
+    "label": "Farm",
+    "map": "farm",
+    "x": 1,
+    "y": 7,
+    "flag": "waystone_farm"
+  },
+  {
+    "id": "forest",
+    "label": "Forest",
+    "map": "forest",
+    "x": 13,
+    "y": 2,
+    "flag": "waystone_forest"
+  },
+  {
+    "id": "quarry",
+    "label": "Quarry",
+    "map": "quarry",
+    "x": 1,
+    "y": 11,
+    "flag": "waystone_quarry"
+  },
+  {
+    "id": "crystal",
+    "label": "Crystal Caverns",
+    "map": "crystal",
+    "x": 6,
+    "y": 2,
+    "flag": "waystone_crystal"
+  },
+  {
+    "id": "peaks",
+    "label": "Snowy Peaks",
+    "map": "peaks",
+    "x": 1,
+    "y": 23,
+    "flag": "waystone_peaks"
+  },
+  {
+    "id": "ruins",
+    "label": "Sunken Ruins",
+    "map": "ruins",
+    "x": 1,
+    "y": 24,
+    "flag": "waystone_ruins"
+  },
+  {
+    "id": "bazaar",
+    "label": "Desert Bazaar",
+    "map": "bazaar",
+    "x": 16,
+    "y": 20,
+    "flag": "waystone_bazaar"
+  }
+]

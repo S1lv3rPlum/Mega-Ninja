@@ -137,6 +137,54 @@
       "icon": "crest",
       "color": "#c8d6e8",
       "desc": "Half of a silver crest. The princess carries the other half... or did."
+    },
+    "sunstone": {
+      "name": "Sunstone",
+      "icon": "gem",
+      "color": "#ffc83c",
+      "desc": "A warm golden stone. Armor smiths in the bazaar prize them."
+    },
+    "cactus-fruit": {
+      "name": "Cactus Fruit",
+      "icon": "pumpkin",
+      "color": "#f05aa0",
+      "desc": "Sweet and prickly. Sand lizards love it."
+    },
+    "moon-crest-half-2": {
+      "name": "Moon Crest (other half)",
+      "icon": "crest",
+      "color": "#e8d6c8",
+      "desc": "The other half of the silver crest. Join it with the first half."
+    },
+    "moon-crest": {
+      "name": "Moon Crest",
+      "icon": "crest",
+      "color": "#ffffff",
+      "desc": "The whole silver crest, glowing softly. It seems to point north."
+    },
+    "frostberry-seeds": {
+      "name": "Frostberry Seeds",
+      "icon": "seeds",
+      "color": "#8fd8ff",
+      "desc": "Plant them in a dirt plot on the farm. They grow into a treat for your friends."
+    },
+    "seaweed-seeds": {
+      "name": "Kelp Spores",
+      "icon": "seeds",
+      "color": "#3fb88a",
+      "desc": "Plant them in a dirt plot on the farm. They grow into a treat for your friends."
+    },
+    "cactus-fruit-seeds": {
+      "name": "Cactus Seeds",
+      "icon": "seeds",
+      "color": "#f05aa0",
+      "desc": "Plant them in a dirt plot on the farm. They grow into a treat for your friends."
+    },
+    "waystone-charm": {
+      "name": "Waystone Charm",
+      "icon": "crest",
+      "color": "#7fffe6",
+      "desc": "A charm that hums near waystones. Open the bag and press Space to travel to any waystone you have lit."
     }
   },
   "tools": {
@@ -168,6 +216,16 @@
     "moonreaper": {
       "icon": "sword",
       "color": "#7fe8ff"
+    }
+  },
+  "armor": {
+    "sunscale": {
+      "icon": "armor",
+      "color": "#e0a040"
+    },
+    "mirage": {
+      "icon": "armor",
+      "color": "#ffd9a0"
     }
   }
 }

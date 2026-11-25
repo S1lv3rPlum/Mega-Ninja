@@ -1,5 +1,62 @@
 {
-  "wheat":   { "name": "Wheat",   "seed": "seeds",         "item": "wheat",   "growMs": 15000, "seedsBack": [1, 2] },
-  "carrot":  { "name": "Carrot",  "seed": "carrot-seeds",  "item": "carrot",  "growMs": 9000,  "seedsBack": [1, 2] },
-  "pumpkin": { "name": "Pumpkin", "seed": "pumpkin-seeds", "item": "pumpkin", "growMs": 30000, "seedsBack": [1, 1] }
+  "wheat": {
+    "name": "Wheat",
+    "seed": "seeds",
+    "item": "wheat",
+    "growMs": 15000,
+    "seedsBack": [
+      1,
+      2
+    ]
+  },
+  "carrot": {
+    "name": "Carrot",
+    "seed": "carrot-seeds",
+    "item": "carrot",
+    "growMs": 9000,
+    "seedsBack": [
+      1,
+      2
+    ]
+  },
+  "pumpkin": {
+    "name": "Pumpkin",
+    "seed": "pumpkin-seeds",
+    "item": "pumpkin",
+    "growMs": 30000,
+    "seedsBack": [
+      1,
+      1
+    ]
+  },
+  "frostberry": {
+    "name": "Frostberry",
+    "seed": "frostberry-seeds",
+    "item": "frostberry",
+    "growMs": 12000,
+    "seedsBack": [
+      1,
+      2
+    ]
+  },
+  "seaweed": {
+    "name": "Seaweed",
+    "seed": "seaweed-seeds",
+    "item": "seaweed",
+    "growMs": 12000,
+    "seedsBack": [
+      1,
+      2
+    ]
+  },
+  "cactus-fruit": {
+    "name": "Cactus Fruit",
+    "seed": "cactus-fruit-seeds",
+    "item": "cactus-fruit",
+    "growMs": 15000,
+    "seedsBack": [
+      1,
+      2
+    ]
+  }
 }

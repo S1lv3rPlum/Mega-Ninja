@@ -355,5 +355,135 @@
     "repeatLines": [
       "\"...to the desert market. Please hurry. - P.\""
     ]
+  },
+  "desertsign": {
+    "name": "Sign",
+    "lines": [
+      "THE GREAT DESERT. The bazaar lies far to the east. Beware the scorpions, and the pit to the south-east."
+    ],
+    "repeatLines": [
+      "The bazaar is east. The Scorpion King's pit is south-east. Do not go unprepared."
+    ]
+  },
+  "bazaarsign": {
+    "name": "Sign",
+    "lines": [
+      "THE DESERT BAZAAR. Armor, treats and gems. Follow the red rug."
+    ],
+    "repeatLines": [
+      "The Desert Bazaar is just ahead."
+    ]
+  },
+  "bzsmith": {
+    "name": "Armorsmith",
+    "lines": [
+      "Welcome, traveller, to the only armor stall for a hundred miles of sand.",
+      "Bring me gold and sunstones from the desert rocks, and I will craft you armor fit for a hero."
+    ],
+    "offer": "Today I could craft {name}: {desc}. Good armor takes time. Come back after you have wandered off, and it will be ready.",
+    "ordered": "Excellent! Go on, explore the dunes, and come back later.",
+    "working": "Patience, friend! The {name} is still cooling. Leave the bazaar and come back, and it will be ready.",
+    "ready": "Ah, there you are! Your {name} is finished. Wear it with pride!",
+    "done": "I have no finer armor left to craft. You wear my best work.",
+    "farewell": "The sun will wait for you.",
+    "repeatLines": [
+      "Back again? Let us see what armor I can craft for you."
+    ]
+  },
+  "bzspice": {
+    "name": "Treat Seller",
+    "lines": [
+      "Treats from every land! Carrots, herbs, crystals, berries, seaweed and cactus fruit. Something for every little friend."
+    ],
+    "menu": "Which treat?",
+    "farewell": "Your friends will thank you!",
+    "repeatLines": [
+      "Treats for your little friends?"
+    ]
+  },
+  "bzgem": {
+    "name": "Gem Trader",
+    "lines": [
+      "Gems! Sunstones! I pay the best prices in the whole bazaar."
+    ],
+    "menu": "Selling?",
+    "farewell": "Come back with more shine!",
+    "repeatLines": [
+      "Got any shiny things for me?"
+    ]
+  },
+  "princess": {
+    "name": "Princess",
+    "lines": [
+      "Oh! You made it. You must be the ninja who followed my notes.",
+      "I have been hiding in this tent. The dark whisper still hunts me.",
+      "I split the Moon Crest in two so it could never take both halves. The Scorpion King took the half I carried. He wears it in his pit, south-east of here.",
+      "Please, if you can... beat him and bring it back. The whisper has made him furious."
+    ],
+    "repeatLines": [
+      "The Scorpion King wears the other half in his pit, south-east of here. Be careful."
+    ],
+    "flagLines": {
+      "scorpionking_defeated": [
+        "You did it! You have both halves! Hold them together...",
+        "The Moon Crest is whole again. See how it glows? It points north, past the snowy peaks, to where the moon touches the mountain.",
+        "Take this Waystone Charm too. Touch the glowing waystones wherever you go, then open your bag and use the charm to travel back to any of them.",
+        "That is where the dark whisper sleeps. We will go together, when you are ready. (To be continued)"
+      ]
+    }
+  },
+  "bzcust1": {
+    "name": "Camel Driver",
+    "lines": [
+      "My camel will not walk past the armor stall. He is afraid of his own reflection."
+    ],
+    "repeatLines": [
+      "Do not tell him."
+    ]
+  },
+  "bzcust2": {
+    "name": "Spice Merchant",
+    "lines": [
+      "Cactus fruit is sweeter on the road than in the bazaar. Do not ask me why."
+    ],
+    "repeatLines": [
+      "It is true."
+    ]
+  },
+  "bzcust3": {
+    "name": "Traveler",
+    "lines": [
+      "I heard the princess is staying in the far stall, the one with the crown on the sign."
+    ],
+    "repeatLines": [
+      "Say hello for me."
+    ]
+  },
+  "bzcust4": {
+    "name": "Little Trader",
+    "lines": [
+      "A friend followed me all the way here. I named her Biscuit. She is a very good lizard."
+    ],
+    "repeatLines": [
+      "Biscuit says hello."
+    ]
+  },
+  "waystone": {
+    "name": "Waystone",
+    "lines": [
+      "A tall stone, cold and quiet."
+    ],
+    "repeatLines": [
+      "A tall stone, cold and quiet."
+    ]
+  },
+  "waystoneon": {
+    "name": "Waystone",
+    "lines": [
+      "The waystone glows softly. It remembers you."
+    ],
+    "repeatLines": [
+      "The waystone glows softly. A Waystone Charm can bring you back here."
+    ]
   }
 }

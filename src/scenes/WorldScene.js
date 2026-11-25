@@ -26,7 +26,10 @@ import InventoryScreen, { iconKey } from '../InventoryScreen.js';
 import { lowTools } from '../inventory.js';
 import { Coop } from '../Coop.js';
 import Friends from '../Friends.js';
-import { ensureSmith, talkToSmith } from '../smith.js';
+import { owedGifts, giveGifts } from '../bossGifts.js';
+import waystoneData from '../data/waystones.json';
+import { ensureSmith, talkToSmith, reduceDamage, mergeCrest } from '../smith.js';
+import armorDefs from '../data/armor.json';
 import friendDefs from '../data/friends.json';
 
 const TILE = 16;
@@ -41,10 +44,10 @@ const START_MAP = 'town';
 const START_TILE = { x: 15, y: 10 };
 
 // To add a map: save it as public/assets/maps/<name>.json and add its name here.
-const MAPS = ['town', 'farm', 'forest', 'quarry', 'cave', 'crystal', 'market', 'peaks', 'ruins'];
+const MAPS = ['town', 'farm', 'forest', 'quarry', 'cave', 'crystal', 'market', 'peaks', 'ruins', 'desert', 'bazaar'];
 // To add a tileset: save it as public/assets/tilesets/<name>.png and add its name here.
 // (The name must match the tileset's name inside Tiled.)
-const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles', 'mine-tiles', 'crystal-tiles', 'market-tiles', 'snow-tiles', 'ruins-tiles'];
+const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles', 'mine-tiles', 'crystal-tiles', 'market-tiles', 'snow-tiles', 'ruins-tiles', 'desert-tiles', 'bazaar-tiles'];
 
 // Tiled stores custom properties as a list of {name, value}; turn that into a plain object
 const readProps = (p) =>
@@ -71,12 +74,12 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('stump', 'assets/sprites/stump.png');
     this.load.image('lumberjack', 'assets/sprites/lumberjack.png'); // textures for NPCs go here
     this.load.image('shopkeeper', 'assets/sprites/shopkeeper.png');
-    ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond', 'crystal'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
+    ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond', 'crystal', 'sun'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
     this.load.image('rubble', 'assets/sprites/rubble.png');
-    ['treant-boss', 'treant-good', 'sapling', 'sign', 'bat-queen', 'moth', 'hexsmith', 'hexcreature', 'hexcharm', 'yeti', 'snowfox', 'frostimp', 'snow-bush', 'snow-bush-bare', 'serpent', 'jelly', 'crab', 'kelp', 'kelp-bare', 'rune-off', 'rune-on', 'ruinsdoor', 'ruinsdoor-open'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
+    ['treant-boss', 'treant-good', 'sapling', 'sign', 'bat-queen', 'moth', 'hexsmith', 'hexcreature', 'hexcharm', 'yeti', 'snowfox', 'frostimp', 'snow-bush', 'snow-bush-bare', 'serpent', 'jelly', 'crab', 'kelp', 'kelp-bare', 'rune-off', 'rune-on', 'ruinsdoor', 'ruinsdoor-open', 'scorpion', 'sandlizard', 'scorpionking', 'cactus-fruit', 'cactus-fruit-bare', 'princess', 'bzsmith', 'bzspice', 'bzgem', 'waystone-off', 'waystone-on'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
     this.load.image('bush', 'assets/sprites/bush.png');
     this.load.image('bush-bare', 'assets/sprites/bush-bare.png');
-    ['carrot', 'pumpkin'].forEach((c) => [2, 3, 4].forEach((n) => this.load.image(`crop-${c}-${n}`, `assets/sprites/crop-${c}-${n}.png`)));
+    ['carrot', 'pumpkin', 'frostberry', 'seaweed', 'cactus-fruit'].forEach((c) => [2, 3, 4].forEach((n) => this.load.image(`crop-${c}-${n}`, `assets/sprites/crop-${c}-${n}.png`)));
     this.load.image('sensei', 'assets/sprites/sensei.png');
     this.load.image('shadow', 'assets/sprites/shadow.png');
     this.load.image('boulder', 'assets/sprites/boulder.png');
@@ -110,6 +113,8 @@ export default class WorldScene extends Phaser.Scene {
     ensureToolState(gs);
     ensureCombatState(gs);
     ensureSmith(gs);
+    gs.flags.waystone_town = true; // the town waystone is always lit
+    if (gs.map === 'bazaar') gs.bazaarVisits += 1; // an order at the armor smith is ready the next time you come back
     if (gs.map === 'market') gs.marketVisits += 1; // an order at the weapon smith is ready the next time you come back
     // co-op: the shared world (farm, rocks, boulders, the treant) comes from the cloud before the map is built
     if (Coop.active) Coop.prepare(gs);
@@ -125,21 +130,8 @@ export default class WorldScene extends Phaser.Scene {
       gs.items['crest-stone'] = (gs.items['crest-stone'] ?? 0) + 1;
       pending.push('Granite was calmed by your friends! He gave you a Crest Stone too.');
     }
-    // the Bat Queen was beaten by a friend before you got here: the Crystal Lantern is yours too (once)
-    if (gs.flags.batqueen_defeated && !(gs.items['crystal-lantern'] > 0)) {
-      gs.items['crystal-lantern'] = 1;
-      pending.push('The Bat Queen was beaten by your friends! She left you a Crystal Lantern too.');
-    }
-    // the Yeti was beaten by a friend before you got here: the Frost Boots are yours too
-    if (gs.flags.yeti_defeated && !(gs.items['frost-boots'] > 0)) {
-      gs.items['frost-boots'] = 1;
-      pending.push('The Yeti was beaten by your friends! He left you Frost Boots too.');
-    }
-    // the Sea Serpent was calmed by a friend before you got here: half of the Moon Crest is yours too
-    if (gs.flags.serpent_defeated && !(gs.items['moon-crest-half'] > 0)) {
-      gs.items['moon-crest-half'] = 1;
-      pending.push('The Sea Serpent was calmed by your friends! You got half of the Moon Crest too.');
-    }
+    // boss rewards a friend earned (or earned before you joined) are yours too, once (see bossGifts.js)
+    pending.push(...giveGifts(gs, owedGifts(gs)));
     if (pending.length) this.registry.set('pendingMsg', pending);
     this.invulnUntil = 0;
     this.nextSwing = 0;
@@ -230,6 +222,8 @@ export default class WorldScene extends Phaser.Scene {
         openFlag: p.openFlag,
         openTexture: p.openTexture,
         openDialogue: p.openDialogue,
+        giveItem: p.giveItem, // gives this item once, when the flag giveWhen is set (the princess and the Waystone Charm)
+        giveWhen: p.giveWhen,
         setFlag: p.setFlag, // pressing Space on it sets this flag (a rune stone); pair with openFlag for the lit look
         needFlags: p.needFlags ? String(p.needFlags).split(',') : null, // it sets its own openFlag once all of these are set (the inner door)
         passable: !!p.passable, // once its openFlag is set you can walk through it (the stone door)
@@ -467,6 +461,7 @@ export default class WorldScene extends Phaser.Scene {
 
   updateHud() {
     const gs = this.gameState;
+    if (mergeCrest(gs)) this.time.delayedCall(900, () => this.showToast('The two halves hum and join into the Moon Crest!'));
     // seeds, wheat, wood, stone and tools live in the bag (I key / BAG button); the HUD keeps the essentials
     const lines = [`   ${gs.gold}`];
     if (this.crops) lines.push(`Water ${gs.can.water}/${gs.can.max}`); // only where there are plots to water
@@ -544,7 +539,7 @@ export default class WorldScene extends Phaser.Scene {
     const now = this.time.now;
     if (now < this.invulnUntil || this.transitioning) return;
     this.invulnUntil = now + 1000;
-    const r = applyHurt(this.gameState, amount);
+    const r = applyHurt(this.gameState, reduceDamage(amount, armorDefs[this.gameState.armor]));
     this.cameras.main.shake(120, 0.004);
     this.tweens.add({ targets: this.player, alpha: 0.3, duration: 80, yoyo: true, repeat: 4, onComplete: () => this.player.setAlpha(1) });
     this.updateHud();
@@ -1047,6 +1042,13 @@ export default class WorldScene extends Phaser.Scene {
     // an animated NPC turns to look at you
     if (npc.sheet && !npc.moving) this.standNpc(npc, this.dirName({ x: -this.facing.x, y: -this.facing.y }));
 
+    if (npc.giveItem && this.gameState.flags[npc.giveWhen] && !this.gameState.flags[`gave_${npc.id}`]) {
+      this.gameState.flags[`gave_${npc.id}`] = true;
+      const gs = this.gameState;
+      gs.items[npc.giveItem] = (gs.items[npc.giveItem] ?? 0) + 1;
+      const nm = itemsData.items[npc.giveItem]?.name ?? npc.giveItem;
+      this.time.delayedCall(2500, () => this.showToast(`Received: ${nm}`));
+    }
     // a rune stone: the first touch lights it (and may open a door that needs several runes)
     if (npc.setFlag && !this.gameState.flags[npc.setFlag]) {
       this.gameState.flags[npc.setFlag] = true;
@@ -1056,7 +1058,8 @@ export default class WorldScene extends Phaser.Scene {
       return;
     }
     if (npc.smith) {
-      this.runConvo(talkToSmith(this.gameState, npc.id, data, weaponDefs), data.name);
+      const armorSmith = npc.smith === 'armor';
+      this.runConvo(talkToSmith(this.gameState, npc.id, data, armorSmith ? armorDefs : weaponDefs, armorSmith ? 'armor' : 'weapon'), data.name);
       return;
     }
 
@@ -1128,6 +1131,28 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   // NPCs with an openFlag switch to their "open" look when the flag is set (also called when a co-op friend opens it)
+  // the Waystone Charm: pick a lit waystone to travel to
+  openWaystones() {
+    const gs = this.gameState;
+    if (this.choice.isOpen || this.dialogue.isOpen || this.moving || this.transitioning) return;
+    const lit = waystoneData.filter((w) => gs.flags[w.flag]);
+    const options = lit.map((w) => ({ label: w.label + (w.map === gs.map ? ' (here)' : ''), disabled: w.map === gs.map }));
+    options.push({ label: 'Cancel', disabled: false });
+    this.choice.open(options, { onSelect: (i) => i < lit.length && this.teleportTo(lit[i]) });
+  }
+
+  teleportTo(w) {
+    this.transitioning = true;
+    this.touchDir = { x: 0, y: 0 };
+    this.cameras.main.fadeOut(300);
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.gameState.map = w.map;
+      this.gameState.tile = { x: w.x, y: w.y };
+      SaveManager.save(this.gameState);
+      this.scene.restart();
+    });
+  }
+
   // a door NPC with needFlags opens itself (sets its openFlag) once every needed flag is set
   checkRuneDoors() {
     const gs = this.gameState;
@@ -1258,24 +1283,9 @@ export default class WorldScene extends Phaser.Scene {
         const rec = gs.enemies[a]?.[b];
         if (rec) this.enemies.removeRemote(b, rec.respawnAt);
         else this.enemies.reviveRemote(b);
-      } else if (path === 'flags/serpent_defeated') {
-        if (!(gs.items['moon-crest-half'] > 0)) {
-          gs.items['moon-crest-half'] = 1;
-          this.showToast('The Sea Serpent was calmed by a friend! You got half the Moon Crest too.');
-          this.updateHud();
-        }
-      } else if (path === 'flags/yeti_defeated') {
-        if (!(gs.items['frost-boots'] > 0)) {
-          gs.items['frost-boots'] = 1;
-          this.showToast('The Yeti was beaten by a friend! You got Frost Boots too.');
-          this.updateHud();
-        }
-      } else if (path === 'flags/batqueen_defeated') {
-        if (!(gs.items['crystal-lantern'] > 0)) {
-          gs.items['crystal-lantern'] = 1;
-          this.showToast('The Bat Queen was beaten by a friend! You got a Crystal Lantern too.');
-          this.updateHud();
-        }
+      } else if (path.startsWith('flags/') && owedGifts(gs, path.slice(6)).length) {
+        giveGifts(gs, owedGifts(gs, path.slice(6))).forEach((msg) => this.showToast(msg));
+        this.updateHud();
       } else if (this.boss && path === `flags/${this.boss.flag}`) {
         freed = true;
       } else if (this.npcs.some((n) => n.openFlag && path === `flags/${n.openFlag}`)) {

@@ -1,6 +1,7 @@
 import itemsData from './data/items.json';
 import toolDefs from './data/tools.json';
 import weaponDefs from './data/weapons.json';
+import armorDefs from './data/armor.json';
 import { listEntries, moveSelection } from './inventory.js';
 
 // 10x10 pixel icons. '#' = main colour, 'o' = dark outline, 'h' = highlight, '.' = empty.
@@ -19,6 +20,8 @@ const ICONS = {
   leaf:    ['.......ooo', '.....oo##o', '...oo###o.', '..o####o..', '.o##h#o...', '.o#o#o....', 'oo#o......', 'o.o.......', '..........', '..........'],
   crest:   ['..oooooo..', '.o#hhh##o.', 'o#h####h#o', 'o##o##o##o', 'o###oo###o', 'o###oo###o', 'o##o##o##o', '.o######o.', '..oooooo..', '..........'],
   lantern: ['...oooo...', '..o....o..', '...oooo...', '..o####o..', '.o#hhh##o.', '.o#h#o##o.', '.o#hhh##o.', '.o######o.', '..oooooo..', '..........'],
+  armor:   ['..oo..oo..', '.o##oo##o.', 'o###oo###o', 'o#h#oo#h#o', '.o##oo##o.', '..o#oo#o..', '..o#oo#o..', '..o#oo#o..', '...oooo...', '..........'],
+  boots:   ['..........', '..oooo....', '.o####o...', '.o#hh#o...', '.o####o...', '.o####oooo', '.o#######o', '.o########', '..oooooooo', '..........'],
   coin:    ['..oooooo..', '.o######o.', 'o##hh###oo', 'o#h##.##o.', 'o#h#.o##o.', 'o#h##.##o.', 'o###oo##o.', '.o######o.', '..oooooo..', '..........'],
 };
 
@@ -72,7 +75,7 @@ export default class InventoryScreen {
     if (this.isOpen) return;
     const s = this.scene;
     this.isOpen = true;
-    this.entries = listEntries(s.gameState, itemsData, toolDefs, weaponDefs);
+    this.entries = listEntries(s.gameState, itemsData, toolDefs, weaponDefs, armorDefs);
     this.index = Math.min(this.index, Math.max(0, this.entries.length - 1));
 
     const add = (o) => {
@@ -104,8 +107,8 @@ export default class InventoryScreen {
         box.setInteractive();
         box.on('pointerdown', () => this.select(i));
         const img = add(s.add.image(x + SLOT / 2, y + SLOT / 2 - 3, iconKey(s, e.icon, e.color)).setOrigin(0.5).setScale(2));
-        if (e.kind === 'weapon') {
-          // weapons don't wear out: no count, no bar
+        if (e.kind === 'weapon' || e.kind === 'armor') {
+          // weapons and armor don't wear out: no count, no bar
         } else if (e.kind === 'item') {
           add(s.add.text(x + SLOT - 3, y + SLOT - 3, String(e.count), { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', stroke: '#000000', strokeThickness: 2 }).setOrigin(1, 1));
         } else {
@@ -176,8 +179,12 @@ export default class InventoryScreen {
       return;
     }
     this.detailName.setText(e.name);
-    this.eatBtn.setVisible(e.kind === 'item' && e.heal > 0);
-    if (e.kind === 'weapon') {
+    this.eatBtn.setVisible(e.kind === 'item' && (e.heal > 0 || e.id === 'waystone-charm'));
+    this.eatBtn.setText(e.id === 'waystone-charm' ? 'USE' : 'EAT');
+    if (e.kind === 'armor') {
+      this.detailSub.setText(`Defense ${e.defense}`);
+      this.detailDesc.setText(e.desc);
+    } else if (e.kind === 'weapon') {
       this.detailSub.setText(`Damage ${e.damage}`);
       this.detailDesc.setText(e.desc);
     } else if (e.kind === 'item') {
@@ -194,6 +201,11 @@ export default class InventoryScreen {
   // Space / the EAT button: eat the selected food
   use() {
     const e = this.entries[this.index];
+    if (this.isOpen && e && e.kind === 'item' && e.id === 'waystone-charm') {
+      this.close();
+      this.scene.openWaystones();
+      return;
+    }
     if (!this.isOpen || !e || e.kind !== 'item' || !e.heal) return;
     const msg = this.scene.eatFood(e.id);
     // rebuild so counts and the cursor stay right (the stack may be gone now)
