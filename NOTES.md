@@ -251,3 +251,6 @@ without being run in a browser, so test new features on desktop and phone.
 - Fish as friend treats: friends.json `likes` (crab: pond minnow, owl: forest trout, snow fox: frost perch, sand lizard: sunfish). The favourite treat is used first (`treatFor` in pets.js). The Friend Journal shows "(or ...)".
 - ChoiceMenu now widens to fit its longest option (long recipe lines were cut off).
 - Regenerate with `python3 make_fishing.py` (after make_school / make_daynight). It overwrites hand edits to those map objects but not fish.json.
+
+## Miner repairs pickaxes
+- The quarry Miner is now a repair-only shop (`shop: 'miner'` on the NPC, `miner` in shop.json). Fixing the pickaxe costs 3 stone (from tools.json), no trip to the farm shop needed. If the pickaxe is fine he says so (`nothing` line in his dialogue; supported in shop.js for any repair-only stall).

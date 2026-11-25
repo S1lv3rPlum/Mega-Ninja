@@ -206,5 +206,15 @@
       "ruby": 110,
       "diamond": 340
     }
+  },
+  "miner": {
+    "offers": [
+      {
+        "id": "fixpick",
+        "type": "repair",
+        "tool": "pickaxe",
+        "label": "Fix Pickaxe"
+      }
+    ]
   }
 }

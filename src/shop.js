@@ -91,6 +91,10 @@ export function talkToShopkeeper(gs, npcId, data, shopDef, toolDefs) {
   const metFlag = `met_${npcId}`;
   const first = !gs.flags[metFlag];
   gs.flags[metFlag] = true;
+  // a repair-only stall with nothing to repair says so instead of showing an empty menu
+  if (data.nothing && getOffers(gs, shopDef, toolDefs).length === 0) {
+    return { lines: first ? [...data.lines, data.nothing] : [data.nothing], afterClose: () => null };
+  }
   return { lines: first ? [...data.lines, data.menu] : [data.menu], afterClose: () => null, choice: menu() };
 
   function menu() {

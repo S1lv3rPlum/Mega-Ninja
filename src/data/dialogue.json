@@ -79,7 +79,13 @@
       "Welcome to the quarry! Every rock here hides something. Grey ones are plain stone, but you will find copper, and if you are lucky, gems.",
       "Swing a pickaxe at a rock to break it. The harder the rock, the more swings it takes. Rocks grow back in a different colour.",
       "See that big cave up north? Rumbling started in there a while back. Something is not right. I would not go in. Not yet."
-    ]
+    ],
+    "repeatLines": [
+      "Back at the rocks, eh?"
+    ],
+    "menu": "Is that pickaxe worn out? I can fix it for you. Just bring me some stone.",
+    "nothing": "Your pickaxe is in fine shape. Come back when it gets worn, and I will fix it for a few stones.",
+    "farewell": "Happy digging!"
   },
   "sensei": {
     "name": "Sensei",
