@@ -24,6 +24,11 @@ import { lowTools } from '../inventory.js';
 import { Coop } from '../Coop.js';
 
 const TILE = 16;
+// NPCs that have walking animation: for each name here, public/assets/sprites/<name>-walk.png is a sheet laid out
+// exactly like the player's (3 frames across: step, stand, step; 4 rows: down, left, right, up; each frame 16x24).
+// To give an NPC animation: add its texture name here, drop in <name>-walk.png, and give the NPC a walkRadius.
+const NPC_WALK_SHEETS = ['npc'];
+const DIRS = ['down', 'left', 'right', 'up'];
 const MOVE_MS = 140; // time to slide one tile
 
 const START_MAP = 'town';
@@ -50,6 +55,9 @@ export default class WorldScene extends Phaser.Scene {
     // walking sheet: 3 frames across (step, stand, step) x 4 rows (down, left, right, up), 16x24 each
     this.load.spritesheet('player', 'assets/sprites/player-walk.png', { frameWidth: 16, frameHeight: 24 });
     this.load.image('npc', 'assets/sprites/npc.png');
+    NPC_WALK_SHEETS.forEach((n) =>
+      this.load.spritesheet(`${n}-walk`, `assets/sprites/${n}-walk.png`, { frameWidth: 16, frameHeight: 24 })
+    );
     this.load.image('rabbit', 'assets/sprites/rabbit.png');
     this.load.image('shovel', 'assets/items/shovel.png');
     this.load.image('dirt-pile', 'assets/sprites/dirt-pile.png'); // textures for "targets" objects go here
@@ -159,13 +167,41 @@ export default class WorldScene extends Phaser.Scene {
       const x = Math.floor(o.x / TILE);
       const y = Math.floor(o.y / TILE);
       const id = p.id ?? o.name;
+      // a walking NPC with a <texture>-walk sheet gets a 16x24 animated sprite (feet on the bottom of its tile)
+      const tex = p.texture ?? 'npc';
+      const sheet = (p.walkRadius ?? 0) > 0 && this.textures.exists(`${tex}-walk`) ? `${tex}-walk` : null;
+      let sprite;
+      if (sheet) {
+        DIRS.forEach((dir, row) => {
+          if (this.anims.exists(`${sheet}-${dir}`)) return;
+          this.anims.create({
+            key: `${sheet}-${dir}`,
+            frames: this.anims.generateFrameNumbers(sheet, { frames: [row * 3 + 1, row * 3, row * 3 + 1, row * 3 + 2] }),
+            frameRate: 8,
+            repeat: -1,
+          });
+        });
+        sprite = this.add.sprite(x * TILE, (y + 1) * TILE, sheet, 1).setOrigin(0, 1).setDepth(10);
+      } else {
+        sprite = this.add.image(x * TILE, y * TILE, tex).setOrigin(0, 0).setDepth(10);
+      }
       return {
         id,
+        sheet,
         dialogue: p.dialogue ?? id,
         shop: p.shop, // a key in data/shop.json makes this NPC a shopkeeper
         x,
         y,
-        sprite: this.add.image(x * TILE, y * TILE, p.texture ?? 'npc').setOrigin(0, 0).setDepth(10),
+        sprite,
+        // Walking NPCs: give the NPC object a custom property  walkRadius  (an int, e.g. 3) in Tiled.
+        // It then strolls around within that many tiles of where you placed it.
+        // Optional: walkPauseMs (average wait between steps, default 2200), walkStepMs (time per step, default 450).
+        walk: p.walkRadius ?? 0,
+        home: { x, y },
+        pauseMs: p.walkPauseMs ?? 2200,
+        stepMs: p.walkStepMs ?? 450,
+        nextStep: 800 + Math.random() * 2000,
+        moving: false,
       };
     });
 
@@ -941,6 +977,8 @@ export default class WorldScene extends Phaser.Scene {
     if (!data) return;
 
     this.touchDir = { x: 0, y: 0 };
+    // an animated NPC turns to look at you
+    if (npc.sheet && !npc.moving) this.standNpc(npc, this.dirName({ x: -this.facing.x, y: -this.facing.y }));
 
     // Shopkeepers (an NPC with a "shop" property pointing at data/shop.json)
     if (npc.shop && shopData[npc.shop]) {
@@ -1109,6 +1147,7 @@ export default class WorldScene extends Phaser.Scene {
     if (!(this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen)) {
       this.enemies.update(_time);
       if (this.boss) this.boss.update(_time);
+      this.updateWalkers(_time);
     }
 
     if (this.moving || this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen) return;
@@ -1127,6 +1166,63 @@ export default class WorldScene extends Phaser.Scene {
     }
 
     if (dx !== 0 || dy !== 0) this.tryMove(dx, dy);
+  }
+
+  // ---------- Walking NPCs ----------
+
+  // can this NPC step onto tile (x, y)?
+  npcCanStep(n, x, y) {
+    if (x < 0 || y < 0 || x >= this.map.width || y >= this.map.height) return false;
+    if (this.obstacles && this.obstacles.getTileAt(x, y) !== null) return false;
+    if (this.crops && this.crops.getTileAt(x, y) !== null) return false; // stay out of the crop plots
+    if (this.tile.x === x && this.tile.y === y) return false;
+    if (this.npcs.some((o) => o !== n && o.x === x && o.y === y)) return false;
+    if (this.targetAt(x, y)) return false;
+    if (this.doors.some((d) => x >= d.x0 && x <= d.x1 && y >= d.y0 && y <= d.y1)) return false; // never stand in a doorway
+    if (this.enemies && this.enemies.at(x, y)) return false;
+    if (this.boss && this.boss.occupies(x, y)) return false;
+    if (this.rabbit && rabbitOnMap(this.rabbit) && this.rabbit.x === x && this.rabbit.y === y) return false;
+    if (Object.values(this.remoteSprites ?? {}).some((r) => r.x === x && r.y === y)) return false; // a co-op friend
+    return true;
+  }
+
+  // stop animating and show the standing pose facing a direction
+  standNpc(n, dir) {
+    if (!n.sheet) return;
+    n.sprite.anims.stop();
+    n.sprite.setFrame(DIRS.indexOf(dir) * 3 + 1);
+  }
+
+  updateWalkers(now) {
+    if (this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen || this.transitioning) return; // everyone waits while you talk
+    this.npcs.forEach((n) => {
+      if (!n.walk || n.moving || now < n.nextStep) return;
+      n.nextStep = now + n.pauseMs * (0.5 + Math.random());
+      const dirs = Phaser.Utils.Array.Shuffle([[1, 0], [-1, 0], [0, 1], [0, -1]]);
+      for (const [dx, dy] of dirs) {
+        const nx = n.x + dx;
+        const ny = n.y + dy;
+        if (Math.abs(nx - n.home.x) > n.walk || Math.abs(ny - n.home.y) > n.walk) continue;
+        if (!this.npcCanStep(n, nx, ny)) continue;
+        n.moving = true;
+        n.x = nx; // the tile is taken straight away so nobody walks into the same spot
+        n.y = ny;
+        const dir = this.dirName({ x: dx, y: dy });
+        const oy = n.sheet ? TILE : 0; // an animated sprite's origin is its feet
+        if (n.sheet) n.sprite.play(`${n.sheet}-${dir}`, true);
+        this.tweens.add({
+          targets: n.sprite,
+          x: nx * TILE,
+          y: ny * TILE + oy,
+          duration: n.stepMs,
+          onComplete: () => {
+            n.moving = false;
+            this.standNpc(n, dir);
+          },
+        });
+        break;
+      }
+    });
   }
 
   tryMove(dx, dy) {
