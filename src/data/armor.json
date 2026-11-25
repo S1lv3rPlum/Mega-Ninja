@@ -1,0 +1,31 @@
+{
+  "sunscale": {
+    "name": "Sunscale Vest",
+    "defense": 1,
+    "rank": 1,
+    "desc": "A vest of sun-baked scales. Hits hurt 1 less (never below 1).",
+    "pitch": "a vest of sun-baked scales that turns aside a blow",
+    "smith": {
+      "gold": 200,
+      "items": {
+        "sunstone": 6,
+        "copper": 4
+      }
+    }
+  },
+  "mirage": {
+    "name": "Mirage Mail",
+    "defense": 2,
+    "rank": 2,
+    "desc": "Shimmering mail that makes enemies miss their mark. Hits hurt 2 less (never below 1).",
+    "pitch": "shimmering mail that wavers like heat on the sand",
+    "smith": {
+      "gold": 550,
+      "items": {
+        "sunstone": 12,
+        "ruby": 1,
+        "diamond": 1
+      }
+    }
+  }
+}
