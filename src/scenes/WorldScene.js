@@ -21,6 +21,7 @@ import shopData from '../data/shop.json';
 import { talkToShopkeeper } from '../shop.js';
 import InventoryScreen, { iconKey } from '../InventoryScreen.js';
 import { lowTools } from '../inventory.js';
+import { Coop } from '../Coop.js';
 
 const TILE = 16;
 const MOVE_MS = 140; // time to slide one tile
@@ -92,6 +93,13 @@ export default class WorldScene extends Phaser.Scene {
     ensureState(gs);
     ensureToolState(gs);
     ensureCombatState(gs);
+    // co-op: the shared world (farm, rocks, boulders, the treant) comes from the cloud before the map is built
+    if (Coop.active) Coop.prepare(gs);
+    // a co-op friend freed the treant before you got there: the lantern is waiting for you too
+    if (gs.flags.treant_defeated && !(gs.items.lantern > 0)) {
+      gs.items.lantern = 1;
+      this.registry.set('pendingMsg', 'The treant is free thanks to your friends! He leaves you the Heartwood Lantern.');
+    }
     this.invulnUntil = 0;
     this.nextSwing = 0;
     // older saves kept the shovel as a plain item: turn it into a tool
@@ -333,6 +341,24 @@ export default class WorldScene extends Phaser.Scene {
     this.tickPlots();
     this.time.addEvent({ delay: 1000, loop: true, callback: () => { this.tickPlots(); this.tickTargets(); } });
 
+    // --- Co-op: see the other players, share the world ---
+    this.remoteSprites = {};
+    if (Coop.active) {
+      this.time.addEvent({ delay: 1000, loop: true, callback: () => Coop.tick() });
+      Coop.bind(this);
+      Coop.sendPresence(gs.map, this.tile.x, this.tile.y, 'down');
+      this.events.once('shutdown', () => Coop.unbind(this));
+      if (!this.registry.get('coopWelcomed')) {
+        this.registry.set('coopWelcomed', true);
+        this.showToast(`Co-op world ${Coop.code}`);
+      }
+    }
+    const pendingMsg = this.registry.get('pendingMsg');
+    if (pendingMsg) {
+      this.registry.set('pendingMsg', null);
+      this.time.delayedCall(900, () => this.dialogue.open([pendingMsg], 'Gnarl'));
+    }
+
     // --- Rabbit: a garden pest on any map that has plots (starts once you've met the farmer) ---
     this.rabbit = null;
     this.plotCells = [];
@@ -448,6 +474,7 @@ export default class WorldScene extends Phaser.Scene {
   quitToTitle() {
     this.gameState.tile = { ...this.tile };
     SaveManager.save(this.gameState);
+    if (Coop.active) Coop.stop(this.gameState);
     this.transitioning = true;
     this.cameras.main.fadeOut(300);
     this.cameras.main.once('camerafadeoutcomplete', () => {
@@ -960,6 +987,105 @@ export default class WorldScene extends Phaser.Scene {
     else next();
   }
 
+  // ---------- Co-op ----------
+
+  // everyone else in the world right now: { name: {n, m: map, x, y, d: direction} }
+  coopPlayers(players) {
+    const gs = this.gameState;
+    const here = {};
+    Object.entries(players).forEach(([k, p]) => {
+      if (p.m === gs.map) here[k] = p;
+    });
+    Object.keys(this.remoteSprites).forEach((k) => {
+      if (here[k]) return;
+      this.remoteSprites[k].sprite.destroy();
+      this.remoteSprites[k].label.destroy();
+      delete this.remoteSprites[k];
+    });
+    Object.entries(here).forEach(([k, p]) => {
+      const px = p.x * TILE;
+      const py = (p.y + 1) * TILE;
+      const dir = ['down', 'left', 'right', 'up'].includes(p.d) ? p.d : 'down';
+      let r = this.remoteSprites[k];
+      if (!r) {
+        const sprite = this.add.sprite(px, py, 'player', 1).setOrigin(0, 1).setDepth(9).setTint(0x9fd0ff);
+        const label = this.add
+          .text(px + 8, py - 26, p.n ?? k, { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', stroke: '#000000', strokeThickness: 2 })
+          .setOrigin(0.5, 1)
+          .setDepth(11);
+        r = { sprite, label, x: p.x, y: p.y };
+        this.remoteSprites[k] = r;
+        this.standRemote(sprite, dir);
+        return;
+      }
+      if (r.x === p.x && r.y === p.y) return;
+      r.x = p.x;
+      r.y = p.y;
+      this.tweens.killTweensOf(r.sprite);
+      r.sprite.play(`walk-${dir}`, true);
+      this.tweens.add({
+        targets: r.sprite,
+        x: px,
+        y: py,
+        duration: MOVE_MS,
+        onUpdate: () => r.label.setPosition(r.sprite.x + 8, r.sprite.y - 26),
+        onComplete: () => this.standRemote(r.sprite, dir),
+      });
+    });
+  }
+
+  standRemote(sprite, dir) {
+    sprite.anims.stop();
+    sprite.setFrame({ down: 0, left: 1, right: 2, up: 3 }[dir] * 3 + 1);
+  }
+
+  // the shared world changed in the cloud (paths like plots/farm/3,8 or targets/forest/boulder)
+  coopSharedChanged(paths) {
+    const gs = this.gameState;
+    let freed = false;
+    paths.forEach((path) => {
+      const [section, a, b] = path.split('/');
+      if (section === 'plots' && a === gs.map && this.crops) {
+        const [x, y] = b.split(',').map(Number);
+        this.refreshPlot(x, y);
+      } else if (section === 'targets' && a === gs.map) {
+        const t = this.targets.find((o) => o.id === b);
+        if (t) this.syncTargetVisual(t);
+      } else if (path === 'flags/treant_defeated') {
+        freed = true;
+      }
+    });
+    if (freed && gs.map === 'forest' && this.boss && !this.boss.good && !this.transitioning) {
+      this.showToast('The treant has been freed!');
+      this.time.delayedCall(1500, () => {
+        if (this.transitioning) return;
+        this.transitioning = true;
+        this.saveQuiet();
+        this.scene.restart(); // the forest rebuilds with the treant freed
+      });
+    }
+  }
+
+  // make a target look like its saved state says (used when someone else changes it)
+  syncTargetVisual(t) {
+    const gs = this.gameState;
+    if (isCleared(gs, gs.map, t.id)) {
+      if (!t.respawnMs) {
+        this.targets = this.targets.filter((o) => o !== t);
+        t.sprite.destroy();
+      } else if (t.active) {
+        t.active = false;
+        t.sprite.setTexture(t.stump).setDepth(3);
+      }
+    } else if (!t.active) {
+      t.active = true;
+      this.applyVariant(t);
+      t.sprite.setTexture(t.texture).setDepth(4);
+    } else {
+      this.applyVariant(t);
+    }
+  }
+
   // quiet save (no toast), used after story moments
   saveQuiet() {
     this.gameState.tile = { ...this.tile };
@@ -1015,6 +1141,7 @@ export default class WorldScene extends Phaser.Scene {
 
     this.moving = true;
     this.tile = { x: nx, y: ny };
+    if (Coop.active) Coop.sendPresence(this.gameState.map, nx, ny, this.dirName(this.facing));
     this.player.play(`walk-${this.dirName(this.facing)}`, true);
     this.tweens.add({
       targets: this.player,

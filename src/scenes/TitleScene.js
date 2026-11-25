@@ -1,7 +1,10 @@
 import Phaser from 'phaser';
 import { SaveManager } from '../SaveManager.js';
+import { Coop } from '../Coop.js';
+import { cloudReady } from '../cloud.js';
+import { cleanCode, cleanName, makeCode } from '../coopLogic.js';
 
-const ROW_Y = [124, 152, 180];
+const ROW_Y = [108, 134, 160, 186]; // three solo slots, then the co-op world
 
 export default class TitleScene extends Phaser.Scene {
   constructor() {
@@ -16,6 +19,7 @@ export default class TitleScene extends Phaser.Scene {
   create() {
     this.cameras.main.fadeIn(300);
     this.starting = false;
+    this.connecting = false;
     this.selected = 0;
     this.confirmDel = -1;
 
@@ -27,9 +31,12 @@ export default class TitleScene extends Phaser.Scene {
     logo.setScale(Math.min(1, 280 / logo.width, 76 / logo.height));
 
     this.slots = SaveManager.list();
+    const co = SaveManager.coop();
+    // the co-op world looks like a 4th slot
+    this.slots.push({ slot: 4, coop: true, exists: co.exists, name: co.name, code: co.code, started: co.started, gold: co.gold });
     this.rows = this.slots.map((s, i) => this.makeRow(s, i));
-    this.add
-      .text(160, 212, 'Tap a slot to play. Empty slot = new game.', { fontSize: '8px', color: '#dddddd' })
+    this.status = this.add
+      .text(160, 212, 'Tap a slot to play. Empty slot = new game.', { fontSize: '8px', color: '#dddddd', align: 'center', wordWrap: { width: 300 } })
       .setOrigin(0.5);
     this.highlight();
 
@@ -45,7 +52,7 @@ export default class TitleScene extends Phaser.Scene {
   makeRow(s, i) {
     const y = ROW_Y[i];
     const box = this.add
-      .rectangle(160, y, 236, 24, 0x14142a, 0.92)
+      .rectangle(160, y, 236, 22, 0x14142a, 0.92)
       .setStrokeStyle(2, 0xffffff)
       .setInteractive({ useHandCursor: true });
     box.on('pointerdown', () => {
@@ -53,10 +60,13 @@ export default class TitleScene extends Phaser.Scene {
       this.highlight();
       this.choose(i);
     });
-    const title = s.exists ? `${s.slot}. ${s.name}` : `${s.slot}. - Empty -`;
-    const label = this.add.text(52, y, title, { fontSize: '10px', color: s.exists ? '#ffffff' : '#9a9ab0' }).setOrigin(0, 0.5);
-    const info = s.exists
-      ? this.add.text(232, y, s.started ? `${s.gold ?? 0} gold` : 'new', { fontSize: '8px', color: '#ffe08a' }).setOrigin(1, 0.5)
+    let title = s.exists ? `${s.slot}. ${s.name}` : `${s.slot}. - Empty -`;
+    if (s.coop) title = s.exists ? `CO-OP ${s.name}` : 'CO-OP WORLD';
+    const label = this.add.text(52, y, title, { fontSize: '10px', color: s.exists || s.coop ? '#ffffff' : '#9a9ab0' }).setOrigin(0, 0.5);
+    let infoText = s.started ? `${s.gold ?? 0} gold` : 'new';
+    if (s.coop) infoText = s.exists ? s.code : cloudReady() ? 'play together' : 'not set up';
+    const info = s.exists || s.coop
+      ? this.add.text(s.coop && s.exists ? 220 : 232, y, infoText, { fontSize: '8px', color: s.coop ? '#9fd0ff' : '#ffe08a' }).setOrigin(1, 0.5)
       : null;
     let del = null;
     if (s.exists) {
@@ -81,6 +91,10 @@ export default class TitleScene extends Phaser.Scene {
   choose(i) {
     if (this.starting) return;
     const s = this.slots[i];
+    if (s.coop) {
+      this.chooseCoop(s);
+      return;
+    }
     if (s.exists) {
       SaveManager.select(s.slot);
       this.startGame();
@@ -100,7 +114,8 @@ export default class TitleScene extends Phaser.Scene {
     const row = this.rows[i];
     if (!s || !s.exists || !row.del) return;
     if (this.confirmDel === i) {
-      SaveManager.remove(s.slot);
+      if (s.coop) SaveManager.removeCoop();
+      else SaveManager.remove(s.slot);
       this.scene.restart();
       return;
     }
@@ -114,9 +129,62 @@ export default class TitleScene extends Phaser.Scene {
     });
   }
 
+  say(msg) {
+    this.status.setText(msg);
+  }
+
+  // The co-op world: a code and a name. Blank code = start a brand-new world.
+  chooseCoop(s) {
+    if (!cloudReady()) {
+      this.say('Co-op is not set up yet. It needs a free Firebase database: see COOP_SETUP.md.');
+      return;
+    }
+    if (s.exists) {
+      this.connectCoop(s.code, s.name, false);
+      return;
+    }
+    const typed = window.prompt('Co-op world code.\nType the code to join a world, or leave blank to start a NEW world:', '');
+    if (typed === null) return;
+    let code = '';
+    let create = false;
+    if (typed.trim() === '') {
+      code = makeCode();
+      create = true;
+    } else {
+      code = cleanCode(typed);
+      if (!code) {
+        this.say('That is not a world code. They are 6 letters and numbers.');
+        return;
+      }
+    }
+    const who = window.prompt('Your name in the co-op world (up to 12 letters).\nUse the same name next time to get your character back:', 'Player');
+    if (who === null) return;
+    this.connectCoop(code, cleanName(who), create);
+  }
+
+  async connectCoop(code, name, create) {
+    if (this.starting || this.connecting) return;
+    this.connecting = true;
+    this.say('Connecting...');
+    const r = await Coop.join({ code, name, create });
+    this.connecting = false;
+    if (!r.ok) {
+      this.say(
+        r.error === 'no-world'
+          ? 'No co-op world with that code. Check the letters.'
+          : 'Could not reach the co-op server. Check the internet and try again.'
+      );
+      return;
+    }
+    SaveManager.joinCoop(code, name, r.char);
+    if (create) window.alert(`Your new co-op world code is\n\n${code}\n\nShare it so others can join!`);
+    this.startGame();
+  }
+
   startGame() {
     if (this.starting) return;
     this.starting = true;
+    this.registry.set('coopWelcomed', false);
     this.registry.set('gameState', null); // WorldScene loads from the chosen slot (or starts fresh)
     this.cameras.main.fadeOut(300);
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('World'));
