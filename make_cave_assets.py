@@ -59,6 +59,91 @@ sprite([
 ], {'k': (22, 20, 28, 255), 'g': (96, 92, 108, 255), 's': (132, 128, 144, 255), 'r': (190, 40, 50, 255), 'd': (40, 38, 52, 255)},
    f'{A}/sprites/sealed-door.png')
 
+from PIL import ImageDraw
+
+def golem_art(path, mood):
+    S = 8  # draw big, then shrink with no smoothing for crisp pixels
+    im = Image.new('RGBA', (32 * S, 32 * S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    def e(box, fill, outline=None, w=0):
+        d.ellipse([c * S for c in box], fill=fill, outline=outline, width=w * S)
+    # stubby arms and feet, then the big round body
+    e((0, 12, 8, 22), (112, 112, 124, 255), (40, 38, 52, 255), 1)
+    e((24, 12, 32, 22), (112, 112, 124, 255), (40, 38, 52, 255), 1)
+    e((7, 26, 14, 31), (96, 96, 108, 255), (40, 38, 52, 255), 1)
+    e((18, 26, 25, 31), (96, 96, 108, 255), (40, 38, 52, 255), 1)
+    e((3, 3, 29, 29), (140, 140, 154, 255), (40, 38, 52, 255), 1)
+    e((6, 6, 20, 18), (170, 170, 184, 255))            # lit upper left
+    e((14, 16, 27, 27), (112, 112, 126, 255))          # shaded lower right
+    for (x0, y0, x1, y1) in [(10, 5, 13, 9), (20, 20, 24, 24), (7, 20, 10, 23)]:  # moss-grey bumps
+        e((x0, y0, x1, y1), (124, 124, 138, 255))
+    eye = (235, 50, 60, 255) if mood == 'evil' else (255, 214, 90, 255)
+    e((9, 12, 14, 17), (250, 250, 250, 255), (40, 38, 52, 255), 1)
+    e((18, 12, 23, 17), (250, 250, 250, 255), (40, 38, 52, 255), 1)
+    e((10.5, 13.5, 13, 16), eye)
+    e((19.5, 13.5, 22, 16), eye)
+    if mood == 'evil':
+        d.line([9 * S, 10 * S, 14 * S, 12 * S], fill=(40, 38, 52, 255), width=S)      # angry brows
+        d.line([23 * S, 10 * S, 18 * S, 12 * S], fill=(40, 38, 52, 255), width=S)
+        d.line([12 * S, 22 * S, 20 * S, 22 * S], fill=(40, 38, 52, 255), width=S)     # frown line
+    else:
+        d.arc([11 * S, 18 * S, 21 * S, 24 * S], 20, 160, fill=(40, 38, 52, 255), width=S)  # a gentle smile
+    im.resize((32, 32), Image.NEAREST).save(path)
+
+golem_art(f'{A}/sprites/golem.png', 'evil')
+golem_art(f'{A}/sprites/golem-good.png', 'good')
+
+def ball_art(path):
+    S = 8
+    im = Image.new('RGBA', (32 * S, 32 * S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.ellipse([3 * S, 3 * S, 29 * S, 29 * S], fill=(128, 128, 142, 255), outline=(40, 38, 52, 255), width=S)
+    d.ellipse([6 * S, 6 * S, 19 * S, 18 * S], fill=(160, 160, 174, 255))
+    for pts in ([8, 24, 14, 20, 12, 16], [16, 28, 20, 22, 26, 20], [20, 6, 18, 12, 24, 14]):
+        d.line([p * S for p in pts], fill=(50, 48, 62, 255), width=S)
+    d.ellipse([22 * S, 10 * S, 25 * S, 13 * S], fill=(235, 50, 60, 255))   # one angry eye peeking out
+    im.resize((32, 32), Image.NEAREST).save(path)
+ball_art(f'{A}/sprites/golem-ball.png')
+
+sprite([
+    "................",
+    "................",
+    "................",
+    "................",
+    "......oooo......",
+    "....oogggggoo...",
+    "...ogggggggggo..",
+    "..ogwwggggwwggo.",
+    "..ogwkgggwkggo..",
+    "..ogggggggggggo.",
+    "..oggggssggggo..",
+    "...ogggggggggo..",
+    "....oossssoo....",
+    "......oooo......",
+    "................",
+    "................",
+], {'o': (40, 38, 52, 255), 'g': (140, 140, 154, 255), 's': (108, 108, 122, 255), 'w': (250, 250, 250, 255), 'k': (30, 30, 40, 255)}, f'{A}/sprites/pebble.png')
+
+sprite([
+    "kkkkkkkkkkkkkkkk",
+    "kggggggggggggggk",
+    "kgsssssssssssgsk",
+    "kgsddddddddddsgk",
+    "kgsdbbbbbbbbdsgk",
+    "kgsdbbbbbbbbdsgk",
+    "kgsdbbbbbbbbdsgk",
+    "kgsdbbbbbbbbdsgk",
+    "kgsdbbbbbbbbdsgk",
+    "kgsdbbbbbbbbdsgk",
+    "kgsdbbbbbbbbdsgk",
+    "kgsdbbbbbbbbdsgk",
+    "kgsdbbbbbbbbdsgk",
+    "kgsdbbbbbbbbdsgk",
+    "kggggggggggggggk",
+    "kkkkkkkkkkkkkkkk",
+], {'k': (22, 20, 28, 255), 'g': (96, 92, 108, 255), 's': (132, 128, 144, 255), 'd': (60, 56, 72, 255), 'b': (8, 6, 14, 255)},
+   f'{A}/sprites/sealed-door-open.png')
+
 # ------------------------------------------------------------------ the cave map
 W, H = 30, 22
 floor = [[False] * W for _ in range(H)]
@@ -94,7 +179,7 @@ rock_pos = {
     'C': [(16, 13), (24, 13), (17, 18), (23, 18), (25, 16), (22, 16)],
     'D': [(16, 3), (18, 6), (24, 3), (26, 5), (25, 7), (16, 7)],
 }
-bats = [(18, 14), (22, 14), (21, 18), (17, 16), (23, 5), (17, 4), (6, 6)]
+bats = [(18, 14), (22, 14), (21, 18), (17, 16), (6, 6), (10, 8)]
 
 def props(**kw):
     out = []
@@ -124,13 +209,15 @@ for i, (x, y) in enumerate(bats):
     enemies.append(obj(f'bat{i}', x, y, id=f'bat{i}', type='bat'))
 
 doors = [obj('to-quarry', 6, 21, toMap='quarry', toX=19, toY=4)]
-npcs = [obj('sealeddoor', 21, 1, id='sealeddoor', texture='sealed-door', dialogue='sealeddoor')]
+npcs = [obj('sealeddoor', 21, 1, id='sealeddoor', texture='sealed-door', dialogue='sealeddoor',
+            openFlag='stonedoor_cleared', openTexture='sealed-door-open', openDialogue='sealeddooropen')]
+boss = [obj('granite', 20, 4, id='granite', kind='golem')]
 
 quarry = json.load(open(f'{A}/maps/quarry.json'))
 cave = {
     'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orientation': 'orthogonal', 'renderorder': 'right-down',
     'tiledversion': '1.10.2', 'tileheight': 16, 'tilewidth': 16, 'type': 'map', 'version': '1.10',
-    'nextlayerid': 7, 'nextobjectid': oid[0] + 1,
+    'nextlayerid': 8, 'nextobjectid': oid[0] + 1,
     'properties': [{'name': 'dark', 'type': 'bool', 'value': True}],  # the lantern lights a circle around you
     'tilesets': quarry['tilesets'],
     'layers': [
@@ -140,8 +227,11 @@ cave = {
         {'draworder': 'topdown', 'id': 4, 'name': 'npcs', 'objects': npcs, 'opacity': 1, 'type': 'objectgroup', 'visible': True, 'x': 0, 'y': 0},
         {'draworder': 'topdown', 'id': 5, 'name': 'targets', 'objects': targets, 'opacity': 1, 'type': 'objectgroup', 'visible': True, 'x': 0, 'y': 0},
         {'draworder': 'topdown', 'id': 6, 'name': 'enemies', 'objects': enemies, 'opacity': 1, 'type': 'objectgroup', 'visible': True, 'x': 0, 'y': 0},
+        {'draworder': 'topdown', 'id': 7, 'name': 'boss', 'objects': boss, 'opacity': 1, 'type': 'objectgroup', 'visible': True, 'x': 0, 'y': 0},
     ],
 }
+for (bx, by) in [(20, 4), (21, 4), (20, 5), (21, 5)]:
+    assert floor[by][bx] and (bx, by) not in {(o['x'] // 16, o['y'] // 16) for o in targets}, (bx, by)
 # every room reachable on foot from the entrance without breaking a rock?
 rocks = {(o['x'] // 16, o['y'] // 16) for o in targets}
 seen, q = {(6, 20)}, deque([(6, 20)])
@@ -179,8 +269,18 @@ json.dump(ej, open('src/data/enemies.json', 'w'), indent=2)
 dj = json.load(open('src/data/dialogue.json'))
 dj['sealeddoor'] = {
     'name': 'Stone Door',
-    'lines': ['A huge stone door, carved with a ninja crest.', 'Three round sockets sit empty beneath it. It will not budge.', 'Whatever sleeps beyond must wait... (To be continued)'],
-    'repeatLines': ['The door is sealed tight. Three empty sockets wait below the crest.'],
+    'lines': ['A huge stone door, carved with a ninja crest.', 'Beneath it are four sockets: a ruby, a sapphire and an emerald, and a round crest in the middle.'],
+    'repeatLines': ['The stone door is sealed tight. Four sockets wait below the crest.'],
+}
+dj['sealeddooropen'] = {
+    'name': 'Stone Door',
+    'lines': ['The door stands open. A cold wind blows up from a dark passage, and it goes a long way down.', 'It is not ready for you yet... (To be continued)'],
+    'repeatLines': ['The dark passage waits. (To be continued)'],
+}
+dj['granite'] = {
+    'name': 'Granite',
+    'lines': ['Granite is sorry for the rockfall. Granite is very glad the voice is gone.'],
+    'repeatLines': ['Granite likes pickaxes now. They tickle.', 'Say hi to the bats for Granite. They are not so bad.'],
 }
 dj['cavesign'] = {
     'name': 'Sign',
@@ -190,4 +290,11 @@ dj['cavesign'] = {
 }
 json.dump(dj, open('src/data/dialogue.json', 'w'), indent=2, ensure_ascii=False)
 open('src/data/dialogue.json', 'a').write('\n')
+ej = json.load(open('src/data/enemies.json'))
+ej['pebble'] = {'name': 'Pebble', 'texture': 'pebble', 'hp': 2, 'damage': 1, 'moveMs': 700, 'attackMs': 1300, 'sight': 9, 'respawnMs': 0, 'gold': 0}
+json.dump(ej, open('src/data/enemies.json', 'w'), indent=2)
+ij = json.load(open('src/data/items.json'))
+ij['items']['crest-stone'] = {'name': 'Crest Stone', 'icon': 'crest', 'color': '#c9a24a',
+                              'desc': 'Carved with a ninja crest. Granite guarded it for the cave builders. It fits the stone door.'}
+json.dump(ij, open('src/data/items.json', 'w'), indent=2)
 print('cave built:', len(targets), 'rocks,', len(enemies), 'bats')
