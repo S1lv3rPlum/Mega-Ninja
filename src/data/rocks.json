@@ -233,5 +233,63 @@
       "texture": "rock-grey",
       "msg": "Rock smashed!"
     }
+  ],
+  "forageSnow": [
+    {
+      "id": "s1",
+      "weight": 60,
+      "hits": 1,
+      "drop": "frostberry",
+      "amount": 2,
+      "texture": "snow-bush",
+      "msg": "Picked frostberries!"
+    },
+    {
+      "id": "s2",
+      "weight": 25,
+      "hits": 1,
+      "drop": "herb",
+      "amount": 2,
+      "texture": "snow-bush",
+      "msg": "Picked some herbs!"
+    },
+    {
+      "id": "s3",
+      "weight": 15,
+      "hits": 1,
+      "drop": "pumpkin-seeds",
+      "amount": 1,
+      "texture": "snow-bush",
+      "msg": "Found a pumpkin seed!"
+    }
+  ],
+  "forageRuins": [
+    {
+      "id": "k1",
+      "weight": 60,
+      "hits": 1,
+      "drop": "seaweed",
+      "amount": 2,
+      "texture": "kelp",
+      "msg": "Picked seaweed!"
+    },
+    {
+      "id": "k2",
+      "weight": 25,
+      "hits": 1,
+      "drop": "herb",
+      "amount": 2,
+      "texture": "kelp",
+      "msg": "Picked some herbs!"
+    },
+    {
+      "id": "k3",
+      "weight": 15,
+      "hits": 1,
+      "drop": "carrot-seeds",
+      "amount": 2,
+      "texture": "kelp",
+      "msg": "Found carrot seeds!"
+    }
   ]
 }

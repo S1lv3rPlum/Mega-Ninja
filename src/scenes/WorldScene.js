@@ -41,10 +41,10 @@ const START_MAP = 'town';
 const START_TILE = { x: 15, y: 10 };
 
 // To add a map: save it as public/assets/maps/<name>.json and add its name here.
-const MAPS = ['town', 'farm', 'forest', 'quarry', 'cave', 'crystal', 'market'];
+const MAPS = ['town', 'farm', 'forest', 'quarry', 'cave', 'crystal', 'market', 'peaks', 'ruins'];
 // To add a tileset: save it as public/assets/tilesets/<name>.png and add its name here.
 // (The name must match the tileset's name inside Tiled.)
-const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles', 'mine-tiles', 'crystal-tiles', 'market-tiles'];
+const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles', 'mine-tiles', 'crystal-tiles', 'market-tiles', 'snow-tiles', 'ruins-tiles'];
 
 // Tiled stores custom properties as a list of {name, value}; turn that into a plain object
 const readProps = (p) =>
@@ -73,7 +73,7 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('shopkeeper', 'assets/sprites/shopkeeper.png');
     ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond', 'crystal'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
     this.load.image('rubble', 'assets/sprites/rubble.png');
-    ['treant-boss', 'treant-good', 'sapling', 'sign', 'bat-queen', 'moth', 'hexsmith', 'hexcreature', 'hexcharm'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
+    ['treant-boss', 'treant-good', 'sapling', 'sign', 'bat-queen', 'moth', 'hexsmith', 'hexcreature', 'hexcharm', 'yeti', 'snowfox', 'frostimp', 'snow-bush', 'snow-bush-bare', 'serpent', 'jelly', 'crab', 'kelp', 'kelp-bare', 'rune-off', 'rune-on', 'ruinsdoor', 'ruinsdoor-open'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
     this.load.image('bush', 'assets/sprites/bush.png');
     this.load.image('bush-bare', 'assets/sprites/bush-bare.png');
     ['carrot', 'pumpkin'].forEach((c) => [2, 3, 4].forEach((n) => this.load.image(`crop-${c}-${n}`, `assets/sprites/crop-${c}-${n}.png`)));
@@ -130,6 +130,16 @@ export default class WorldScene extends Phaser.Scene {
       gs.items['crystal-lantern'] = 1;
       pending.push('The Bat Queen was beaten by your friends! She left you a Crystal Lantern too.');
     }
+    // the Yeti was beaten by a friend before you got here: the Frost Boots are yours too
+    if (gs.flags.yeti_defeated && !(gs.items['frost-boots'] > 0)) {
+      gs.items['frost-boots'] = 1;
+      pending.push('The Yeti was beaten by your friends! He left you Frost Boots too.');
+    }
+    // the Sea Serpent was calmed by a friend before you got here: half of the Moon Crest is yours too
+    if (gs.flags.serpent_defeated && !(gs.items['moon-crest-half'] > 0)) {
+      gs.items['moon-crest-half'] = 1;
+      pending.push('The Sea Serpent was calmed by your friends! You got half of the Moon Crest too.');
+    }
     if (pending.length) this.registry.set('pendingMsg', pending);
     this.invulnUntil = 0;
     this.nextSwing = 0;
@@ -152,6 +162,7 @@ export default class WorldScene extends Phaser.Scene {
     this.map.layers.forEach((l) => {
       const layer = this.map.createLayer(l.name, tilesets);
       if (l.name === 'obstacles') this.obstacles = layer;
+      if (l.name === 'ground') this.groundLayer = layer;
       if (l.name === 'crops') this.crops = layer;
     });
     // gid of the first tile in farm-tiles.png: dirt, sown, sprouts, young, ready, then pump, fence, hay
@@ -219,6 +230,8 @@ export default class WorldScene extends Phaser.Scene {
         openFlag: p.openFlag,
         openTexture: p.openTexture,
         openDialogue: p.openDialogue,
+        setFlag: p.setFlag, // pressing Space on it sets this flag (a rune stone); pair with openFlag for the lit look
+        needFlags: p.needFlags ? String(p.needFlags).split(',') : null, // it sets its own openFlag once all of these are set (the inner door)
         passable: !!p.passable, // once its openFlag is set you can walk through it (the stone door)
         dialogue: isOpen && p.openDialogue ? p.openDialogue : p.dialogue ?? id,
         shop: p.shop, // a key in data/shop.json makes this NPC a shopkeeper
@@ -315,6 +328,7 @@ export default class WorldScene extends Phaser.Scene {
     // --- Dark maps (a map property "dark" = true in Tiled): only a lantern-sized circle around you is lit ---
     this.darkRT = null;
     if (readProps(raw.properties).dark) this.createDarkness();
+    this.thinIceGid = readProps(raw.properties).thinIceGid ?? 0;
 
     // --- Dialogue ---
     this.dialogue = new DialogueBox(this);
@@ -1033,6 +1047,14 @@ export default class WorldScene extends Phaser.Scene {
     // an animated NPC turns to look at you
     if (npc.sheet && !npc.moving) this.standNpc(npc, this.dirName({ x: -this.facing.x, y: -this.facing.y }));
 
+    // a rune stone: the first touch lights it (and may open a door that needs several runes)
+    if (npc.setFlag && !this.gameState.flags[npc.setFlag]) {
+      this.gameState.flags[npc.setFlag] = true;
+      this.showToast('The rune glows!');
+      this.refreshOpenNpcs();
+      this.checkRuneDoors();
+      return;
+    }
     if (npc.smith) {
       this.runConvo(talkToSmith(this.gameState, npc.id, data, weaponDefs), data.name);
       return;
@@ -1106,6 +1128,19 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   // NPCs with an openFlag switch to their "open" look when the flag is set (also called when a co-op friend opens it)
+  // a door NPC with needFlags opens itself (sets its openFlag) once every needed flag is set
+  checkRuneDoors() {
+    const gs = this.gameState;
+    this.npcs.forEach((n) => {
+      if (!n.needFlags || !n.openFlag || gs.flags[n.openFlag]) return;
+      if (n.needFlags.every((f) => gs.flags[f])) {
+        gs.flags[n.openFlag] = true;
+        this.time.delayedCall(700, () => this.showToast('A heavy door grinds open somewhere nearby...'));
+      }
+    });
+    this.refreshOpenNpcs();
+  }
+
   refreshOpenNpcs() {
     const gs = this.gameState;
     this.npcs.forEach((n) => {
@@ -1223,6 +1258,18 @@ export default class WorldScene extends Phaser.Scene {
         const rec = gs.enemies[a]?.[b];
         if (rec) this.enemies.removeRemote(b, rec.respawnAt);
         else this.enemies.reviveRemote(b);
+      } else if (path === 'flags/serpent_defeated') {
+        if (!(gs.items['moon-crest-half'] > 0)) {
+          gs.items['moon-crest-half'] = 1;
+          this.showToast('The Sea Serpent was calmed by a friend! You got half the Moon Crest too.');
+          this.updateHud();
+        }
+      } else if (path === 'flags/yeti_defeated') {
+        if (!(gs.items['frost-boots'] > 0)) {
+          gs.items['frost-boots'] = 1;
+          this.showToast('The Yeti was beaten by a friend! You got Frost Boots too.');
+          this.updateHud();
+        }
       } else if (path === 'flags/batqueen_defeated') {
         if (!(gs.items['crystal-lantern'] > 0)) {
           gs.items['crystal-lantern'] = 1;
@@ -1235,6 +1282,7 @@ export default class WorldScene extends Phaser.Scene {
         this.refreshOpenNpcs();
       }
     });
+    this.checkRuneDoors();
     if (freed && this.boss && !this.boss.good && !this.transitioning) {
       this.showToast(`${this.boss.name ?? 'The boss'} has been beaten by a friend!`);
       this.time.delayedCall(1500, () => {
@@ -1406,6 +1454,7 @@ export default class WorldScene extends Phaser.Scene {
       this.faceFrame(this.facing); // bumped into something: just turn to face it
       const locked = this.lockedDoorAt(nx, ny);
       if (locked && !this.toast.alpha) this.showToast(locked.lockedMsg);
+      else if (this.thinIceAt(nx, ny) && !this.toast.alpha) this.showToast('The ice is too thin and slippery. Boots with a good grip might help.');
       return;
     }
 
@@ -1443,6 +1492,14 @@ export default class WorldScene extends Phaser.Scene {
     this.player.setFrame(row * 3 + 1);
   }
 
+  // thin ice (a map property thinIceGid = the ground tile number) can only be crossed in Frost Boots
+  thinIceAt(x, y) {
+    const gid = this.thinIceGid;
+    if (!gid || !this.groundLayer) return false;
+    const t = this.groundLayer.getTileAt(x, y);
+    return !!t && t.index === gid && !(this.gameState.items['frost-boots'] > 0);
+  }
+
   lockedDoorAt(x, y) {
     const d = this.doors.find((o) => x >= o.x0 && x <= o.x1 && y >= o.y0 && y <= o.y1);
     if (!d) return null;
@@ -1476,6 +1533,7 @@ export default class WorldScene extends Phaser.Scene {
     if (this.npcAt(x, y)) return false;
     // a door that needs an item you do not have
     if (this.lockedDoorAt(x, y)) return false;
+    if (this.thinIceAt(x, y)) return false;
     // so does a rabbit sitting on a tile
     if (this.rabbit && rabbitOnMap(this.rabbit) && this.rabbit.x === x && this.rabbit.y === y) return false;
     // so does an enemy

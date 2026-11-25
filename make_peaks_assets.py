@@ -189,7 +189,7 @@ for (x, y) in [(37, 11), (36, 11)]:
 thin_cells.discard((37, 11))
 rect(obst, 37, 8, 38, 8, CLIFF); rect(obst, 37, 14, 38, 14, CLIFF)   # the island can only be reached over the ice
 # pines scattered in the open snow (not on paths, ice or near key spots)
-keep = {(1, 24), (2, 24), (3, 24), (13, 10), (13, 22), (21, 14), (37, 11)}
+keep = {(38, 11), (1, 24), (2, 24), (3, 24), (13, 10), (13, 22), (21, 14), (37, 11)}
 for _ in range(110):
     x, y = random.randint(2, W - 3), random.randint(2, H - 3)
     if obst[idx(x, y)] or ground[idx(x, y)] in (PATH, THIN, DEEP) or (x, y) in keep:
@@ -236,9 +236,11 @@ place([('y', 13, 4)])
 enemies.append(obj('yeti', 13, 4, id='yeti', type='yeti', hideIfFlag='yeti_defeated'))
 npcs = [obj('icehermit', 4, 26, id='icehermit', texture='npc', dialogue='icehermit'),
         obj('peaksign', 3, 23, id='peaksign', texture='sign', dialogue='peaksign'),
-        obj('ruinsgate', 38, 11, id='ruinsgate', texture='sign', dialogue='ruinsgate')]
+        ]
 place([('n', o['x'] // 16, o['y'] // 16) for o in npcs])
-doors = [obj('to-crystal', 0, 24, toMap='crystal', toX=32, toY=22)]
+doors = [obj('to-crystal', 0, 24, toMap='crystal', toX=32, toY=22),
+         obj('to-ruins', 38, 11, toMap='ruins', toX=1, toY=25)]
+ground[idx(38, 11)] = ARCH; obst[idx(38, 11)] = 0   # the old gate: the way into the Sunken Ruins
 
 peaks = {
     'compressionlevel': -1, 'height': H, 'width': W, 'infinite': False, 'orientation': 'orthogonal', 'renderorder': 'right-down',
@@ -320,7 +322,7 @@ dj['icehermit'] = {
     'repeatLines': ['Frost Boots, from the Yeti in the den to the north. He is not himself lately.', 'Take care, the ice has no mercy.'],
     'flagLines': {'yeti_defeated': ['You beat the Yeti? Bless my beard! Now the lake is yours to cross.', 'Follow the thin ice east. The ruins gate is on the far shore.']},
 }
-dj['ruinsgate'] = {'name': 'Ruined Gate', 'lines': ['An old gate of green stone, half sunk in the snow. Faint carvings show a princess and a crescent crest.', 'It does not budge yet... (To be continued)'],
+dj['ruinsgate'] = {'name': 'Ruined Gate', 'lines': ['An old gate of green stone, half sunk in the snow. Faint carvings show a princess and a crescent crest.', 'It does not budge yet...'],
                    'repeatLines': ['The old gate will not budge yet. (To be continued)']}
 json.dump(dj, open('src/data/dialogue.json', 'w'), indent=2, ensure_ascii=False)
 open('src/data/dialogue.json', 'a').write('\n')

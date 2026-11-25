@@ -82,5 +82,104 @@
       "The Bat Queen tumbles from the air with a squeak, her crown rolling across the floor.",
       "The dark whisper that drove the bats is gone. She flutters off to sleep, leaving a glowing lantern behind."
     ]
+  },
+  "snowfox": {
+    "name": "Snow Fox",
+    "texture": "snowfox",
+    "hp": 3,
+    "damage": 1,
+    "moveMs": 500,
+    "attackMs": 1300,
+    "sight": 5,
+    "respawnMs": 40000,
+    "gold": 4,
+    "tame": "snowfox"
+  },
+  "frostimp": {
+    "name": "Frost Imp",
+    "texture": "frostimp",
+    "hp": 3,
+    "damage": 1,
+    "moveMs": 520,
+    "attackMs": 1200,
+    "sight": 7,
+    "respawnMs": 40000,
+    "gold": 4
+  },
+  "yeti": {
+    "name": "Yeti",
+    "texture": "yeti",
+    "hp": 22,
+    "damage": 2,
+    "moveMs": 600,
+    "attackMs": 1300,
+    "sight": 12,
+    "respawnMs": 31536000000,
+    "gold": 60,
+    "boss": true,
+    "flag": "yeti_defeated",
+    "summon": {
+      "type": "frostimp",
+      "everyMs": 7000,
+      "max": 2
+    },
+    "reward": {
+      "item": "frost-boots",
+      "msg": "The Yeti is beaten! The Frost Boots are yours."
+    },
+    "defeatLines": [
+      "The Yeti sits down in the snow with a huge sigh. A cold whisper leaves him like steam.",
+      "\"...Sorry. Something dark kept me angry up here.\"",
+      "He pushes a pair of fur-lined boots toward you. They sparkle like frost. \"For crossing thin ice.\""
+    ]
+  },
+  "crab": {
+    "name": "Tide Crab",
+    "texture": "crab",
+    "hp": 3,
+    "damage": 1,
+    "moveMs": 520,
+    "attackMs": 1200,
+    "sight": 5,
+    "respawnMs": 40000,
+    "gold": 5,
+    "tame": "crab"
+  },
+  "jelly": {
+    "name": "Jelly",
+    "texture": "jelly",
+    "hp": 3,
+    "damage": 1,
+    "moveMs": 560,
+    "attackMs": 1200,
+    "sight": 7,
+    "respawnMs": 40000,
+    "gold": 4
+  },
+  "serpent": {
+    "name": "Sea Serpent",
+    "texture": "serpent",
+    "hp": 26,
+    "damage": 2,
+    "moveMs": 600,
+    "attackMs": 1300,
+    "sight": 12,
+    "respawnMs": 31536000000,
+    "gold": 80,
+    "boss": true,
+    "flag": "serpent_defeated",
+    "summon": {
+      "type": "jelly",
+      "everyMs": 7000,
+      "max": 2
+    },
+    "reward": {
+      "item": "moon-crest-half",
+      "msg": "The Sea Serpent is calm. You found half of the Moon Crest!"
+    },
+    "defeatLines": [
+      "The Sea Serpent sinks back into the pool with a bubbling sigh, and the dark whisper drifts out of her like smoke.",
+      "Behind her, half of a silver crest glimmers on a ledge. The other half is missing, torn away."
+    ]
   }
 }

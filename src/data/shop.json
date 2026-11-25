@@ -65,7 +65,9 @@
       "carrot": 6,
       "pumpkin": 25,
       "herb": 3,
-      "crystal": 12
+      "crystal": 12,
+      "frostberry": 5,
+      "seaweed": 4
     }
   },
   "hexcreature": {

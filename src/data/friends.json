@@ -25,6 +25,18 @@
       "baseName": "Glimmer",
       "texture": "moth",
       "treat": "crystal"
+    },
+    "snowfox": {
+      "name": "Snow Fox",
+      "baseName": "Frosty",
+      "texture": "snowfox",
+      "treat": "frostberry"
+    },
+    "crab": {
+      "name": "Tide Crab",
+      "baseName": "Pinchy",
+      "texture": "crab",
+      "treat": "seaweed"
     }
   }
 }

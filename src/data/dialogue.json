@@ -262,5 +262,98 @@
     "repeatLines": [
       "Tell her I said hello, if you find her."
     ]
+  },
+  "peaksign": {
+    "name": "Sign",
+    "lines": [
+      "SNOWY PEAKS. Beware the Yeti in the den to the north. Frostberries grow on the bushes."
+    ],
+    "repeatLines": [
+      "The Yeti lives north, up the stone path."
+    ]
+  },
+  "icehermit": {
+    "name": "Old Hermit",
+    "lines": [
+      "Brrr... a visitor! I have not seen anyone up here since the princess.",
+      "She stopped by three days ago, looking for the Sunken Ruins across the frozen lake.",
+      "The ice is far too thin to cross on plain boots, though. The Yeti has the only pair of Frost Boots, and he has been in a foul mood."
+    ],
+    "repeatLines": [
+      "Frost Boots, from the Yeti in the den to the north. He is not himself lately.",
+      "Take care, the ice has no mercy."
+    ],
+    "flagLines": {
+      "yeti_defeated": [
+        "You beat the Yeti? Bless my beard! Now the lake is yours to cross.",
+        "Follow the thin ice east. The ruins gate is on the far shore."
+      ]
+    }
+  },
+  "ruinsgate": {
+    "name": "Ruined Gate",
+    "lines": [
+      "An old gate of green stone, half sunk in the snow. Faint carvings show a princess and a crescent crest.",
+      "It does not budge yet..."
+    ],
+    "repeatLines": [
+      "The old gate will not budge yet. (To be continued)"
+    ]
+  },
+  "ruinssign": {
+    "name": "Worn Stone",
+    "lines": [
+      "The letters are worn, but you can read: \"THREE RUNES WAKE THE INNER DOOR. THE GUARDIAN SLEEPS BEYOND.\""
+    ],
+    "repeatLines": [
+      "Three runes wake the inner door."
+    ]
+  },
+  "runestone": {
+    "name": "Rune Stone",
+    "lines": [
+      "A rune stone, cold and dark. You press your hand against it."
+    ],
+    "repeatLines": [
+      "The rune is dark."
+    ]
+  },
+  "runestoneon": {
+    "name": "Rune Stone",
+    "lines": [
+      "The rune glows a steady, watery green."
+    ],
+    "repeatLines": [
+      "The rune glows a steady, watery green."
+    ]
+  },
+  "ruinsdoor": {
+    "name": "Inner Door",
+    "lines": [
+      "A heavy stone door with three glowing slots. Three rune stones in the ruins must wake it."
+    ],
+    "repeatLines": [
+      "Three runes wake this door."
+    ]
+  },
+  "ruinsdooropen": {
+    "name": "Inner Door",
+    "lines": [
+      "The door stands open. Water drips somewhere beyond."
+    ],
+    "repeatLines": [
+      "The way to the guardian is open."
+    ]
+  },
+  "princessnote": {
+    "name": "Princess's Note",
+    "lines": [
+      "A note pinned under a smooth stone, in careful, royal handwriting:",
+      "\"I split the Moon Crest in two so the dark one could never take it all. I left one half here with the guardian, under the old waves.\"",
+      "\"The other half I carry to the desert market, where the caravans trade. If you are reading this, you are brave. Please hurry. - P.\""
+    ],
+    "repeatLines": [
+      "\"...to the desert market. Please hurry. - P.\""
+    ]
   }
 }

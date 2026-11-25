@@ -113,6 +113,30 @@
       "icon": "lantern",
       "color": "#7fe8ff",
       "desc": "The Bat Queen's lantern. It shines much brighter than yours, and it may reveal hidden things."
+    },
+    "frostberry": {
+      "name": "Frostberry",
+      "icon": "leaf",
+      "color": "#8fd8ff",
+      "desc": "A chilly blue berry. Snow foxes love them."
+    },
+    "frost-boots": {
+      "name": "Frost Boots",
+      "icon": "boots",
+      "color": "#8fd8ff",
+      "desc": "Fur-lined boots that grip thin ice. You can walk across the frozen lake in them."
+    },
+    "seaweed": {
+      "name": "Seaweed",
+      "icon": "leaf",
+      "color": "#3fb88a",
+      "desc": "Slippery and salty. Crabs love it."
+    },
+    "moon-crest-half": {
+      "name": "Moon Crest (half)",
+      "icon": "crest",
+      "color": "#c8d6e8",
+      "desc": "Half of a silver crest. The princess carries the other half... or did."
     }
   },
   "tools": {
