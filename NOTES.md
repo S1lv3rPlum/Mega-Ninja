@@ -133,3 +133,11 @@ without being run in a browser, so test new features on desktop and phone.
 - Characters are keyed by lowercase name; the bag etc. is backed up to `chars/<name>` on every save (throttled 8 s) and autosaved every 20 s in co-op. The newer of the device copy and the cloud copy wins when joining.
 - A player who arrives after `treant_defeated` is set gets the Heartwood Lantern automatically (WorldScene.create).
 - Not done yet: shared enemies/boss fight, blocking other players' tiles, trading.
+
+## Walking NPCs
+- Any NPC object on a map's `npcs` layer walks if it has an int custom property **walkRadius** (e.g. 3): it strolls to neighbouring tiles within that many tiles of where you placed it. Without the property it stands still as before.
+- Optional properties: `walkPauseMs` (average wait between steps, default 2200) and `walkStepMs` (time per step, default 450).
+- They never step on obstacles, crop plots, doorways, targets (rocks, trees), enemies, the boss, the rabbit, you, or a co-op friend. They freeze while any dialogue, menu or the bag is open, so you can always talk to one.
+- **Walking animation**: a walking NPC whose texture has a sheet named `<texture>-walk.png` in `public/assets/sprites/` is animated. The sheet is laid out exactly like the player's `player-walk.png`: 3 frames across (step, stand, step) x 4 rows (down, left, right, up), every frame 16x24, feet on the bottom edge. Example: texture `npc` uses `npc-walk.png` (a placeholder bobbing sheet made from `npc.png`). **To swap in real art: replace the PNG with the same layout.** For a new NPC: add its texture name to `NPC_WALK_SHEETS` at the top of WorldScene.js, add `<name>-walk.png`, and give the NPC a `walkRadius`. NPCs without a sheet still slide around as a single picture. A walking NPC also turns to face you when you talk to it.
+- Code: `updateWalkers` / `npcCanStep` / `standNpc` in WorldScene.js.
+- Town has a demo "wanderer" at (9,12), radius 2. Walking is not synced between co-op players (each device moves its own wanderers).
