@@ -133,13 +133,14 @@ carve(30, 7, 31, 8)
 for p in [(7, 12), (7, 15), (11, 12), (11, 15), (23, 12), (27, 13), (21, 22), (28, 22)]:   # pillars
     fl[p[1]][p[0]] = False
 fl[0][4] = True        # the way back up to the stone door
+fl[22][33] = True      # the cold passage behind the Queen's roost: the way to the Snowy Peaks
 fl[2][31] = True       # the hidden crack in the nook wall: the way to the Shadow Market
 
 ground, obstacles = [], []
 for y in range(H):
     for x in range(W):
         if fl[y][x]:
-            g = 5 if (x, y) in ((4, 0), (31, 2)) else (3 if random.random() < 0.12 else 2)
+            g = 5 if (x, y) in ((4, 0), (31, 2), (33, 22)) else (3 if random.random() < 0.12 else 2)
             ground.append(g); obstacles.append(0)
         else:
             ground.append(2)
@@ -181,7 +182,9 @@ npcs = [obj('crystalnote', 3, 12, id='crystalnote', texture='sign', dialogue='cr
         obj('nooksign', 31, 5, id='nooksign', texture='sign', dialogue='nooksign')]
 doors = [obj('to-cave', 4, 0, toMap='cave', toX=21, toY=2),
          obj('to-market', 31, 2, toMap='market', toX=15, toY=19, requiresItem='crystal-lantern',
-             lockedMsg='A crack in the wall. It is too dim to see through. A brighter light might help.')]
+             lockedMsg='A crack in the wall. It is too dim to see through. A brighter light might help.'),
+         obj('to-peaks', 33, 22, toMap='peaks', toX=1, toY=24, requiresFlag='batqueen_defeated',
+             lockedMsg='A freezing draft blows from a passage behind the roost. The Bat Queen still guards it.')]
 
 cave = json.load(open(f'{A}/maps/cave.json'))
 crystal = {
@@ -207,9 +210,9 @@ while q:
     x, y = q.popleft()
     for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
         nx, ny = x + dx, y + dy
-        if 0 <= nx < W and 0 <= ny < H and fl[ny][nx] and (nx, ny) not in seen and (nx, ny) not in blocked and (nx, ny) not in ((4, 0), (31, 2)):
+        if 0 <= nx < W and 0 <= ny < H and fl[ny][nx] and (nx, ny) not in seen and (nx, ny) not in blocked and (nx, ny) not in ((4, 0), (31, 2), (33, 22)):
             seen.add((nx, ny)); q.append((nx, ny))
-allfloor = {(x, y) for y in range(H) for x in range(W) if fl[y][x] and (x, y) not in blocked and (x, y) not in ((4, 0), (31, 2))}
+allfloor = {(x, y) for y in range(H) for x in range(W) if fl[y][x] and (x, y) not in blocked and (x, y) not in ((4, 0), (31, 2), (33, 22))}
 assert not (allfloor - seen), sorted(allfloor - seen)[:10]
 json.dump(crystal, open(f'{A}/maps/crystal.json', 'w'), separators=(',', ':'))
 
