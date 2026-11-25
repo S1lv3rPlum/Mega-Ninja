@@ -123,3 +123,13 @@ without being run in a browser, so test new features on desktop and phone.
 - **After the win**: flag `treant_defeated`; sprouts disappear (`hideIfFlag`), dark tint on trees clears, Gnarl becomes a friendly NPC (`dialogue.json` key `treant`) and you receive the **Heartwood Lantern** (`items.lantern = 1`, never needs oil). Cave sign in the quarry (`cavesign`) reacts to the flag. The cave itself is still blocked: next step.
 - Fainting during the fight resets the boss (the scene restarts); `faint.json` still decides the penalty.
 - `make_boss_crops_assets.py` regenerates the placeholder art and map edits (runs once per map).
+
+## Co-op world (4th slot on the title screen)
+- Files: `coopLogic.js` (pure logic, tested by `test_coop.mjs`), `cloud.js` (Firebase REST + live stream, no npm package), `Coop.js` (the connection that lives across scene restarts), `firebaseConfig.js` (the database address; empty = co-op shows "not set up"), `database.rules.json`, `COOP_SETUP.md`.
+- Cloud layout: `worlds/<CODE>/meta`, `/shared/{plots,targets,flags}`, `/chars/<name>`, `/players/<name>`.
+- **Shared** = `gs.plots`, `gs.targets`, and world flags (`isWorldFlag` in coopLogic.js: `treant_defeated` and any flag ending `_cleared`). To share another flag, change that function. Everything else in the game state is personal.
+- Shared changes are found by diffing every second (`Coop.tick`, called from WorldScene) and only the changed paths are sent. Incoming changes call `WorldScene.coopSharedChanged` (redraw plots, targets; restart the forest if the treant was freed elsewhere).
+- Other players: `WorldScene.coopPlayers` draws a tinted copy of the player sprite with a name label. Presence is sent on every step and every 10 s; anyone quiet for 45 s disappears.
+- Characters are keyed by lowercase name; the bag etc. is backed up to `chars/<name>` on every save (throttled 8 s) and autosaved every 20 s in co-op. The newer of the device copy and the cloud copy wins when joining.
+- A player who arrives after `treant_defeated` is set gets the Heartwood Lantern automatically (WorldScene.create).
+- Not done yet: shared enemies/boss fight, blocking other players' tiles, trading.
