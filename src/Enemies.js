@@ -145,7 +145,8 @@ export default class Enemies {
     return false;
   }
 
-  kill(e) {
+  // quiet = no reward message (it left as a friend)
+  kill(e, quiet = false) {
     const s = this.scene;
     const gs = s.gameState;
     e.dead = true;
@@ -159,7 +160,7 @@ export default class Enemies {
     const spr = e.sprite;
     e.sprite = null;
     s.tweens.add({ targets: spr, alpha: 0, duration: 300, onComplete: () => spr.destroy() });
-    if (e.def.gold) {
+    if (e.def.gold && !quiet) {
       gs.gold += e.def.gold;
       s.showToast(`${e.def.name} defeated! +${e.def.gold} gold`);
       s.updateHud();

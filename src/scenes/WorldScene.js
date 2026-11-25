@@ -25,6 +25,7 @@ import { talkToShopkeeper } from '../shop.js';
 import InventoryScreen, { iconKey } from '../InventoryScreen.js';
 import { lowTools } from '../inventory.js';
 import { Coop } from '../Coop.js';
+import Friends from '../Friends.js';
 
 const TILE = 16;
 // NPCs that have walking animation: for each name here, public/assets/sprites/<name>-walk.png is a sheet laid out
@@ -307,6 +308,8 @@ export default class WorldScene extends Phaser.Scene {
     this.dialogue = new DialogueBox(this);
     this.choice = new ChoiceMenu(this);
     this.bag = new InventoryScreen(this);
+    this.friends = new Friends(this);
+    this.friends.start();
 
     // --- Input: arrows + WASD to move; Space / Enter / Z to talk; P to save ---
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -352,6 +355,9 @@ export default class WorldScene extends Phaser.Scene {
     };
     this.input.keyboard.on('keydown-J', (event) => {
       if (!event.repeat) this.attack();
+    });
+    this.input.keyboard.on('keydown-G', (event) => {
+      if (!event.repeat) this.friends.open();
     });
     this.input.keyboard.on('keydown-I', toggleBag);
     this.input.keyboard.on('keydown-TAB', toggleBag);
@@ -790,7 +796,7 @@ export default class WorldScene extends Phaser.Scene {
       this.tweens.add({ targets: this.rabbitSprite, alpha: { from: 0, to: 1 }, duration: 250 });
       if (!gs.flags.rabbit_hint) {
         gs.flags.rabbit_hint = true;
-        this.showToast('A rabbit! Face it and press F to catch it.');
+        this.showToast('A rabbit! F catches it. Or face it and press Space to offer a carrot.');
       } else {
         this.showToast('A rabbit is in the garden!');
       }
@@ -957,6 +963,10 @@ export default class WorldScene extends Phaser.Scene {
     // BAG button opens the inventory (the I key on a keyboard)
     const bagBtn = make(292, 46, 'BAG', () => this.toggleBag());
     bagBtn.setStyle({ fixedWidth: 44, fontSize: '10px' });
+
+    // FRIENDS button (the G key on a keyboard)
+    const friendBtn = make(292, 76, 'PETS', () => this.friends.open());
+    friendBtn.setStyle({ fixedWidth: 44, fontSize: '10px' });
   }
 
   // Space / Enter / Z / the A button
@@ -979,6 +989,7 @@ export default class WorldScene extends Phaser.Scene {
     const ty = this.tile.y + this.facing.y;
     // the treant is weak to the axe: Space with a working axe swings it at the boss
     if (this.boss && this.boss.occupies(tx, ty) && (this.boss.toolHit?.() ?? this.boss.axeHit())) return;
+    if (this.friends.tryOffer(tx, ty)) return;
     const npc = this.npcAt(tx, ty);
     const target = this.targetAt(tx, ty);
     if (npc) {
@@ -1350,7 +1361,9 @@ export default class WorldScene extends Phaser.Scene {
     }
 
     this.moving = true;
+    const prevTile = this.tile;
     this.tile = { x: nx, y: ny };
+    this.friends.onStep(prevTile);
     if (Coop.active) Coop.sendPresence(this.gameState.map, nx, ny, this.dirName(this.facing));
     this.player.play(`walk-${this.dirName(this.facing)}`, true);
     this.tweens.add({

@@ -1,0 +1,175 @@
+import friendDefs from './data/friends.json';
+import itemsData from './data/items.json';
+import toolDefs from './data/tools.json';
+import { giveTool } from './tools.js';
+import { rabbitOnMap, canCatch, throwRabbit } from './rabbit.js';
+import { ensurePets, befriend, setCompanion, renamePet, releasePet, isFull, hasTreat, companionPet, cleanPetName } from './pets.js';
+
+const TILE = 16;
+
+// Scene helper for friends: offering treats, the one that follows you, and the Friends menu.
+// (The rules live in pets.js.)
+export default class Friends {
+  constructor(scene) {
+    this.scene = scene;
+    this.sprite = null;
+    this.sprite_id = null;
+    ensurePets(scene.gameState);
+  }
+
+  // called after the map is built: put the companion next to the player
+  start() {
+    this.refresh(true);
+  }
+
+  // make the follower sprite match gs.companion
+  refresh(place = false) {
+    const s = this.scene;
+    const pet = companionPet(s.gameState);
+    if (!pet) {
+      if (this.sprite) this.sprite.destroy();
+      this.sprite = null;
+      this.sprite_id = null;
+      return;
+    }
+    const kind = friendDefs.kinds[pet.kind];
+    if (this.sprite && this.sprite_id !== pet.id) {
+      this.sprite.destroy();
+      this.sprite = null;
+    }
+    if (!this.sprite) {
+      this.sprite = s.add.image(0, 0, kind.texture).setOrigin(0, 0).setDepth(7);
+      this.sprite_id = pet.id;
+      place = true;
+    }
+    if (place) {
+      // start on the tile behind you if it is free, otherwise right under you
+      const bx = s.tile.x - s.facing.x;
+      const by = s.tile.y - s.facing.y;
+      const spot = s.canWalk(bx, by) ? { x: bx, y: by } : s.tile;
+      this.sprite.setPosition(spot.x * TILE, spot.y * TILE);
+    }
+  }
+
+  // the player stepped from `prev`: the friend hops into the tile you just left
+  onStep(prev) {
+    if (!this.sprite) return;
+    this.scene.tweens.add({ targets: this.sprite, x: prev.x * TILE, y: prev.y * TILE, duration: 150 });
+  }
+
+  // Space on something small and friendly-able. Returns true if it took the key.
+  tryOffer(tx, ty) {
+    const s = this.scene;
+    const gs = s.gameState;
+    const e = s.enemies.at(tx, ty);
+    let kindId = null;
+    let creature = null;
+    if (e && e.def.tame) {
+      kindId = e.def.tame;
+      creature = { type: 'enemy', e };
+    } else if (s.rabbit && rabbitOnMap(s.rabbit) && s.rabbit.x === tx && s.rabbit.y === ty && s.rabbitSprite && canCatch(s.rabbit)) {
+      kindId = 'rabbit';
+      creature = { type: 'rabbit' };
+    }
+    if (!kindId) return false;
+    const kind = friendDefs.kinds[kindId];
+    const treat = itemsData.items[kind.treat].name;
+    if (isFull(gs, friendDefs)) {
+      s.showToast(`You have ${friendDefs.max} friends already.`);
+      return true;
+    }
+    if (!hasTreat(gs, kind)) {
+      s.showToast(`${kind.name} might like a ${treat.toLowerCase()}...`);
+      return true;
+    }
+    s.choice.open([`Offer a ${treat.toLowerCase()}`, 'Not now'], {
+      onSelect: (i) => {
+        if (i === 0) this.makeFriend(kindId, creature);
+      },
+    });
+    return true;
+  }
+
+  makeFriend(kindId, creature) {
+    const s = this.scene;
+    const gs = s.gameState;
+    const kind = friendDefs.kinds[kindId];
+    // the creature must still be there
+    if (creature.type === 'enemy' && creature.e.dead) return;
+    if (creature.type === 'rabbit' && !s.rabbitSprite) return;
+    let name = kind.baseName;
+    try {
+      const typed = window.prompt(`Your new ${kind.name.toLowerCase()} is happy! Name it:`, kind.baseName);
+      name = cleanPetName(typed, kind.baseName);
+    } catch (err) {
+      /* no prompt available: keep the default name */
+    }
+    const r = befriend(gs, kindId, name, friendDefs);
+    if (!r.ok) return;
+    if (creature.type === 'enemy') s.enemies.kill(creature.e, true);
+    else {
+      throwRabbit(s.rabbit); // it leaves the garden for a while
+      const spr = s.rabbitSprite;
+      s.rabbitSprite = null;
+      s.tweens.add({ targets: spr, alpha: 0, duration: 300, onComplete: () => spr.destroy() });
+      if (!gs.flags.shovel_dropped) {
+        gs.flags.shovel_dropped = true;
+        giveTool(gs, toolDefs, 'shovel');
+        s.time.delayedCall(1600, () => s.showToast(`${r.pet.name} gave you a shovel!`));
+      }
+    }
+    this.refresh();
+    s.showToast(`${r.pet.name} is your friend now!`);
+    s.updateHud();
+  }
+
+  // ---- Friends menu (FRIENDS button / G key) ----
+  open() {
+    const s = this.scene;
+    if (s.choice.isOpen || s.dialogue.isOpen || s.bag.isOpen || s.moving || s.transitioning) return;
+    const gs = s.gameState;
+    if (gs.pets.length === 0) {
+      s.showToast('No friends yet. Offer a treat to a bunny, a sprout or a bat!');
+      return;
+    }
+    const opts = gs.pets.map((p) => `${p.name}${p.id === gs.companion ? ' (with you)' : ''}`);
+    opts.push('Close');
+    s.choice.open(opts, {
+      onSelect: (i) => {
+        if (i < gs.pets.length) this.openPet(gs.pets[i]);
+      },
+    });
+  }
+
+  openPet(pet) {
+    const s = this.scene;
+    const gs = s.gameState;
+    const follows = gs.companion === pet.id;
+    s.choice.open([follows ? 'Rest at home' : 'Come with me', 'Rename', 'Say goodbye', 'Back'], {
+      onSelect: (i) => {
+        if (i === 0) {
+          setCompanion(gs, follows ? null : pet.id);
+          this.refresh(true);
+          s.showToast(follows ? `${pet.name} stays home.` : `${pet.name} follows you!`);
+        } else if (i === 1) {
+          let typed = null;
+          try {
+            typed = window.prompt('New name:', pet.name);
+          } catch (err) {
+            /* ignore */
+          }
+          if (typed !== null) renamePet(gs, pet.id, typed);
+        } else if (i === 2) {
+          s.choice.open(['Yes, set it free', 'No'], {
+            onSelect: (j) => {
+              if (j !== 0) return;
+              releasePet(gs, pet.id);
+              this.refresh();
+              s.showToast(`${pet.name} waves goodbye.`);
+            },
+          });
+        } else this.open();
+      },
+    });
+  }
+}

@@ -8,7 +8,8 @@
     "attackMs": 1300,
     "sight": 5,
     "respawnMs": 45000,
-    "gold": 3
+    "gold": 3,
+    "tame": "shadow"
   },
   "sapling": {
     "name": "Sapling",
@@ -30,7 +31,8 @@
     "attackMs": 1100,
     "sight": 6,
     "respawnMs": 40000,
-    "gold": 4
+    "gold": 4,
+    "tame": "bat"
   },
   "pebble": {
     "name": "Pebble",
