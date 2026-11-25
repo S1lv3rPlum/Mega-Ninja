@@ -3,7 +3,8 @@ import { SaveManager } from '../SaveManager.js';
 import DialogueBox from '../DialogueBox.js';
 import dialogueData from '../data/dialogue.json';
 import questsData from '../data/quests.json';
-import { MAX_STAGE, ensureState, getPlot, plant, water, harvest, fillCan, tick, eatPlot } from '../farming.js';
+import { MAX_STAGE, ensureState, getPlot, plant, water, harvest, fillCan, tick, eatPlot, plantable } from '../farming.js';
+import cropsData from '../data/crops.json';
 import { talkToQuestGiver } from '../quests.js';
 import { createRabbit, tickRabbit, catchRabbit, throwRabbit, canCatch, rabbitOnMap } from '../rabbit.js';
 import ChoiceMenu from '../ChoiceMenu.js';
@@ -14,6 +15,7 @@ import itemsData from '../data/items.json';
 import weaponDefs from '../data/weapons.json';
 import faintCfg from '../data/faint.json';
 import Enemies from '../Enemies.js';
+import Boss from '../Boss.js';
 import { ensureCombatState, hurtPlayer as applyHurt, faint as applyFaint, eat } from '../combat.js';
 import shopData from '../data/shop.json';
 import { talkToShopkeeper } from '../shop.js';
@@ -56,6 +58,10 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('shopkeeper', 'assets/sprites/shopkeeper.png');
     ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
     this.load.image('rubble', 'assets/sprites/rubble.png');
+    ['treant-boss', 'treant-good', 'sapling', 'sign'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
+    this.load.image('bush', 'assets/sprites/bush.png');
+    this.load.image('bush-bare', 'assets/sprites/bush-bare.png');
+    ['carrot', 'pumpkin'].forEach((c) => [2, 3, 4].forEach((n) => this.load.image(`crop-${c}-${n}`, `assets/sprites/crop-${c}-${n}.png`)));
     this.load.image('sensei', 'assets/sprites/sensei.png');
     this.load.image('shadow', 'assets/sprites/shadow.png');
     this.load.image('boulder', 'assets/sprites/boulder.png');
@@ -67,6 +73,7 @@ export default class WorldScene extends Phaser.Scene {
     this.moving = false;
     this.transitioning = false;
     this.plotMarks = {}; // little icons drawn on plots: thirsty / watered / ready
+    this.plotCrops = {}; // pictures of non-wheat crops drawn over a plot
     this.makeMarkTextures();
     this.dropSprites = {}; // items lying on the ground
     this.rabbitSprite = null;
@@ -215,6 +222,15 @@ export default class WorldScene extends Phaser.Scene {
     this.enemies = new Enemies(this);
     this.enemies.spawn(objects('enemies'), readProps);
 
+    // --- The forest boss (an object on a "boss" layer) ---
+    this.boss = null;
+    const bossObj = objects('boss')[0];
+    if (bossObj) this.boss = new Boss(this, bossObj);
+    // the forest is darkened by the shadow until the treant is freed
+    if (gs.map === 'forest' && gs.flags.got_sword && !gs.flags.treant_defeated) {
+      this.targets.forEach((t) => t.sprite.setTint(0x8a7aaa));
+    }
+
     // --- Camera follows the player and stays inside the map ---
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
     this.cameras.main.startFollow(this.player, true);
@@ -236,7 +252,7 @@ export default class WorldScene extends Phaser.Scene {
 
     // --- Save (P) ---
     this.toast = this.add
-      .text(160, 42, '', { fontSize: '10px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 } })
+      .text(160, 42, '', { fontSize: '10px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 4, y: 2 }, wordWrap: { width: 280 }, align: 'center' })
       .setOrigin(0.5, 0)
       .setScrollFactor(0) // stays fixed on screen
       .setDepth(400) // above the bag, so messages from eating show
@@ -292,6 +308,12 @@ export default class WorldScene extends Phaser.Scene {
       .text(4, 4, '', { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 3, y: 2 }, lineSpacing: 1 })
       .setScrollFactor(0)
       .setDepth(100);
+    this.pickupText = this.add
+      .text(4, 40, '', { fontSize: '8px', fontFamily: 'monospace', color: '#ffe08a', backgroundColor: '#000000aa', padding: { x: 3, y: 2 }, lineSpacing: 1 })
+      .setScrollFactor(0)
+      .setDepth(100)
+      .setAlpha(0);
+    this.lastItems = { ...gs.items }; // so only changes after this point pop up
     // little coin icon in front of the gold number (the Coin Pouch)
     this.hudCoin = this.add.image(12, 9, iconKey(this, 'coin', '#f2c230')).setScrollFactor(0).setDepth(101);
     this.createHearts();
@@ -326,11 +348,29 @@ export default class WorldScene extends Phaser.Scene {
   updateHud() {
     const gs = this.gameState;
     // seeds, wheat, wood, stone and tools live in the bag (I key / BAG button); the HUD keeps the essentials
-    const lines = [`   ${gs.gold}`, `Water ${gs.can.water}/${gs.can.max}`];
+    const lines = [`   ${gs.gold}`];
+    if (this.crops) lines.push(`Water ${gs.can.water}/${gs.can.max}`); // only where there are plots to water
     const worn = lowTools(gs, toolDefs).map((t) => (t.dur <= 0 ? `${t.name} broken!` : `${t.name} ${t.dur}/${t.max}!`));
     if (worn.length > 0) lines.push(worn.join('  '));
     this.hud.setText(lines.join('\n'));
     this.updateHearts();
+    this.showPickups();
+  }
+
+  // When something is added to your bag, show it with the new total under the HUD ("+2 Wood (7)")
+  showPickups() {
+    const gs = this.gameState;
+    if (!this.lastItems) this.lastItems = { ...gs.items };
+    const gained = [];
+    Object.entries(gs.items).forEach(([id, n]) => {
+      const before = this.lastItems[id] ?? 0;
+      if (n > before && id !== 'shovel') gained.push(`+${n - before} ${itemsData.items[id]?.name ?? id} (${n})`);
+    });
+    this.lastItems = { ...gs.items };
+    if (gained.length === 0 || !this.pickupText) return;
+    this.pickupText.setText(gained.join('\n')).setAlpha(1).setPosition(4, this.hud.y + this.hud.height + 3);
+    this.tweens.killTweensOf(this.pickupText);
+    this.tweens.add({ targets: this.pickupText, alpha: 0, delay: 2200, duration: 500 });
   }
 
   // ---------- Hearts, attacking, fainting, eating ----------
@@ -377,6 +417,7 @@ export default class WorldScene extends Phaser.Scene {
 
     const e = this.enemies.at(tx, ty);
     if (e) this.enemies.hit(e, w.damage, fx, fy);
+    else if (this.boss && this.boss.occupies(tx, ty)) this.boss.hit(w.damage);
   }
 
   hurtPlayer(amount) {
@@ -439,7 +480,15 @@ export default class WorldScene extends Phaser.Scene {
   refreshPlot(x, y) {
     if (!this.crops || this.farmGid === null) return;
     const plot = getPlot(this.gameState, this.gameState.map, x, y);
-    this.crops.putTileAt(this.farmGid + plot.stage, x, y);
+    const cropId = plot.crop ?? 'wheat';
+    const overlay = cropId !== 'wheat' && plot.stage >= 2;
+    // wheat has its own tiles; other crops are a picture drawn over plain dirt
+    this.crops.putTileAt(this.farmGid + (overlay ? 0 : plot.stage), x, y);
+    if (this.plotCrops[`${x},${y}`]) {
+      this.plotCrops[`${x},${y}`].destroy();
+      delete this.plotCrops[`${x},${y}`];
+    }
+    if (overlay) this.plotCrops[`${x},${y}`] = this.add.image(x * TILE, y * TILE, `crop-${cropId}-${plot.stage}`).setOrigin(0, 0).setDepth(4);
 
     const k = `${x},${y}`;
     if (this.plotMarks[k]) {
@@ -533,8 +582,28 @@ export default class WorldScene extends Phaser.Scene {
     const gs = this.gameState;
     const map = gs.map;
     const stage = getPlot(gs, map, x, y).stage;
-    const result =
-      stage === 0 ? plant(gs, map, x, y) : stage >= MAX_STAGE ? harvest(gs, map, x, y) : water(gs, map, x, y);
+    if (stage === 0) {
+      // which seeds? one kind plants straight away, several kinds ask first
+      const options = plantable(gs, cropsData);
+      if (options.length === 0) {
+        this.showToast('No seeds. Try picking the bushes.');
+        return;
+      }
+      if (options.length === 1) {
+        this.finishFarm(x, y, plant(gs, map, x, y, options[0].id, cropsData));
+        return;
+      }
+      this.touchDir = { x: 0, y: 0 };
+      this.choice.open(options.map((o) => `${o.name} seeds (${o.count})`), {
+        onSelect: (i) => this.finishFarm(x, y, plant(gs, map, x, y, options[i].id, cropsData)),
+      });
+      return;
+    }
+    const result = stage >= MAX_STAGE ? harvest(gs, map, x, y, Math.random, cropsData) : water(gs, map, x, y, Date.now(), cropsData);
+    this.finishFarm(x, y, result);
+  }
+
+  finishFarm(x, y, result) {
     if (result.ok) this.refreshPlot(x, y);
     this.showToast(result.msg);
     this.updateHud();
@@ -819,6 +888,8 @@ export default class WorldScene extends Phaser.Scene {
 
     const tx = this.tile.x + this.facing.x;
     const ty = this.tile.y + this.facing.y;
+    // the treant is weak to the axe: Space with a working axe swings it at the boss
+    if (this.boss && this.boss.occupies(tx, ty) && this.boss.axeHit()) return;
     const npc = this.npcAt(tx, ty);
     const target = this.targetAt(tx, ty);
     if (npc) {
@@ -834,6 +905,7 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   npcAt(x, y) {
+    if (this.boss && this.boss.npc && this.boss.occupies(x, y)) return this.boss.npc; // the freed treant
     return this.npcs.find((n) => n.x === x && n.y === y) ?? null;
   }
 
@@ -888,6 +960,12 @@ export default class WorldScene extends Phaser.Scene {
     else next();
   }
 
+  // quiet save (no toast), used after story moments
+  saveQuiet() {
+    this.gameState.tile = { ...this.tile };
+    SaveManager.save(this.gameState);
+  }
+
   saveGame() {
     this.gameState.tile = { ...this.tile };
     const ok = SaveManager.save(this.gameState);
@@ -902,7 +980,10 @@ export default class WorldScene extends Phaser.Scene {
 
   update(_time, delta) {
     this.updateRabbit(delta);
-    if (!(this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen)) this.enemies.update(_time);
+    if (!(this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen)) {
+      this.enemies.update(_time);
+      if (this.boss) this.boss.update(_time);
+    }
 
     if (this.moving || this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen) return;
 
@@ -990,6 +1071,8 @@ export default class WorldScene extends Phaser.Scene {
     if (this.rabbit && rabbitOnMap(this.rabbit) && this.rabbit.x === x && this.rabbit.y === y) return false;
     // so does an enemy
     if (this.enemies && this.enemies.at(x, y)) return false;
+    // the treant fills a 2x2 block
+    if (this.boss && this.boss.occupies(x, y)) return false;
     // dirt piles, trees and rocks block the way until they are cleared
     if (this.targetAt(x, y)) return false;
     // any tile painted on the "obstacles" layer blocks movement
