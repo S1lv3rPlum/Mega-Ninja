@@ -26,6 +26,7 @@ import InventoryScreen, { iconKey } from '../InventoryScreen.js';
 import { lowTools } from '../inventory.js';
 import { Coop } from '../Coop.js';
 import Friends from '../Friends.js';
+import { ensureSmith, talkToSmith } from '../smith.js';
 import friendDefs from '../data/friends.json';
 
 const TILE = 16;
@@ -40,10 +41,10 @@ const START_MAP = 'town';
 const START_TILE = { x: 15, y: 10 };
 
 // To add a map: save it as public/assets/maps/<name>.json and add its name here.
-const MAPS = ['town', 'farm', 'forest', 'quarry', 'cave', 'crystal'];
+const MAPS = ['town', 'farm', 'forest', 'quarry', 'cave', 'crystal', 'market'];
 // To add a tileset: save it as public/assets/tilesets/<name>.png and add its name here.
 // (The name must match the tileset's name inside Tiled.)
-const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles', 'mine-tiles', 'crystal-tiles'];
+const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles', 'mine-tiles', 'crystal-tiles', 'market-tiles'];
 
 // Tiled stores custom properties as a list of {name, value}; turn that into a plain object
 const readProps = (p) =>
@@ -72,7 +73,7 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('shopkeeper', 'assets/sprites/shopkeeper.png');
     ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond', 'crystal'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
     this.load.image('rubble', 'assets/sprites/rubble.png');
-    ['treant-boss', 'treant-good', 'sapling', 'sign', 'bat-queen', 'moth'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
+    ['treant-boss', 'treant-good', 'sapling', 'sign', 'bat-queen', 'moth', 'hexsmith', 'hexcreature', 'hexcharm'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
     this.load.image('bush', 'assets/sprites/bush.png');
     this.load.image('bush-bare', 'assets/sprites/bush-bare.png');
     ['carrot', 'pumpkin'].forEach((c) => [2, 3, 4].forEach((n) => this.load.image(`crop-${c}-${n}`, `assets/sprites/crop-${c}-${n}.png`)));
@@ -108,6 +109,8 @@ export default class WorldScene extends Phaser.Scene {
     ensureState(gs);
     ensureToolState(gs);
     ensureCombatState(gs);
+    ensureSmith(gs);
+    if (gs.map === 'market') gs.marketVisits += 1; // an order at the weapon smith is ready the next time you come back
     // co-op: the shared world (farm, rocks, boulders, the treant) comes from the cloud before the map is built
     if (Coop.active) Coop.prepare(gs);
     // a co-op friend freed the treant before you got there: the lantern is waiting for you too
@@ -219,6 +222,7 @@ export default class WorldScene extends Phaser.Scene {
         passable: !!p.passable, // once its openFlag is set you can walk through it (the stone door)
         dialogue: isOpen && p.openDialogue ? p.openDialogue : p.dialogue ?? id,
         shop: p.shop, // a key in data/shop.json makes this NPC a shopkeeper
+        smith: p.smith, // a weapon smith: orders weapons from data/weapons.json
         x,
         y,
         sprite,
@@ -1028,6 +1032,11 @@ export default class WorldScene extends Phaser.Scene {
     }
     // an animated NPC turns to look at you
     if (npc.sheet && !npc.moving) this.standNpc(npc, this.dirName({ x: -this.facing.x, y: -this.facing.y }));
+
+    if (npc.smith) {
+      this.runConvo(talkToSmith(this.gameState, npc.id, data, weaponDefs), data.name);
+      return;
+    }
 
     // Shopkeepers (an NPC with a "shop" property pointing at data/shop.json)
     if (npc.shop && shopData[npc.shop]) {

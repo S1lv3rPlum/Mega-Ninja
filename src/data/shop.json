@@ -67,5 +67,52 @@
       "herb": 3,
       "crystal": 12
     }
+  },
+  "hexcreature": {
+    "offers": [
+      {
+        "id": "carrot",
+        "type": "item",
+        "item": "carrot",
+        "amount": 3,
+        "label": "3 Carrots",
+        "price": 18
+      },
+      {
+        "id": "herb",
+        "type": "item",
+        "item": "herb",
+        "amount": 3,
+        "label": "3 Herbs",
+        "price": 12
+      },
+      {
+        "id": "pumpkin",
+        "type": "item",
+        "item": "pumpkin",
+        "amount": 1,
+        "label": "1 Pumpkin",
+        "price": 50
+      },
+      {
+        "id": "crystal",
+        "type": "item",
+        "item": "crystal",
+        "amount": 1,
+        "label": "1 Glow Crystal",
+        "price": 30
+      }
+    ],
+    "sell": {}
+  },
+  "hexcharm": {
+    "offers": [],
+    "sell": {
+      "crystal": 20,
+      "sapphire": 40,
+      "emerald": 65,
+      "ruby": 100,
+      "diamond": 320
+    }
   }
 }

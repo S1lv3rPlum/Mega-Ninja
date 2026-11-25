@@ -174,8 +174,93 @@
       "A cold draft seeps through a crack in the crystal wall. You hear faint, strange music behind it."
     ],
     "repeatLines": [
-      "The crack is too dim to see through. A brighter light might show the way."
+      "The crack in the wall is too dim to see through. A brighter light might show the way."
     ],
     "flagLines": {}
+  },
+  "hexsmith": {
+    "name": "Hexsmith",
+    "lines": [
+      "Heh heh... a customer with a lantern. Not many find my little corner of the dark.",
+      "I forge weapons nobody else would dare to. Bring me gold and glow crystals, and I will make you something special."
+    ],
+    "offer": "Today I could forge {name}: {desc}. It takes time. Come back after you have wandered off, and it will be waiting.",
+    "ordered": "Deal! The forge is already glowing. Go on, wander off... and come back later.",
+    "working": "Patience! The {name} is still cooling. Leave the market and come back, and it will be ready.",
+    "ready": "Ah, there you are! Your {name} is ready. Handle it with care... it bites.",
+    "done": "I have nothing finer left to forge for you. You carry my best work.",
+    "farewell": "Heh heh. The dark will wait.",
+    "repeatLines": [
+      "Back again? Let us see what I can forge for you."
+    ]
+  },
+  "hexcreature": {
+    "name": "Critter Seller",
+    "lines": [
+      "Psst! Treats for little friends. Furry ones, flappy ones, glowy ones. All of them love a snack."
+    ],
+    "menu": "Which treat?",
+    "farewell": "Be kind to your friends!",
+    "repeatLines": [
+      "Treats for your little friends?"
+    ]
+  },
+  "hexcharm": {
+    "name": "Charm Seller",
+    "lines": [
+      "Shiny things! I pay well for gems and glow crystals. Better than the daytime market, hee hee."
+    ],
+    "menu": "Selling?",
+    "farewell": "Come back with more sparkle!",
+    "repeatLines": [
+      "Got any sparkle for me?"
+    ]
+  },
+  "closedstall": {
+    "name": "Sign",
+    "lines": [
+      "This stall is closed. A brewing pot bubbles inside. \"Back soon. - The Brewer\""
+    ],
+    "repeatLines": [
+      "Closed. Something purple is bubbling inside."
+    ]
+  },
+  "hexcust1": {
+    "name": "Hooded Shopper",
+    "lines": [
+      "I came for a lucky charm. The seller says all her charms are a little bit haunted."
+    ],
+    "repeatLines": [
+      "Haunted charms are the best kind."
+    ]
+  },
+  "hexcust2": {
+    "name": "Cloaked Traveler",
+    "lines": [
+      "Shh. Do not tell the daylight folk about this place. They would want a discount."
+    ],
+    "repeatLines": [
+      "Our secret."
+    ]
+  },
+  "hexcust3": {
+    "name": "Little Witch",
+    "lines": [
+      "My pet bat has no name yet. Do you have any ideas?",
+      "Everyone says friends are better when you pick the name yourself."
+    ],
+    "repeatLines": [
+      "Maybe I will call her Biscuit."
+    ]
+  },
+  "hexcust4": {
+    "name": "Gloomy Shopper",
+    "lines": [
+      "I heard a princess passed through here, asking about a Moon Crest.",
+      "She did not buy anything. She just looked sad and kept going."
+    ],
+    "repeatLines": [
+      "Tell her I said hello, if you find her."
+    ]
   }
 }

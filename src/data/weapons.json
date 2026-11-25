@@ -1,3 +1,40 @@
 {
-  "sword": { "name": "Training Sword", "damage": 2, "cooldownMs": 350, "desc": "A plain wooden blade. Press J to swing (the B button on a phone)." }
+  "sword": {
+    "name": "Training Sword",
+    "damage": 2,
+    "cooldownMs": 350,
+    "desc": "A plain wooden blade. Press J to swing (the B button on a phone).",
+    "rank": 1
+  },
+  "shadowglass": {
+    "name": "Shadowglass Blade",
+    "damage": 3,
+    "cooldownMs": 300,
+    "rank": 2,
+    "desc": "A blade of black glass. It hums when bats are near. Press J to swing.",
+    "pitch": "a blade of black glass that drinks the light",
+    "smith": {
+      "gold": 120,
+      "items": {
+        "crystal": 4,
+        "copper": 3
+      }
+    }
+  },
+  "moonreaper": {
+    "name": "Moonreaper",
+    "damage": 5,
+    "cooldownMs": 380,
+    "rank": 3,
+    "desc": "A pale curved blade that glows in the dark. Press J to swing.",
+    "pitch": "a pale moon-bright scythe-blade for the deepest dark",
+    "smith": {
+      "gold": 400,
+      "items": {
+        "crystal": 8,
+        "ruby": 1,
+        "sapphire": 2
+      }
+    }
+  }
 }

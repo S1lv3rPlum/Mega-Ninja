@@ -133,12 +133,13 @@ carve(30, 7, 31, 8)
 for p in [(7, 12), (7, 15), (11, 12), (11, 15), (23, 12), (27, 13), (21, 22), (28, 22)]:   # pillars
     fl[p[1]][p[0]] = False
 fl[0][4] = True        # the way back up to the stone door
+fl[2][31] = True       # the hidden crack in the nook wall: the way to the Shadow Market
 
 ground, obstacles = [], []
 for y in range(H):
     for x in range(W):
         if fl[y][x]:
-            g = 5 if (x, y) == (4, 0) else (3 if random.random() < 0.12 else 2)
+            g = 5 if (x, y) in ((4, 0), (31, 2)) else (3 if random.random() < 0.12 else 2)
             ground.append(g); obstacles.append(0)
         else:
             ground.append(2)
@@ -178,7 +179,9 @@ for o in enemies:
     assert fl[oy][ox], (ox, oy)
 npcs = [obj('crystalnote', 3, 12, id='crystalnote', texture='sign', dialogue='crystalnote'),
         obj('nooksign', 31, 5, id='nooksign', texture='sign', dialogue='nooksign')]
-doors = [obj('to-cave', 4, 0, toMap='cave', toX=21, toY=2)]
+doors = [obj('to-cave', 4, 0, toMap='cave', toX=21, toY=2),
+         obj('to-market', 31, 2, toMap='market', toX=15, toY=19, requiresItem='crystal-lantern',
+             lockedMsg='A crack in the wall. It is too dim to see through. A brighter light might help.')]
 
 cave = json.load(open(f'{A}/maps/cave.json'))
 crystal = {
@@ -204,9 +207,9 @@ while q:
     x, y = q.popleft()
     for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
         nx, ny = x + dx, y + dy
-        if 0 <= nx < W and 0 <= ny < H and fl[ny][nx] and (nx, ny) not in seen and (nx, ny) not in blocked and (nx, ny) != (4, 0):
+        if 0 <= nx < W and 0 <= ny < H and fl[ny][nx] and (nx, ny) not in seen and (nx, ny) not in blocked and (nx, ny) not in ((4, 0), (31, 2)):
             seen.add((nx, ny)); q.append((nx, ny))
-allfloor = {(x, y) for y in range(H) for x in range(W) if fl[y][x] and (x, y) not in blocked and (x, y) != (4, 0)}
+allfloor = {(x, y) for y in range(H) for x in range(W) if fl[y][x] and (x, y) not in blocked and (x, y) not in ((4, 0), (31, 2))}
 assert not (allfloor - seen), sorted(allfloor - seen)[:10]
 json.dump(crystal, open(f'{A}/maps/crystal.json', 'w'), separators=(',', ':'))
 
@@ -271,7 +274,7 @@ dj['crystalnote'] = {
 dj['nooksign'] = {
     'name': 'Cold Draft',
     'lines': ['A cold draft seeps through a crack in the crystal wall. You hear faint, strange music behind it.'],
-    'repeatLines': ['The crack is too dim to see through. A brighter light might show the way.'],
+    'repeatLines': ['The crack in the wall is too dim to see through. A brighter light might show the way.'],
     'flagLines': {},
 }
 dj['sealeddooropen'] = {'name': 'Stone Door', 'lines': ['The door stands open. A cold wind blows up from the deep.'], 'repeatLines': ['The passage leads down into the Crystal Caverns.']}

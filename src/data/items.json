@@ -136,6 +136,14 @@
     "sword": {
       "icon": "sword",
       "color": "#c9a46a"
+    },
+    "shadowglass": {
+      "icon": "sword",
+      "color": "#9a6bff"
+    },
+    "moonreaper": {
+      "icon": "sword",
+      "color": "#7fe8ff"
     }
   }
 }
