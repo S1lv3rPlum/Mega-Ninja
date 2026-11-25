@@ -145,7 +145,7 @@ export default class InventoryScreen {
     this.detailDesc = add(s.add.text(200, 72, '', { fontSize: '8px', fontFamily: 'monospace', color: '#c8ccdc', wordWrap: { width: 104 }, lineSpacing: 2 }));
 
     // footer: hint + close button (the button is what phones use)
-    add(s.add.text(20, 214, 'Arrows: move  Space: eat', { fontSize: '7px', fontFamily: 'monospace', color: '#8a90a8' }));
+    add(s.add.text(20, 214, 'Arrows: move  Space: use', { fontSize: '7px', fontFamily: 'monospace', color: '#8a90a8' }));
     const close = add(
       s.add.text(284, 215, 'CLOSE', { fontSize: '9px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#444466', padding: { x: 4, y: 2 } }).setOrigin(0.5).setInteractive(),
     );
@@ -208,8 +208,8 @@ export default class InventoryScreen {
       return;
     }
     this.detailName.setText(e.name);
-    this.eatBtn.setVisible(e.kind === 'item' && (e.heal > 0 || e.id === 'waystone-charm'));
-    this.eatBtn.setText(e.id === 'waystone-charm' ? 'USE' : 'EAT');
+    this.eatBtn.setVisible(e.kind === 'item' && (e.heal > 0 || e.brew || e.id === 'waystone-charm'));
+    this.eatBtn.setText(e.id === 'waystone-charm' ? 'USE' : e.brew ? 'DRINK' : 'EAT');
     if (e.kind === 'armor') {
       this.detailSub.setText(`Defense ${e.defense}`);
       this.detailDesc.setText(e.desc);
@@ -236,8 +236,8 @@ export default class InventoryScreen {
       this.scene.openWaystones();
       return;
     }
-    if (!this.isOpen || !e || e.kind !== 'item' || !e.heal) return;
-    const msg = this.scene.eatFood(e.id);
+    if (!this.isOpen || !e || e.kind !== 'item' || !(e.heal || e.brew)) return;
+    const msg = e.brew ? this.scene.drinkBrew(e.id) : this.scene.eatFood(e.id);
     // rebuild so counts and the cursor stay right (the stack may be gone now)
     this.close();
     this.open();

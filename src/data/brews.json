@@ -1,0 +1,5 @@
+{
+  "swift-brew":  { "speed": 45000 },
+  "owl-brew":    { "vision": 90000 },
+  "shadow-brew": { "speed": 45000, "vision": 90000 }
+}

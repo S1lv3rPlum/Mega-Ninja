@@ -16,7 +16,7 @@ export function listEntries(gs, items, toolDefs, weaponDefs = {}, armorDefs = {}
     const n = have[id] ?? 0;
     if (n <= 0) return;
     const d = items.items[id] ?? { name: NICE(id), icon: 'rock', color: '#999999', desc: '' };
-    entries.push({ id, kind: 'item', name: d.name, count: n, icon: d.icon, color: d.color, desc: d.desc, heal: d.heal ?? 0 });
+    entries.push({ id, kind: 'item', name: d.name, count: n, icon: d.icon, color: d.color, desc: d.desc, heal: d.heal ?? 0, brew: !!d.brew });
   });
   if (gs.weapon && weaponDefs[gs.weapon]) {
     const w = weaponDefs[gs.weapon];

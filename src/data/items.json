@@ -485,6 +485,27 @@
       "color": "#c890f0",
       "desc": "Shimmering sushi. Eat it to heal a lot.",
       "heal": 12
+    },
+    "swift-brew": {
+      "name": "Swift Brew",
+      "icon": "gem",
+      "color": "#58d868",
+      "desc": "Fizzy green brew. Drink it to run faster for 45 seconds.",
+      "brew": true
+    },
+    "owl-brew": {
+      "name": "Owl-Eye Brew",
+      "icon": "gem",
+      "color": "#f0d040",
+      "desc": "Glowing yellow brew. Drink it to see in the dark for 90 seconds.",
+      "brew": true
+    },
+    "shadow-brew": {
+      "name": "Shadow Brew",
+      "icon": "gem",
+      "color": "#a060e0",
+      "desc": "Swirly purple brew. Run faster AND see in the dark. A ninja favourite.",
+      "brew": true
     }
   },
   "tools": {

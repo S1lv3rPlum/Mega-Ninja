@@ -1059,5 +1059,18 @@
     "repeatLines": [
       "FISHING POND. Face the water with a rod and press Space."
     ]
+  },
+  "brewer": {
+    "name": "The Brewer",
+    "lines": [
+      "Heh heh heh... the stall is open again! My cauldron has been bubbling all week.",
+      "The green one makes your feet fly. The yellow one lets you see in the dark, even without a big lantern.",
+      "The purple one does both. Drink them from your bag. They wear off, so use them well!"
+    ],
+    "repeatLines": [
+      "Back for more brew, little ninja?"
+    ],
+    "menu": "Which brew will it be?",
+    "farewell": "Heh heh... mind the dark!"
   }
 }

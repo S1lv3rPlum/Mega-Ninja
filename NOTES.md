@@ -254,3 +254,9 @@ without being run in a browser, so test new features on desktop and phone.
 
 ## Miner repairs pickaxes
 - The quarry Miner is now a repair-only shop (`shop: 'miner'` on the NPC, `miner` in shop.json). Fixing the pickaxe costs 3 stone (from tools.json), no trip to the farm shop needed. If the pickaxe is fine he says so (`nothing` line in his dialogue; supported in shop.js for any repair-only stall).
+
+## The Brewer (Shadow Market stall)
+- The closed stall at the east end of the market is open: the Brewer (`brewer` NPC, `shop: 'brewer'`, sprite hexbrewer.png) replaces the closed sign. Made by `make_brewer.py` (run after make_market_assets.py).
+- Three brews, drunk from the bag (DRINK button / Space): Swift Brew 25g (45 s: walk ~35% faster), Owl-Eye Brew 25g (90 s: bigger lantern circle in dark areas, night tint outdoors mostly lifted), Shadow Brew 40g (both).
+- `src/brew.js` (no Phaser) + `src/data/brews.json` (effect -> ms). `gs.buffs = { speed, vision }` hold expiry times on the real clock, so they survive a save. Stacking adds time, max 5 minutes. HUD shows "Swift 0:45  Owl-eye 1:30" under the hearts.
+- Hooks in WorldScene: `moveMs` in the player's move tween, `lightScale` in updateDarkness, `nightTint` in updateDayNight, `drinkBrew` / `updateBuffHud`. Items with `brew: true` get a DRINK button in the bag.

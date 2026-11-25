@@ -24,6 +24,8 @@ import shopData from '../data/shop.json';
 import { talkToShopkeeper } from '../shop.js';
 import { talkToCrafter } from '../craft.js';
 import FishingUI from '../FishingUI.js';
+import brewDefs from '../data/brews.json';
+import { drink, moveMs, lightScale, nightTint, buffText } from '../brew.js';
 import fishDefs from '../data/fish.json';
 import { talkFisher } from '../fishing.js';
 import { hitDummy, sparBonus, talkSparMaster, talkLibrarian, talkFeeder, rest, talkHeadmaster } from '../school.js';
@@ -87,7 +89,7 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('stump', 'assets/sprites/stump.png');
     this.load.image('lumberjack', 'assets/sprites/lumberjack.png'); // textures for NPCs go here
     this.load.image('shopkeeper', 'assets/sprites/shopkeeper.png');
-    ['fisher', 'firefly', 'owl', 'moonhare', 'cook', 'trainer', 'enchanter', 'student1', 'student2', 'student3', 'bookshelf', 'bed', 'dummy'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
+    ['fisher', 'hexbrewer', 'firefly', 'owl', 'moonhare', 'cook', 'trainer', 'enchanter', 'student1', 'student2', 'student3', 'bookshelf', 'bed', 'dummy'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
     this.load.image('alchemist', 'assets/sprites/alchemist.png');
     ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond', 'crystal', 'sun'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
     this.load.image('rubble', 'assets/sprites/rubble.png');
@@ -416,6 +418,7 @@ export default class WorldScene extends Phaser.Scene {
     this.createTouchControls();
 
     // --- HUD: gold, water, seeds, wheat ---
+    this.buffHud = null; // (re)made on the first updateBuffHud: the scene restarts on every map change
     this.hud = this.add
       .text(4, 4, '', { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 3, y: 2 }, lineSpacing: 1 })
       .setScrollFactor(0)
@@ -630,6 +633,22 @@ export default class WorldScene extends Phaser.Scene {
       this.registry.set('gameState', null);
       this.scene.start('Title');
     });
+  }
+
+  // drink a brew from the bag (brew.js)
+  drinkBrew(id) {
+    const r = drink(this.gameState, brewDefs, id, Date.now());
+    this.updateBuffHud();
+    this.dnTick = 0; // repaint the night tint right away
+    return r.msg;
+  }
+
+  updateBuffHud() {
+    if (!this.buffHud) {
+      this.buffHud = this.add.text(168, 17, '', { fontSize: '8px', fontFamily: 'monospace', color: '#d8b8ff', stroke: '#000000', strokeThickness: 2 }).setScrollFactor(0).setDepth(101);
+    }
+    const t = buffText(this.gameState, Date.now());
+    if (t !== this.buffHud.text) this.buffHud.setText(t);
   }
 
   eatFood(id) {
@@ -1506,6 +1525,7 @@ export default class WorldScene extends Phaser.Scene {
     this.updateDarkness(_time);
     this.updateDayNight(_time);
     this.fishing.update(this.time.now);
+    this.updateBuffHud();
     this.updateRabbit(delta);
     if (!(this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen)) {
       this.enemies.update(_time);
@@ -1582,7 +1602,7 @@ export default class WorldScene extends Phaser.Scene {
     if (!this.dayOverlay || (!first && time < this.dnTick)) return;
     this.dnTick = time + 120;
     const phase = this.phaseNow();
-    this.dayOverlay.setFillStyle(toHex(skyColor(phase)));
+    this.dayOverlay.setFillStyle(toHex(nightTint(this.gameState, Date.now(), skyColor(phase)))); // Owl-Eye lifts the night
     const d = darkness(phase);
     this.nightBugs.forEach((b, i) => b.obj.setAlpha(d * (0.45 + 0.55 * Math.sin(time / 320 + b.seed))));
     this.waystoneGlows.forEach((g) => g.img.setAlpha(this.gameState.flags[g.npc.openFlag] ? d * 0.8 : 0));
@@ -1613,7 +1633,7 @@ export default class WorldScene extends Phaser.Scene {
     this.darkRT.fill(0x05030c, 0.94);
     const flicker = 1 + Math.sin(time / 170) * 0.025 + Math.sin(time / 53) * 0.015; // a gentle lantern flicker
     const bright = this.gameState.items['crystal-lantern'] > 0 ? 1.5 : 1; // the Crystal Lantern lights a much bigger circle
-    this.lightImg.setScale(flicker * bright);
+    this.lightImg.setScale(flicker * bright * lightScale(this.gameState, Date.now())); // an Owl-Eye Brew lights a bigger circle
     this.darkRT.erase(this.lightImg, this.player.x + 8 - cam.scrollX, this.player.y - 12 - cam.scrollY);
   }
 
@@ -1698,7 +1718,7 @@ export default class WorldScene extends Phaser.Scene {
       targets: this.player,
       x: nx * TILE,
       y: (ny + 1) * TILE,
-      duration: MOVE_MS,
+      duration: moveMs(this.gameState, Date.now(), MOVE_MS), // a Swift Brew makes you quicker
       onComplete: () => {
         this.moving = false;
         // keep walking if a direction is still held, otherwise stand still facing that way

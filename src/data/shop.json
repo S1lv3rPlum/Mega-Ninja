@@ -216,5 +216,34 @@
         "label": "Fix Pickaxe"
       }
     ]
+  },
+  "brewer": {
+    "offers": [
+      {
+        "id": "swift-brew",
+        "type": "item",
+        "item": "swift-brew",
+        "amount": 1,
+        "label": "Swift Brew",
+        "price": 25
+      },
+      {
+        "id": "owl-brew",
+        "type": "item",
+        "item": "owl-brew",
+        "amount": 1,
+        "label": "Owl-Eye Brew",
+        "price": 25
+      },
+      {
+        "id": "shadow-brew",
+        "type": "item",
+        "item": "shadow-brew",
+        "amount": 1,
+        "label": "Shadow Brew",
+        "price": 40
+      }
+    ],
+    "sell": {}
   }
 }
