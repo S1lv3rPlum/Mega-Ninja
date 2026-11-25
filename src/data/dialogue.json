@@ -141,11 +141,10 @@
   "sealeddooropen": {
     "name": "Stone Door",
     "lines": [
-      "The door stands open. A cold wind blows up from a dark passage, and it goes a long way down.",
-      "It is not ready for you yet... (To be continued)"
+      "The door stands open. A cold wind blows up from the deep."
     ],
     "repeatLines": [
-      "The dark passage waits. (To be continued)"
+      "The passage leads down into the Crystal Caverns."
     ]
   },
   "granite": {
@@ -157,5 +156,26 @@
       "Granite likes pickaxes now. They tickle.",
       "Say hi to the bats for Granite. They are not so bad."
     ]
+  },
+  "crystalnote": {
+    "name": "Torn Note",
+    "lines": [
+      "A scout's note, half buried in glittering dust:",
+      "\"Sensei - the princess came through here three nights ago, carrying the Moon Crest.\"",
+      "\"The bats down here serve a Queen who sleeps in the roost to the south. Something whispers in her dreams. Do not wake her.\""
+    ],
+    "repeatLines": [
+      "\"...the princess went on alone. Find her. - a worried scout\""
+    ]
+  },
+  "nooksign": {
+    "name": "Cold Draft",
+    "lines": [
+      "A cold draft seeps through a crack in the crystal wall. You hear faint, strange music behind it."
+    ],
+    "repeatLines": [
+      "The crack is too dim to see through. A brighter light might show the way."
+    ],
+    "flagLines": {}
   }
 }

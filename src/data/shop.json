@@ -64,7 +64,8 @@
       "diamond": 250,
       "carrot": 6,
       "pumpkin": 25,
-      "herb": 3
+      "herb": 3,
+      "crystal": 12
     }
   }
 }

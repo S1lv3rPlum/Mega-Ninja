@@ -44,5 +44,43 @@
     "sight": 9,
     "respawnMs": 0,
     "gold": 0
+  },
+  "moth": {
+    "name": "Crystal Moth",
+    "texture": "moth",
+    "hp": 2,
+    "damage": 1,
+    "moveMs": 520,
+    "attackMs": 1400,
+    "sight": 5,
+    "respawnMs": 40000,
+    "gold": 3,
+    "tame": "moth"
+  },
+  "batqueen": {
+    "name": "Bat Queen",
+    "texture": "bat-queen",
+    "hp": 16,
+    "damage": 2,
+    "moveMs": 480,
+    "attackMs": 1200,
+    "sight": 12,
+    "respawnMs": 31536000000,
+    "gold": 40,
+    "boss": true,
+    "flag": "batqueen_defeated",
+    "summon": {
+      "type": "bat",
+      "everyMs": 6500,
+      "max": 2
+    },
+    "reward": {
+      "item": "crystal-lantern",
+      "msg": "The Bat Queen is beaten! She dropped the Crystal Lantern."
+    },
+    "defeatLines": [
+      "The Bat Queen tumbles from the air with a squeak, her crown rolling across the floor.",
+      "The dark whisper that drove the bats is gone. She flutters off to sleep, leaving a glowing lantern behind."
+    ]
   }
 }

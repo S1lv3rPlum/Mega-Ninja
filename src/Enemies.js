@@ -83,6 +83,7 @@ export default class Enemies {
     const s = this.scene;
     const now = Date.now();
     this.list.forEach((e) => {
+      if (e.def.summon && !e.dead && e.def.sight >= Math.abs(e.x - s.tile.x) + Math.abs(e.y - s.tile.y)) this.summonTick(e, time);
       if (e.dead) {
         if (now >= e.respawnAt && this.free(e.home.x, e.home.y, e)) this.revive(e); // (Infinity = never)
         return;
@@ -150,6 +151,7 @@ export default class Enemies {
     const s = this.scene;
     const gs = s.gameState;
     e.dead = true;
+    if (e.def.flag && !quiet) this.bossDown(e);
     if (e.noRespawn) {
       e.respawnAt = Infinity; // helpers don't come back
     } else {
@@ -164,6 +166,48 @@ export default class Enemies {
       gs.gold += e.def.gold;
       s.showToast(`${e.def.name} defeated! +${e.def.gold} gold`);
       s.updateHud();
+    }
+  }
+
+  // a mini-boss fell: set its world flag, hand out its reward, tell the story
+  bossDown(e) {
+    const s = this.scene;
+    const gs = s.gameState;
+    gs.flags[e.def.flag] = true;
+    const r = e.def.reward;
+    if (r) {
+      gs.items[r.item] = (gs.items[r.item] ?? 0) + 1;
+      s.time.delayedCall(700, () => s.showToast(r.msg));
+    }
+    if (e.def.defeatLines) s.time.delayedCall(1800, () => s.dialogue.open(e.def.defeatLines, e.def.name));
+    // its helpers vanish with it
+    this.list.forEach((o) => {
+      if (!o.noRespawn || o.dead) return;
+      o.dead = true;
+      o.respawnAt = Infinity;
+      const spr = o.sprite;
+      o.sprite = null;
+      if (spr) s.tweens.add({ targets: spr, alpha: 0, duration: 400, onComplete: () => spr.destroy() });
+    });
+  }
+
+  // a boss that calls helpers: keeps up to `max` of them around while you fight
+  summonTick(e, time) {
+    const sm = e.def.summon;
+    if (!sm || e.dead) return;
+    if (!e.nextSummon) e.nextSummon = time + sm.everyMs;
+    if (time < e.nextSummon) return;
+    e.nextSummon = time + sm.everyMs;
+    const alive = this.list.filter((o) => o.noRespawn && !o.dead && o.def.texture === (enemyDefs[sm.type]?.texture ?? sm.type)).length;
+    if (alive >= sm.max) return;
+    const spots = [[1, 0], [-1, 0], [0, 1], [0, -1], [2, 0], [-2, 0]];
+    for (const [dx, dy] of spots) {
+      const x = e.x + dx;
+      const y = e.y + dy;
+      if (this.free(x, y, e)) {
+        this.spawnAt(sm.type, x, y);
+        return;
+      }
     }
   }
 

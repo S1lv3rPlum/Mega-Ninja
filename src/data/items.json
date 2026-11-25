@@ -101,6 +101,18 @@
       "icon": "crest",
       "color": "#c9a24a",
       "desc": "Carved with a ninja crest. Granite guarded it for the cave builders. It fits the stone door."
+    },
+    "crystal": {
+      "name": "Glow Crystal",
+      "icon": "gem",
+      "color": "#5fe6f2",
+      "desc": "A softly glowing crystal. Moths love it."
+    },
+    "crystal-lantern": {
+      "name": "Crystal Lantern",
+      "icon": "lantern",
+      "color": "#7fe8ff",
+      "desc": "The Bat Queen's lantern. It shines much brighter than yours, and it may reveal hidden things."
     }
   },
   "tools": {

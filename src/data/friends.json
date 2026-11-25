@@ -1,8 +1,30 @@
 {
   "max": 6,
   "kinds": {
-    "rabbit": { "name": "Garden Rabbit", "baseName": "Bunny", "texture": "rabbit", "treat": "carrot" },
-    "shadow": { "name": "Shadow Sprout", "baseName": "Sprout", "texture": "shadow", "tint": "#9dffb0", "treat": "herb" },
-    "bat": { "name": "Cave Bat", "baseName": "Bat", "texture": "bat", "treat": "pumpkin" }
+    "rabbit": {
+      "name": "Garden Rabbit",
+      "baseName": "Bunny",
+      "texture": "rabbit",
+      "treat": "carrot"
+    },
+    "shadow": {
+      "name": "Shadow Sprout",
+      "baseName": "Sprout",
+      "texture": "shadow",
+      "tint": "#9dffb0",
+      "treat": "herb"
+    },
+    "bat": {
+      "name": "Cave Bat",
+      "baseName": "Bat",
+      "texture": "bat",
+      "treat": "pumpkin"
+    },
+    "moth": {
+      "name": "Crystal Moth",
+      "baseName": "Glimmer",
+      "texture": "moth",
+      "treat": "crystal"
+    }
   }
 }

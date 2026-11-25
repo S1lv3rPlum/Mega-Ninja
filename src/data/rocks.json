@@ -177,5 +177,61 @@
       "texture": "rock-diamond",
       "msg": "A DIAMOND!"
     }
+  ],
+  "crystalRocks": [
+    {
+      "id": "crystal",
+      "weight": 40,
+      "hits": 4,
+      "drop": "crystal",
+      "amount": 2,
+      "texture": "rock-crystal",
+      "msg": "Glow crystals!"
+    },
+    {
+      "id": "sapphire",
+      "weight": 18,
+      "hits": 5,
+      "drop": "sapphire",
+      "amount": 1,
+      "texture": "rock-sapphire",
+      "msg": "A sapphire!"
+    },
+    {
+      "id": "emerald",
+      "weight": 14,
+      "hits": 6,
+      "drop": "emerald",
+      "amount": 1,
+      "texture": "rock-emerald",
+      "msg": "An emerald!"
+    },
+    {
+      "id": "ruby",
+      "weight": 12,
+      "hits": 7,
+      "drop": "ruby",
+      "amount": 1,
+      "texture": "rock-ruby",
+      "msg": "A ruby!"
+    },
+    {
+      "id": "diamond",
+      "weight": 8,
+      "hits": 8,
+      "drop": "diamond",
+      "amount": 1,
+      "texture": "rock-diamond",
+      "msg": "A DIAMOND!"
+    },
+    {
+      "id": "grey",
+      "weight": 8,
+      "hits": 3,
+      "drop": "stone",
+      "amount": 2,
+      "texture": "rock-grey",
+      "msg": "Rock smashed!"
+    }
   ]
 }

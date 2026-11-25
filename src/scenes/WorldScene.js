@@ -40,10 +40,10 @@ const START_MAP = 'town';
 const START_TILE = { x: 15, y: 10 };
 
 // To add a map: save it as public/assets/maps/<name>.json and add its name here.
-const MAPS = ['town', 'farm', 'forest', 'quarry', 'cave'];
+const MAPS = ['town', 'farm', 'forest', 'quarry', 'cave', 'crystal'];
 // To add a tileset: save it as public/assets/tilesets/<name>.png and add its name here.
 // (The name must match the tileset's name inside Tiled.)
-const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles', 'mine-tiles'];
+const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles', 'mine-tiles', 'crystal-tiles'];
 
 // Tiled stores custom properties as a list of {name, value}; turn that into a plain object
 const readProps = (p) =>
@@ -70,9 +70,9 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('stump', 'assets/sprites/stump.png');
     this.load.image('lumberjack', 'assets/sprites/lumberjack.png'); // textures for NPCs go here
     this.load.image('shopkeeper', 'assets/sprites/shopkeeper.png');
-    ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
+    ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond', 'crystal'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
     this.load.image('rubble', 'assets/sprites/rubble.png');
-    ['treant-boss', 'treant-good', 'sapling', 'sign'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
+    ['treant-boss', 'treant-good', 'sapling', 'sign', 'bat-queen', 'moth'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
     this.load.image('bush', 'assets/sprites/bush.png');
     this.load.image('bush-bare', 'assets/sprites/bush-bare.png');
     ['carrot', 'pumpkin'].forEach((c) => [2, 3, 4].forEach((n) => this.load.image(`crop-${c}-${n}`, `assets/sprites/crop-${c}-${n}.png`)));
@@ -122,6 +122,11 @@ export default class WorldScene extends Phaser.Scene {
       gs.items['crest-stone'] = (gs.items['crest-stone'] ?? 0) + 1;
       pending.push('Granite was calmed by your friends! He gave you a Crest Stone too.');
     }
+    // the Bat Queen was beaten by a friend before you got here: the Crystal Lantern is yours too (once)
+    if (gs.flags.batqueen_defeated && !(gs.items['crystal-lantern'] > 0)) {
+      gs.items['crystal-lantern'] = 1;
+      pending.push('The Bat Queen was beaten by your friends! She left you a Crystal Lantern too.');
+    }
     if (pending.length) this.registry.set('pendingMsg', pending);
     this.invulnUntil = 0;
     this.nextSwing = 0;
@@ -169,6 +174,7 @@ export default class WorldScene extends Phaser.Scene {
           toX: p.toX,
           toY: p.toY,
           requiresItem: p.requiresItem, // e.g. 'lantern': the door will not open without it
+          requiresFlag: p.requiresFlag, // e.g. 'stonedoor_cleared': closed until that flag is set
           lockedMsg: p.lockedMsg ?? 'It is locked.',
         };
       })
@@ -210,6 +216,7 @@ export default class WorldScene extends Phaser.Scene {
         openFlag: p.openFlag,
         openTexture: p.openTexture,
         openDialogue: p.openDialogue,
+        passable: !!p.passable, // once its openFlag is set you can walk through it (the stone door)
         dialogue: isOpen && p.openDialogue ? p.openDialogue : p.dialogue ?? id,
         shop: p.shop, // a key in data/shop.json makes this NPC a shopkeeper
         x,
@@ -1007,7 +1014,7 @@ export default class WorldScene extends Phaser.Scene {
 
   npcAt(x, y) {
     if (this.boss && this.boss.npc && this.boss.occupies(x, y)) return this.boss.npc; // the freed treant
-    return this.npcs.find((n) => n.x === x && n.y === y) ?? null;
+    return this.npcs.find((n) => n.x === x && n.y === y && !(n.passable && n.openFlag && this.gameState.flags[n.openFlag])) ?? null;
   }
 
   talkTo(npc) {
@@ -1207,6 +1214,12 @@ export default class WorldScene extends Phaser.Scene {
         const rec = gs.enemies[a]?.[b];
         if (rec) this.enemies.removeRemote(b, rec.respawnAt);
         else this.enemies.reviveRemote(b);
+      } else if (path === 'flags/batqueen_defeated') {
+        if (!(gs.items['crystal-lantern'] > 0)) {
+          gs.items['crystal-lantern'] = 1;
+          this.showToast('The Bat Queen was beaten by a friend! You got a Crystal Lantern too.');
+          this.updateHud();
+        }
       } else if (this.boss && path === `flags/${this.boss.flag}`) {
         freed = true;
       } else if (this.npcs.some((n) => n.openFlag && path === `flags/${n.openFlag}`)) {
@@ -1313,7 +1326,8 @@ export default class WorldScene extends Phaser.Scene {
     this.darkRT.clear();
     this.darkRT.fill(0x05030c, 0.94);
     const flicker = 1 + Math.sin(time / 170) * 0.025 + Math.sin(time / 53) * 0.015; // a gentle lantern flicker
-    this.lightImg.setScale(flicker);
+    const bright = this.gameState.items['crystal-lantern'] > 0 ? 1.5 : 1; // the Crystal Lantern lights a much bigger circle
+    this.lightImg.setScale(flicker * bright);
     this.darkRT.erase(this.lightImg, this.player.x + 8 - cam.scrollX, this.player.y - 12 - cam.scrollY);
   }
 
@@ -1422,7 +1436,10 @@ export default class WorldScene extends Phaser.Scene {
 
   lockedDoorAt(x, y) {
     const d = this.doors.find((o) => x >= o.x0 && x <= o.x1 && y >= o.y0 && y <= o.y1);
-    return d && d.requiresItem && !(this.gameState.items[d.requiresItem] > 0) ? d : null;
+    if (!d) return null;
+    const noItem = d.requiresItem && !(this.gameState.items[d.requiresItem] > 0);
+    const noFlag = d.requiresFlag && !this.gameState.flags[d.requiresFlag];
+    return noItem || noFlag ? d : null;
   }
 
   checkDoor() {
