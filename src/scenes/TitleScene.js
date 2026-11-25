@@ -14,6 +14,8 @@ export default class TitleScene extends Phaser.Scene {
   preload() {
     this.load.image('title-bg', 'assets/ui/title-bg.png');
     this.load.image('title-logo', 'assets/ui/title-logo.png');
+    // optional: drop your logo at public/assets/ui/dataforge-logo.png and it appears next to the credit line
+    this.load.image('dataforge-logo', 'assets/ui/dataforge-logo.png');
   }
 
   create() {
@@ -39,6 +41,7 @@ export default class TitleScene extends Phaser.Scene {
       .text(160, 212, 'Tap a slot to play. Empty slot = new game.', { fontSize: '8px', color: '#dddddd', align: 'center', wordWrap: { width: 300 } })
       .setOrigin(0.5);
     this.highlight();
+    this.addCredit();
 
     // keyboard: up/down to pick a slot, Enter/Space to play, Delete to erase it
     this.input.keyboard.on('keydown-UP', () => this.move(-1));
@@ -47,6 +50,26 @@ export default class TitleScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-SPACE', () => this.choose(this.selected));
     this.input.keyboard.on('keydown-DELETE', () => this.askDelete(this.selected));
     this.input.keyboard.on('keydown-BACKSPACE', () => this.askDelete(this.selected));
+  }
+
+  // "Created by Data Forge Apps" along the very bottom, below the instructions
+  addCredit() {
+    const text = this.add.text(0, 232, 'Created by Data Forge Apps', { fontSize: '8px', color: '#c8c8d8', fontFamily: 'monospace' }).setOrigin(0, 0.5);
+    let w = text.width;
+    let logo = null;
+    if (this.textures.exists('dataforge-logo')) {
+      this.textures.get('dataforge-logo').setFilter(Phaser.Textures.FilterMode.LINEAR);
+      logo = this.add.image(0, 232, 'dataforge-logo').setOrigin(0, 0.5);
+      logo.setScale(Math.min(1, 14 / logo.height, 40 / logo.width)); // at most 14px tall
+      w += logo.displayWidth + 4;
+    }
+    // centre the logo + text together
+    let x = 160 - w / 2;
+    if (logo) {
+      logo.setX(x);
+      x += logo.displayWidth + 4;
+    }
+    text.setX(x);
   }
 
   makeRow(s, i) {
