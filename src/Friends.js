@@ -5,7 +5,7 @@ import { giveTool } from './tools.js';
 import { Coop } from './Coop.js';
 import { rabbitOnMap, canCatch, throwRabbit } from './rabbit.js';
 import { ensureJournal, claimRewards } from './journal.js';
-import { ensurePets, befriend, setCompanion, renamePet, releasePet, isFull, hasTreat, treatFor, companionPet, cleanPetName } from './pets.js';
+import { ensurePets, befriend, setCompanion, renamePet, releasePet, isFull, hasKind, hasTreat, treatFor, companionPet, cleanPetName } from './pets.js';
 
 const TILE = 16;
 
@@ -77,6 +77,10 @@ export default class Friends {
     }
     if (!kindId) return false;
     const kind = friendDefs.kinds[kindId];
+    if (hasKind(gs, kindId)) {
+      this.hopAway(creature, kind);
+      return true;
+    }
     const have = treatFor(gs, kind);
     const treat = itemsData.items[have ?? kind.treat].name;
     if (isFull(gs, friendDefs)) {
@@ -93,6 +97,25 @@ export default class Friends {
       },
     });
     return true;
+  }
+
+  // you already have this kind: it is happy to see you, bounds away, and no treat is used
+  hopAway(creature, kind) {
+    const s = this.scene;
+    const gs = s.gameState;
+    s.showToast(`The ${kind.name} knows you already! It hops away happily.`);
+    const spr = creature.type === 'enemy' ? creature.e.sprite : s.rabbitSprite;
+    if (spr) s.tweens.add({ targets: spr, y: spr.y - 4, duration: 110, yoyo: true, repeat: 3 });
+    s.time.delayedCall(520, () => {
+      if (creature.type === 'enemy') {
+        if (!creature.e.dead) s.enemies.kill(creature.e, true); // gone for a while, then it grows back like any other
+      } else if (s.rabbitSprite && s.rabbit && canCatch(s.rabbit)) {
+        throwRabbit(s.rabbit); // the garden rabbit leaves for a while
+        const rs = s.rabbitSprite;
+        s.rabbitSprite = null;
+        s.tweens.add({ targets: rs, alpha: 0, duration: 300, onComplete: () => rs.destroy() });
+      }
+    });
   }
 
   makeFriend(kindId, creature) {

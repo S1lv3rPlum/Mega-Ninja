@@ -46,6 +46,7 @@ export default class Golem {
     this.scene = scene;
     this.x = Math.floor(obj.x / TILE);
     this.y = Math.floor(obj.y / TILE);
+    this.home = { x: this.x, y: this.y }; // where Granite sits when he is calm
     this.name = GOLEM.name;
     this.max = GOLEM.hp;
     this.hp = this.max;
@@ -71,6 +72,14 @@ export default class Golem {
 
   occupies(x, y) {
     return x >= this.x && x <= this.x + 1 && y >= this.y && y <= this.y + 1;
+  }
+
+  // slide back to the spot he started on (the room's far corner, clear of the stone door)
+  goHome() {
+    if (this.x === this.home.x && this.y === this.home.y) return;
+    this.x = this.home.x;
+    this.y = this.home.y;
+    this.scene.tweens.add({ targets: this.sprite, x: (this.x + 1) * TILE, y: (this.y + 1) * TILE, duration: 700, ease: 'Sine.easeInOut' });
   }
 
   makeNpc() {
@@ -358,6 +367,7 @@ export default class Golem {
         gs.items['crest-stone'] = (gs.items['crest-stone'] ?? 0) + 1;
         this.good = true;
         this.state = 'good';
+        this.goHome(); // he may have rolled to the middle of the room, or in front of the stone door: back to his own spot
         this.makeNpc();
         s.updateHud();
         s.showToast('Received the Crest Stone');

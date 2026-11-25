@@ -264,3 +264,7 @@ without being run in a browser, so test new features on desktop and phone.
 ## Fixes: scrolling menus, invisible blockers
 - ChoiceMenu shows at most 9 rows; longer lists (a shop with many offers) scroll with the arrow keys, with ▲/▼ markers you can also tap.
 - Night-only creatures that are asleep by day (`hidden`) no longer block tiles: `Enemies.at()`, `free()`, the summon check and the pet-fight target search all ignore them. (They used to sit invisibly on their home tile all day.)
+
+## One friend per kind; Granite goes home
+- `befriend()` refuses a kind you already have (`reason: 'have'`). In the world, offering a treat to a wild animal of a kind you already have shows "...knows you already! It hops away happily." The animal hops and leaves for a while (normal respawn), and NO treat is used (`Friends.hopAway`). Saying goodbye to your friend lets you befriend that kind again. Saves that already have two of a kind keep both. (Idea parked: let every friend follow at once, an "entourage".)
+- Granite (Golem.js) slides back to his home spot when he is calmed, so he can no longer end up sitting in front of the stone door. (Leaving the cave and coming back also resets him, because his spot is not saved.)

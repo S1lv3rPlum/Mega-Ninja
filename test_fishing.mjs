@@ -94,8 +94,9 @@ assert.equal(F.pickFish('nowhere', false, fish), null);
   assert.equal(treatFor(gs, crab), null); gs.items['pond-minnow'] = 1; assert.equal(treatFor(gs, crab), 'pond-minnow');
   gs.items.seaweed = 1; assert.equal(treatFor(gs, crab), 'seaweed');                        // favourite first
   assert.equal(befriend(gs, 'crab', 'Pinchy', fr).ok, true); assert.equal(gs.items.seaweed, 0); assert.equal(gs.items['pond-minnow'], 1);
-  assert.equal(befriend(gs, 'crab', 'Two', fr).ok, true); assert.equal(gs.items['pond-minnow'], 0);   // then the fish
-  assert.equal(befriend(gs, 'crab', 'Three', fr).reason, 'no-treat');
+  assert.equal(befriend(gs, 'crab', 'Two', fr).reason, 'have'); assert.equal(gs.items['pond-minnow'], 1);   // one crab only
+  gs.pets = []; assert.equal(befriend(gs, 'crab', 'Again', fr).ok, true); assert.equal(gs.items['pond-minnow'], 0);   // then the fish (once the first has left)
+  gs.pets = []; assert.equal(befriend(gs, 'crab', 'Three', fr).reason, 'no-treat');
   gs.items['forest-trout'] = 1; assert.equal(befriend(gs, 'owl', 'Hoot', fr).ok, true);
   gs.items['pond-minnow'] = 1; assert.equal(befriend(gs, 'rabbit', 'R', fr).reason, 'no-treat');   // a minnow is not for bunnies
   assert.deepEqual(journalEntries(gs, fr.kinds ? fr : fr, items).find((e) => e.id === 'crab').also, ['Pond Minnow']); }

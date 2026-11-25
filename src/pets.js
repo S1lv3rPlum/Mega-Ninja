@@ -11,6 +11,8 @@ export function ensurePets(gs) {
 
 export const cleanPetName = (text, fallback) => String(text ?? '').trim().slice(0, 12).trim() || fallback;
 
+// one friend per kind: a wild animal of a kind you already have just hops away happy (nothing is used up)
+export const hasKind = (gs, kindId) => gs.pets.some((p) => p.kind === kindId);
 export const isFull = (gs, defs) => gs.pets.length >= defs.max;
 // the favourite treat first, then anything else the kind likes (fish, see data/friends.json 'likes'); null if you have none
 export const treatFor = (gs, kind) => [kind.treat, ...(kind.likes ?? [])].find((t) => (gs.items[t] ?? 0) > 0) ?? null;
@@ -18,10 +20,11 @@ export const hasTreat = (gs, kind) => treatFor(gs, kind) !== null;
 export const companionPet = (gs) => gs.pets.find((p) => p.id === gs.companion) ?? null;
 
 // Win a creature over: uses up one treat and adds the friend (the first one starts following you).
-// Returns { ok, pet?, reason? }  reason: 'unknown' | 'full' | 'no-treat'
+// Returns { ok, pet?, reason? }  reason: 'unknown' | 'have' | 'full' | 'no-treat'
 export function befriend(gs, kindId, name, defs) {
   const kind = defs.kinds[kindId];
   if (!kind) return { ok: false, reason: 'unknown' };
+  if (hasKind(gs, kindId)) return { ok: false, reason: 'have' };
   if (isFull(gs, defs)) return { ok: false, reason: 'full' };
   if (!hasTreat(gs, kind)) return { ok: false, reason: 'no-treat' };
   gs.items[treatFor(gs, kind)] -= 1;

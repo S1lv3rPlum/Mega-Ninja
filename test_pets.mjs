@@ -16,18 +16,23 @@ assert.equal(P.befriend(gs, 'shadow', '', defs).reason, 'no-treat');
 assert.equal(P.befriend(gs, 'nope', '', defs).reason, 'unknown');
 const a = P.befriend(gs, 'rabbit', '  Thumper the Great ', defs);
 assert(a.ok && a.pet.name === 'Thumper the' && gs.items.carrot === 1 && gs.companion === 'rabbit1');
-const b = P.befriend(gs, 'rabbit', '', defs);
-assert(b.ok && b.pet.id === 'rabbit2' && b.pet.name === 'Bunny' && gs.companion === 'rabbit1'); // first one keeps following
-assert.equal(P.befriend(gs, 'rabbit', 'x', defs).reason, 'no-treat');
-assert(P.setCompanion(gs, 'rabbit2') && P.companionPet(gs).name === 'Bunny');
+assert.equal(P.befriend(gs, 'rabbit', '', defs).reason, 'have'); assert.equal(gs.items.carrot, 1);   // one friend per kind: no second bunny, and the treat is kept
+assert(P.hasKind(gs, 'rabbit') && !P.hasKind(gs, 'bat'));
+gs.items.pumpkin = 1; const b = P.befriend(gs, 'bat', '', defs);
+assert(b.ok && b.pet.id === 'bat1' && b.pet.name === 'Bat' && gs.companion === 'rabbit1'); // first one keeps following
+assert(P.setCompanion(gs, 'bat1') && P.companionPet(gs).name === 'Bat');
 assert(P.setCompanion(gs, null) && !P.companionPet(gs));
 assert(!P.setCompanion(gs, 'ghost'));
 assert(P.renamePet(gs, 'rabbit1', 'Zoom') && gs.pets[0].name === 'Zoom');
 assert(P.releasePet(gs, 'rabbit1') && gs.pets.length === 1);
 // the friend list is capped
 const full = { items: { herb: 20 }, pets: [], companion: null };
-for (let i = 0; i < defs.max; i++) assert(P.befriend(full, 'shadow', '', defs).ok);
-assert.equal(P.befriend(full, 'shadow', '', defs).reason, 'full'); assert.equal(full.items.herb, 20 - defs.max);
+full.items = { herb: 20, carrot: 20, pumpkin: 20, crystal: 20, frostberry: 20, seaweed: 20, 'cactus-fruit': 20 };
+['shadow', 'rabbit', 'bat', 'moth', 'snowfox', 'crab'].forEach((k) => assert(P.befriend(full, k, '', defs).ok));
+assert.equal(full.pets.length, defs.max);
+assert.equal(P.befriend(full, 'sandlizard', '', defs).reason, 'full'); assert.equal(full.items['cactus-fruit'], 20);
+// (a kind you have wins over a full list: you are told you know it already)
+assert.equal(P.befriend(full, 'shadow', '', defs).reason, 'have');
 // a stale companion id is cleaned up on load
 const stale = { pets: [], companion: 'gone' }; P.ensurePets(stale); assert.equal(stale.companion, null);
 console.log('pets ok');
