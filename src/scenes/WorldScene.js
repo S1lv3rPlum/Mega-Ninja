@@ -546,7 +546,7 @@ export default class WorldScene extends Phaser.Scene {
     const st = (this.petFight[pet.id] ??= newFightState());
     const px = Math.round(spr.x / TILE);
     const py = Math.round(spr.y / TILE);
-    const target = this.enemies.list.find((e) => !e.dead && !e.def.tame && Math.abs(e.x - px) <= 1 && Math.abs(e.y - py) <= 1);
+    const target = this.enemies.list.find((e) => !e.dead && !e.hidden && !e.def.tame && Math.abs(e.x - px) <= 1 && Math.abs(e.y - py) <= 1);
     const r = petTick(st, stats, Date.now(), !!target);
     if (st.tiredUntil) spr.setTint(0x8c8cb4);
     if (r === 'rested') {

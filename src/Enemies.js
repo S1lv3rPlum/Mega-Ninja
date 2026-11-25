@@ -77,12 +77,12 @@ export default class Enemies {
   }
 
   at(x, y) {
-    return this.list.find((e) => !e.dead && e.x === x && e.y === y) ?? null;
+    return this.list.find((e) => !e.dead && !e.hidden && e.x === x && e.y === y) ?? null; // (a night creature asleep by day is not there)
   }
 
   free(x, y, self) {
     const s = this.scene;
-    return s.canWalk(x, y) && !(x === s.tile.x && y === s.tile.y) && !this.list.some((e) => e !== self && !e.dead && e.x === x && e.y === y);
+    return s.canWalk(x, y) && !(x === s.tile.x && y === s.tile.y) && !this.list.some((e) => e !== self && !e.dead && !e.hidden && e.x === x && e.y === y);
   }
 
   // called every frame by the scene
@@ -90,7 +90,7 @@ export default class Enemies {
     const s = this.scene;
     const now = Date.now();
     this.list.forEach((e) => {
-      if (e.def.summon && !e.dead && e.def.sight >= Math.abs(e.x - s.tile.x) + Math.abs(e.y - s.tile.y)) this.summonTick(e, time);
+      if (e.def.summon && !e.dead && !e.hidden && e.def.sight >= Math.abs(e.x - s.tile.x) + Math.abs(e.y - s.tile.y)) this.summonTick(e, time);
       if (e.dead) {
         if (now >= e.respawnAt && (!e.nightOnly || s.isNight) && this.free(e.home.x, e.home.y, e)) this.revive(e); // (Infinity = never)
         return;

@@ -260,3 +260,7 @@ without being run in a browser, so test new features on desktop and phone.
 - Three brews, drunk from the bag (DRINK button / Space): Swift Brew 25g (45 s: walk ~35% faster), Owl-Eye Brew 25g (90 s: bigger lantern circle in dark areas, night tint outdoors mostly lifted), Shadow Brew 40g (both).
 - `src/brew.js` (no Phaser) + `src/data/brews.json` (effect -> ms). `gs.buffs = { speed, vision }` hold expiry times on the real clock, so they survive a save. Stacking adds time, max 5 minutes. HUD shows "Swift 0:45  Owl-eye 1:30" under the hearts.
 - Hooks in WorldScene: `moveMs` in the player's move tween, `lightScale` in updateDarkness, `nightTint` in updateDayNight, `drinkBrew` / `updateBuffHud`. Items with `brew: true` get a DRINK button in the bag.
+
+## Fixes: scrolling menus, invisible blockers
+- ChoiceMenu shows at most 9 rows; longer lists (a shop with many offers) scroll with the arrow keys, with ▲/▼ markers you can also tap.
+- Night-only creatures that are asleep by day (`hidden`) no longer block tiles: `Enemies.at()`, `free()`, the summon check and the pet-fight target search all ignore them. (They used to sit invisibly on their home tile all day.)
