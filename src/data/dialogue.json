@@ -1002,5 +1002,18 @@
       "It wiggles its leaves.",
       "The sprout glows a faint green."
     ]
+  },
+  "tailor": {
+    "name": "Ninja Tailor",
+    "lines": [
+      "Ninja outfits! Every ninja wears black, but a splash of colour says who you are.",
+      "Pick your colour. You can come back and change it any time."
+    ],
+    "repeatLines": [
+      "Back for a new look?"
+    ],
+    "menu": "Which colour today?",
+    "farewell": "Come back any time!",
+    "doneLine": "Perfect! That suits you."
   }
 }

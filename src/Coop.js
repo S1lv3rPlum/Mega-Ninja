@@ -148,6 +148,7 @@ export const Coop = {
   sendPresence(map, x, y, d) {
     if (!this.active) return;
     this.me = { n: this.name, m: map, x, y, d, t: Date.now() };
+    if (this.scene?.gameState?.ninja) this.me.nj = this.scene.gameState.ninja; // your ninja colour is visible to the others
     const pet = this.scene?.gameState ? companionPet(this.scene.gameState) : null;
     if (pet) {
       this.me.c = pet.kind; // your friend is visible to the others

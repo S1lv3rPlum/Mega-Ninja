@@ -141,3 +141,97 @@ without being run in a browser, so test new features on desktop and phone.
 - **Walking animation**: a walking NPC whose texture has a sheet named `<texture>-walk.png` in `public/assets/sprites/` is animated. The sheet is laid out exactly like the player's `player-walk.png`: 3 frames across (step, stand, step) x 4 rows (down, left, right, up), every frame 16x24, feet on the bottom edge. Example: texture `npc` uses `npc-walk.png` (a placeholder bobbing sheet made from `npc.png`). **To swap in real art: replace the PNG with the same layout.** For a new NPC: add its texture name to `NPC_WALK_SHEETS` at the top of WorldScene.js, add `<name>-walk.png`, and give the NPC a `walkRadius`. NPCs without a sheet still slide around as a single picture. A walking NPC also turns to face you when you talk to it.
 - Code: `updateWalkers` / `npcCanStep` / `standNpc` in WorldScene.js.
 - Town has a demo "wanderer" at (9,12), radius 2. Walking is not synced between co-op players (each device moves its own wanderers).
+
+## The cave
+- **Entrance**: a door object `to-cave` in quarry.json at tile (19,3), in the north cliff above the sign. A door can now have `requiresItem` (an item id, here `lantern`) and `lockedMsg`: without the item the tile is blocked and the message shows when you walk into it. Any door can use this.
+- **Dark maps**: a map-level custom property `dark` = true (Map > Map Properties in Tiled) darkens the whole screen except a flickering lantern circle around the player (`createDarkness` / `updateDarkness` in WorldScene.js; circle size = the 160px `lantern-light` canvas, change the scale there). Enemies and rocks outside the circle are barely visible, on purpose.
+- **cave.json** (30x22, tileset mine-tiles): entrance hall -> mining chamber (west) and bat hall (east) -> deep chamber with the sealed stone door (NPC `sealeddoor` at the top). 21 rocks use `variants: caveRocks` (rocks.json: same kinds as `rocks` but gems are more common), respawn after 2 minutes. 7 `bat` enemies (enemies.json: fast, 3 hp).
+- **The sealed door** is the teaser for the next land: its dialogue says three empty sockets wait under a ninja crest. Idea for later: placing a ruby, sapphire and emerald opens it.
+- `make_cave_assets.py` rebuilds the map, bat and door pictures, the quarry door and the data entries (it checks that every room can be reached without breaking a rock). Re-running it overwrites hand edits to cave.json, so after you start editing in Tiled, stop using the script.
+
+## Granite (cave boss) and the stone door
+- **Granite** (`src/Golem.js`, object `granite` with property `kind: golem` on cave.json's `boss` layer at tile (20,4)): a 2x2 round rock golem, 48 hp. Rockfall (red tiles, then rocks drop) and Roll (curls into a ball, a red lane shows the path, it rolls across, then sits dizzy: double damage). At half health it is faster and shakes loose up to 2 `pebble` helpers. Weak to the pickaxe (Space on it: 4 damage, 0.6 s between swings, wears the pickaxe); the sword does 2. Tuning numbers are the `GOLEM` object at the top of Golem.js. The scene picks the class from the boss object's `kind` (no kind = Gnarl the treant). Both bosses have a `toolHit()` and a `flag`.
+- **After the fight**: flag `golem_defeated` (a shared co-op world flag: any flag ending `_defeated` or `_cleared` is shared), Granite becomes a friendly NPC (`granite` in dialogue.json) and gives the **Crest Stone** (`items['crest-stone']`, personal flag `got_crest`). A co-op friend who arrives later gets a Crest Stone too, once.
+- **The stone door** (NPC `sealeddoor` at (21,1)): `src/door.js` + `data/sealed-door.json` say what it needs: ruby, sapphire, emerald and the Crest Stone (all used up). Talking to it lists what is missing, or offers "Place them". Opening sets the shared flag `stonedoor_cleared`; the NPC then swaps to `openTexture` and `openDialogue` (NPC properties `openFlag`, `openTexture`, `openDialogue` work for any NPC). The passage beyond just says "To be continued" for now. Tested by `test_door.mjs`.
+- Taming/following creatures (Pokemon-style) was suggested by the kids: not built. Granite and the Pebbles would be natural first tamables. The Bat Queen is saved for a later boss.
+
+## Friends (taming) 
+- Small creatures only (bunny, shadow sprout, cave bat). Never bosses or boss helpers (saplings, pebbles). Nothing is fought: face the creature and press Space/A to offer its favourite treat.
+- Treats + kinds are in `src/data/friends.json` (rabbit = carrot, shadow sprout = herb, bat = pumpkin). To make another enemy tameable: add a kind there and `"tame": "<kind>"` to that enemy in `enemies.json`.
+- Up to 6 friends (`max`), one follows you (follow only, no fighting). PETS button / G key: choose who follows, rename, say goodbye.
+- Befriending the first rabbit also gives the shovel (same as the old throw-out reward). F still catches and throws it.
+- State: `gs.pets` [{id, kind, name}], `gs.companion`. Personal (not shared in co-op). Rules in `pets.js` (test: `test_pets.mjs`), scene code in `Friends.js`.
+
+### Friends and enemies in co-op
+- Defeated/befriended enemies are now SHARED (`gs.enemies` -> cloud `shared/enemies/<map>/<id>` = {respawnAt}): when one kid beats or befriends a bat or sprout, it vanishes for the other too (no reward for them) and grows back on the same timer. Enemy positions are NOT synced; each device moves its own copy.
+- A player's companion is sent with their presence (`c` = kind, `cn` = name) so the other player sees the friend trailing them. Friends themselves stay personal (the Friends list is not shared).
+- No change needed to `database.rules.json`.
+
+## Crystal Caverns (beyond the stone door)
+- Built by `make_crystal_assets.py` (map `crystal.json`, `crystal-tiles.png`, sprites, data). Re-running it overwrites hand edits to `crystal.json`; and re-running `make_cave_assets.py` afterwards would undo the door it adds to `cave.json`, so run the crystal script again after it.
+- The stone door (NPC with `passable: yes`) can be walked through once `stonedoor_cleared` is set; a door object with `requiresFlag` sits behind it.
+- Rooms: Glimmer Hall (arrive), Crystal Gallery (scout's note: princess + Moon Crest story beat), Moth Garden (tameable Crystal Moths, treat = Glow Crystal), Queen's Roost (Bat Queen), hidden nook (cold draft sign: the Shadow Market door goes here next).
+- Bat Queen = a boss-type enemy in `enemies.json` (`boss`, `flag: batqueen_defeated`, `summon`, `reward`, `defeatLines`); only the sword/weapon is needed. Reward: Crystal Lantern (bigger light circle in dark maps; will also reveal the hidden market door). Late joiners and co-op friends get the lantern too.
+- Crystal rocks (`crystalRocks`) drop Glow Crystals (sell 12) plus gems.
+
+## Shadow Market (hidden dark-magic market behind the Caverns nook)
+- Reached from the Crystal Caverns hidden nook; the crack in the wall only opens with the Crystal Lantern (door `requiresItem`). Built by `make_market_assets.py` (run `make_crystal_assets.py` first; it makes the door).
+- Stalls: Hexsmith (weapon smith), Critter Seller (treats for friends), Charm Seller (buys gems/crystals at better prices), a closed stall (potions/brews later). 4 customers wander (`walkRadius`).
+- Weapon smith (`smith.js`, test `test_smith.mjs`): unique weapons in `weapons.json` have `rank` and `smith: {gold, items}`. You can only order the next rank; the order is ready the next time you come back (`gs.marketVisits` goes up on each entry, `gs.smith = {id, visit}`). Weapons: Shadowglass Blade (dmg 3, fast), Moonreaper (dmg 5). New weapon replaces the old one.
+- Plan: the NEXT market (desert bazaar) gets the armor smith and NO weapon smith.
+
+## Snowy Peaks (behind the Bat Queen's roost)
+- Built by `make_peaks_assets.py` (run `make_crystal_assets.py` first: it adds the passage door at the back of the Queen's Roost, open once `batqueen_defeated`). Order if you regenerate everything: cave -> crystal -> market -> peaks (each script rewrites `dialogue.json` entries it owns; they add to the file rather than replace it).
+- Map `peaks.json`: arrival clearing with snowy berry bushes (frostberries = the Snow Fox treat) and Snow Foxes (tameable), an Old Hermit (story: princess went to the Sunken Ruins across the lake), the Yeti's den (boss-type enemy like the Bat Queen; weapon only; calls Frost Imps; reward Frost Boots, flag `yeti_defeated`, shared + late-joiner gift), and a frozen lake with a thin-ice path to a far-shore island with the ruins gate (teaser: "To be continued").
+- Thin ice: map property `thinIceGid` (the ground tile number); those tiles block movement unless you own `frost-boots` (`thinIceAt` in WorldScene). Deep ice and cliffs are normal obstacles.
+- Next: the Sunken Ruins gate goes at the island (replace the `ruinsgate` sign with a door), and the ruins loop back to the Crystal Caverns. Then the desert (armor smith, no weapon smith).
+
+## Sunken Ruins (through the old gate on the Peaks island)
+- Built by `make_ruins_assets.py`. Script order if regenerating everything: cave -> crystal -> market -> peaks -> ruins. The Peaks island gate is now a door (`to-ruins`), and the Crystal Gallery has a wave-carved archway (west wall) that opens once `serpent_defeated`: the LOOP back to the Caverns.
+- Puzzle: three rune stones (NPCs with `setFlag` + `openFlag` + lit texture; flags `runea/b/c_cleared`) light the inner door (NPC with `needFlags`, `passable`, own `openFlag: ruinsdoor_cleared`). Flags end in `_cleared`, so co-op shares them. New generic NPC props: `setFlag`, `needFlags`, `passable`.
+- Guardian's chamber: Sea Serpent (boss-type enemy, 26 hp, calls Jellies; reward Moon Crest (half); flag `serpent_defeated`), the princess's note (story: she split the Crest, the other half went to the desert market), and the exit arch back to the Caverns.
+- Tameable Tide Crab (treat = seaweed from kelp bushes). Shared + late-joiner gifts for the Crest half, like the lantern and boots.
+- Next: the desert (bazaar with the armor smith, NO weapon smith; the other Crest half / the princess).
+
+## Desert + Bazaar (through the sealed archway in the Moth Garden)
+- Built by `make_desert_assets.py` (maps `desert.json`, `bazaar.json`). Script order: cave -> crystal -> market -> peaks -> ruins -> desert.
+- The Moth Garden's crescent-sealed archway opens only for someone carrying the Moon Crest (half) from the Sunken Ruins.
+- Desert: scorpions (hostile), tameable Sand Lizards (treat = cactus fruit), cactus-fruit bushes, sunstone rocks (`desertRocks`), the Scorpion King's pit (boss-type enemy, 34 hp, calls scorpions, flag `scorpionking_defeated`, drops the other Crest half).
+- Bazaar: ARMOR smith (no weapon smith here), treat seller (every treat), gem trader (best gem prices), the princess (flagLines change after the king falls), 4 wandering customers.
+- Armor (`armor.json`, `smith.js` now handles both kinds): ordered like weapons, ready on your next visit (`gs.armor`, `gs.armorOrder`, `gs.bazaarVisits`). Sunscale Vest defense 1, Mirage Mail defense 2. Each hit is reduced by the defense but always does at least 1 (`reduceDamage`). Shown in the bag.
+- The two Crest halves join into the Moon Crest automatically (`mergeCrest`, run from `updateHud`). The princess points north: the end-game hook ("To be continued").
+- Boss rewards for co-op friends are now a table in `bossGifts.js` (test `test_gifts.mjs`); a personal flag `gift_<flag>` stops used-up items being given twice. To add a boss: give its enemy `flag` + `reward`, then add a row to BOSS_GIFTS.
+
+## Waystones, Waystone Charm, treat crops
+- `make_waystones.py` (RUN LAST, after the area scripts, because they rebuild maps): adds a waystone NPC to town, farm, forest, quarry, crystal, peaks, ruins and bazaar (finds a free open spot near the arrival), writes `waystones.json` (id, label, map, arrival x/y, flag `waystone_<id>`), makes the treat crop sprites and adds the crops + seeds. Safe to run again (it replaces old waystones).
+- Touch a waystone once to light it (NPC `setFlag` + `openFlag`; flags are personal, not shared in co-op). The town one is always lit.
+- Waystone Charm: the princess in the bazaar gives it after the Scorpion King falls (NPC props `giveItem` + `giveWhen`). Bag -> select the charm -> USE (or Space) -> pick a lit waystone.
+- Treat crops: frostberry, seaweed (kelp spores), cactus fruit now grow in the farm plots (`crops.json`); seeds come from the area bushes (about 1 in 5 pickings).
+- Planned next (agreed order): ninja school (sensei checklist, kitchen/potions) -> pet training + pet armor -> enchanting -> final area + hard boss.
+
+## Ninja School
+- `make_school.py` builds everything: the building front in the town (top-left, door at tile 4,2, needs the Moon Crest), `school-tiles.png`, the rooms, sprites (students/cook/alchemist are recolours of the villager, bookshelf/bed/dummy are placeholders), recipes, items and dialogue. Safe to re-run (only touches the town's top-left corner).
+- Rooms (map names): `school` (hall: Headmaster, wandering students; doors to every room), `kitchen` (Cook), `potions` (Alchemist), `library` (8 books + Librarian), `sparring` (Sparring Master + 4 dummies), `dorm1`/`dorm2` (beds heal you), `garden` (outside, students, pond), `barn` (5 animals to feed/pet, not tameable). Free slots for the Pet Dojo and Enchanting Workshop: hall top wall at x=16 and one more (the hall is 20 wide).
+- NPC prop `role`: book (plain dialogue, counts as read via `met_<id>`), librarian (prop `books` = comma list of book ids; all read = +1 heart, once), sparmaster, dummy, bed, feeder. All logic is in `src/school.js` (tests: `test_school.mjs`, which also checks every door lands on a free tile and has a way back).
+- Sparring: talk to the master, then every 10 sword hits on a dummy is a lesson; 5 lessons and a talk to the master gives `spar_passed` = +1 sword damage (see `sparBonus` in `attack()`).
+- Crafting: Cook (`craft: kitchen`) and Alchemist (`craft: potions`) use `src/craft.js` + `src/data/recipes.json`. Foods and potions are normal items with `heal`. Add a recipe = one entry in recipes.json + an item in items.json.
+- The Headmaster gives the Acceptance Letter once (NPC `giveItem` with no `giveWhen` = give on first talk).
+- Second floor: a staircase in the hall (tile 17,1) opens once the Headmaster says so (`school_upper`). He checks: cooked at the Cook (`crafted_cook`), brewed (`crafted_alchemist`), read every book (`library_done`), passed sparring (`spar_passed`); see `BASICS` in `src/school.js`. Upstairs (`upper`): Pet Dojo (`dojo`) and the Enchanting Workshop (`workshop`, door locked by `workshop_open` until enchanting is built; the room has a placeholder Enchanter).
+- Pet fighting (`src/petfight.js`, `updatePetFight` in WorldScene): train your companion at the Pet Trainer with its favourite treats (+ gold): Rookie, Fighter, Champion (`TRAIN` table). A trained friend hits enemies next to it (never tameable kinds), gets TIRED after its stamina runs out (greyed out, rests 10 s), and is never hurt. Pet armor (`petarmor.json`, recipes in recipes.json `petarmor`, made and fitted at the Trainer) adds stamina and a little damage. `pet.level` and `pet.armor` are saved with the pet. Tests: `test_petfight.mjs`.
+- Enchanting (`src/enchant.js`, `src/data/enchants.json`, recipes.json `enchant`): the Enchanter in the Workshop (`workshop`, open to anyone who reached the second floor) makes gems/scrolls from ore + crystals and sets them on your gear. One enchant per slot (`gs.enchant = { weapon, armor }`), it stays when you upgrade at a smith, and a new one swaps the old back into the bag. Ember Gem +1 / Greater +2 damage, Ward Gem +1 / Greater +2 defense, Swift Scroll 25% faster swings; greater gems need a diamond. Effects are applied in `attack()` (damage + cooldown) and `hurtPlayer()` (defense). The bag shows "Enchanted: ..." on the weapon and armor. Tests: `test_enchant.mjs`. To add an enchant: one entry in enchants.json, an item in items.json, a recipe.
+- Still to come: the final area + boss, tuned for players who have enchanted gear.
+
+## Day and night, night friends, night crops, Night Barn
+- `src/daynight.js`: one day = 8 minutes of real clock time (`CYCLE_MS`; shared automatically in co-op because it is the clock). Phases: day, dusk, night, dawn. Outdoor maps (`OUTDOOR`: town, farm, forest, quarry, peaks, desert, bazaar, garden) get a multiply-colour overlay (blue at night, orange at dusk/dawn), drifting fireflies and glowing lit waystones (`createDayNight`/`updateDayNight` in WorldScene). Buildings, caves, the school and the castle are not tinted.
+- Testing the clock: add `?time=night` (or day, dusk, dawn) to the game's web address to pin the time; `?cycle=60000` makes a full day 1 minute.
+- Night friends: firefly (treat: glowcap), owl and moon hare (treat: moonbloom). They are `harmless` tameable enemies (`damage 0`, they only wander) with the object property `nightOnly=yes`: they are asleep (hidden) by day and appear at dusk (`Enemies.applyDayNight`). Placed in town, farm, forest and the school garden by `make_daynight.py`.
+- Night crops: moonbloom and glowcap (`nightOnly: true` in crops.json). They plant and water like any crop but only advance a stage while it is night (`tick(gs, map, now, crops, night)` in farming.js). Seeds: bushes in town/forest (rare) and 3 for 30g at the market stall.
+- Night Barn: a second barn in the school garden (door at tile 10,3), a dark map (`nightbarn`, needs the lantern like the cave) with 5 night animals to feed and pet (the barn feeder now also offers moonbloom/glowcap when you carry some).
+- Run order if regenerating: ... make_school.py -> make_waystones.py -> make_daynight.py (it edits the town/farm/forest/garden maps).
+- Not changed on purpose: bosses are not harder at night.
+
+## Ninja colours
+- Choose Black + Red (the original), Pink, Green or Yellow. `src/ninja.js` swaps only the strongly red pixels (scarf/headband) of `player-walk.png` at runtime and keeps the shading, so it also works if the sprite art is replaced as long as the accent is red. The recoloured sheet is built once per colour in `ninjaTexture()` (WorldScene) and cached as `player-<colour>`; walking animations are `walk-<texture>-<dir>`.
+- `gs.ninja` holds the colour (saved; co-op sends it as `nj` in presence, so each player is seen in their own colour; two players with the same colour get the blue tint so you can tell them apart).
+- A save that has not chosen yet is asked once at the start ("Which ninja are you?"). The Ninja Tailor in the town (`make_tailor.py`, role `wardrobe`) changes it any time.
+- To add a colour: one entry in `NINJA_COLORS`. Tests: `test_ninja.mjs`.

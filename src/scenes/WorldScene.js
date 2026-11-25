@@ -25,6 +25,7 @@ import { talkToShopkeeper } from '../shop.js';
 import { talkToCrafter } from '../craft.js';
 import { hitDummy, sparBonus, talkSparMaster, talkLibrarian, talkFeeder, rest, talkHeadmaster } from '../school.js';
 import { enchantBonus, talkEnchanter } from '../enchant.js';
+import { NINJA_COLORS, NINJA_IDS, ninjaId, recolorData, talkTailor } from '../ninja.js';
 import { OUTDOOR, phaseAt, darkness, skyColor, toHex, isNightPhase, forcedPhase, cycleFrom } from '../daynight.js';
 import enchantDefs from '../data/enchants.json';
 import { petStats, petTick, newFightState, talkTrainer } from '../petfight.js';
@@ -301,19 +302,11 @@ export default class WorldScene extends Phaser.Scene {
 
     // --- Player (grid-based: tracks a tile position, slides between tiles) ---
     // The sprite is taller than a tile (16x24), so its feet sit on the bottom edge of its tile.
+    this.playerTex = this.ninjaTexture(ninjaId(gs));
     this.player = this.add
-      .sprite(this.tile.x * TILE, (this.tile.y + 1) * TILE, 'player', 0)
+      .sprite(this.tile.x * TILE, (this.tile.y + 1) * TILE, this.playerTex, 0)
       .setOrigin(0, 1)
       .setDepth(10);
-    ['down', 'left', 'right', 'up'].forEach((dir, row) => {
-      if (this.anims.exists(`walk-${dir}`)) return;
-      this.anims.create({
-        key: `walk-${dir}`,
-        frames: this.anims.generateFrameNumbers('player', { frames: [row * 3 + 1, row * 3, row * 3 + 1, row * 3 + 2] }),
-        frameRate: 8,
-        repeat: -1,
-      });
-    });
     this.faceFrame(this.facing);
 
     // --- Enemies (real-time; an "enemies" object layer in Tiled) ---
@@ -349,6 +342,7 @@ export default class WorldScene extends Phaser.Scene {
     this.bag = new InventoryScreen(this);
     this.friends = new Friends(this);
     this.friends.start();
+    if (!this.gameState.ninja) this.time.delayedCall(700, () => this.chooseNinja()); // choose a colour the first time
 
     // --- Input: arrows + WASD to move; Space / Enter / Z to talk; P to save ---
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -1116,6 +1110,10 @@ export default class WorldScene extends Phaser.Scene {
       this.checkRuneDoors();
       return;
     }
+    if (npc.role === 'wardrobe') {
+      this.runConvo(talkTailor(this.gameState, npc.id, data, (id) => this.setNinja(id)), data.name);
+      return;
+    }
     if (npc.role === 'headmaster') {
       const step = talkHeadmaster(this.gameState, data);
       this.runConvo(step, data.name);
@@ -1291,7 +1289,7 @@ export default class WorldScene extends Phaser.Scene {
       if (p.m === gs.map) here[k] = p;
     });
     Object.keys(this.remoteSprites).forEach((k) => {
-      if (here[k]) return;
+      if (here[k] && here[k].nj === this.remoteSprites[k].nj) return; // (a changed colour rebuilds the sprite)
       this.remoteSprites[k].sprite.destroy();
       this.remoteSprites[k].label.destroy();
       this.remoteSprites[k].pet?.destroy();
@@ -1303,12 +1301,14 @@ export default class WorldScene extends Phaser.Scene {
       const dir = ['down', 'left', 'right', 'up'].includes(p.d) ? p.d : 'down';
       let r = this.remoteSprites[k];
       if (!r) {
-        const sprite = this.add.sprite(px, py, 'player', 1).setOrigin(0, 1).setDepth(9).setTint(0x9fd0ff);
+        const tex = this.ninjaTexture(p.nj);
+        const sprite = this.add.sprite(px, py, tex, 1).setOrigin(0, 1).setDepth(9);
+        if (!p.nj || p.nj === ninjaId(gs)) sprite.setTint(0x9fd0ff); // same colour as you (or unknown): tinted blue so you can tell who is who
         const label = this.add
           .text(px + 8, py - 26, p.n ?? k, { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', stroke: '#000000', strokeThickness: 2 })
           .setOrigin(0.5, 1)
           .setDepth(11);
-        r = { sprite, label, x: p.x, y: p.y, pet: null, petKind: null };
+        r = { sprite, label, x: p.x, y: p.y, pet: null, petKind: null, tex, nj: p.nj };
         this.remoteSprites[k] = r;
         this.standRemote(sprite, dir);
       }
@@ -1318,7 +1318,7 @@ export default class WorldScene extends Phaser.Scene {
       r.x = p.x;
       r.y = p.y;
       this.tweens.killTweensOf(r.sprite);
-      r.sprite.play(`walk-${dir}`, true);
+      r.sprite.play(this.walkKey(r.tex, dir), true);
       this.tweens.add({
         targets: r.sprite,
         x: px,
@@ -1347,6 +1347,64 @@ export default class WorldScene extends Phaser.Scene {
       r.pet = this.add.image(r.x * TILE, r.y * TILE, kind.texture).setOrigin(0, 0).setDepth(7);
       r.petKind = p.c;
     }
+  }
+
+  // ---------- Ninja colour (see ninja.js) ----------
+
+  // the texture key for a colour: 'player' for the original red, otherwise a recoloured copy made once from the sheet
+  ninjaTexture(id) {
+    const cid = NINJA_COLORS[id] ? id : 'red';
+    const key = cid === 'red' ? 'player' : `player-${cid}`;
+    if (!this.textures.exists(key)) {
+      const src = this.textures.get('player').getSourceImage();
+      const cv = document.createElement('canvas');
+      cv.width = src.width;
+      cv.height = src.height;
+      const ctx = cv.getContext('2d');
+      ctx.drawImage(src, 0, 0);
+      const img = ctx.getImageData(0, 0, cv.width, cv.height);
+      recolorData(img.data, cid);
+      ctx.putImageData(img, 0, 0);
+      const tex = this.textures.addCanvas(key, cv);
+      for (let i = 0; i < 12; i++) tex.add(i, 0, (i % 3) * 16, Math.floor(i / 3) * 24, 16, 24);
+    }
+    ['down', 'left', 'right', 'up'].forEach((dir, row) => {
+      const ak = this.walkKey(key, dir);
+      if (this.anims.exists(ak)) return;
+      this.anims.create({
+        key: ak,
+        frames: this.anims.generateFrameNumbers(key, { frames: [row * 3 + 1, row * 3, row * 3 + 1, row * 3 + 2] }),
+        frameRate: 8,
+        repeat: -1,
+      });
+    });
+    return key;
+  }
+
+  walkKey(tex, dir) {
+    return tex === 'player' ? `walk-${dir}` : `walk-${tex}-${dir}`;
+  }
+
+  // switch colour now: the sprite changes at once and the other players see it
+  setNinja(id) {
+    const gs = this.gameState;
+    gs.ninja = NINJA_COLORS[id] ? id : 'red';
+    this.playerTex = this.ninjaTexture(gs.ninja);
+    this.player.setTexture(this.playerTex);
+    this.faceFrame(this.facing);
+    if (Coop.active && Coop.me) Coop.sendPresence(Coop.me.m, Coop.me.x, Coop.me.y, Coop.me.d);
+    this.saveQuiet();
+  }
+
+  // the first time (every save that has not chosen yet): which ninja are you?
+  chooseNinja() {
+    if (this.choice.isOpen || this.dialogue.isOpen || this.transitioning) return;
+    this.showToast('Which ninja are you?');
+    this.choice.open(NINJA_IDS.map((id) => NINJA_COLORS[id].name), {
+      onSelect: (i) => {
+        if (i >= 0 && i < NINJA_IDS.length) this.setNinja(NINJA_IDS[i]);
+      },
+    });
   }
 
   standRemote(sprite, dir) {
@@ -1618,7 +1676,7 @@ export default class WorldScene extends Phaser.Scene {
     this.tile = { x: nx, y: ny };
     this.friends.onStep(prevTile);
     if (Coop.active) Coop.sendPresence(this.gameState.map, nx, ny, this.dirName(this.facing));
-    this.player.play(`walk-${this.dirName(this.facing)}`, true);
+    this.player.play(this.walkKey(this.playerTex, this.dirName(this.facing)), true);
     this.tweens.add({
       targets: this.player,
       x: nx * TILE,
