@@ -5,6 +5,9 @@
 // Each watering starts a growth timer. Timers use real clock time and are saved,
 // so crops keep growing while the player is away.
 
+// Crops come from data/crops.json (seed item, harvest item, growMs per stage, seedsBack [min, max]).
+// The functions below take that table as their last argument; this default keeps plain wheat working on its own.
+export const DEFAULT_CROPS = { wheat: { name: 'Wheat', seed: 'seeds', item: 'wheat', growMs: 15000, seedsBack: [1, 2] } };
 export const GROW_MS = 15000; // time for one stage to grow after watering (15 s while testing; try 60000+ later)
 export const MAX_STAGE = 4;   // ready to harvest
 export const CAN_MAX = 6;     // how much water the can holds
@@ -37,31 +40,41 @@ function setPlot(gs, map, x, y, plot) {
   else gs.plots[map][key(x, y)] = plot;
 }
 
-export function plant(gs, map, x, y) {
-  if (getPlot(gs, map, x, y).stage !== 0) return { ok: false, msg: 'Something is already growing here.' };
-  if (gs.items.seeds < 1) return { ok: false, msg: 'You have no seeds.' };
-  gs.items.seeds -= 1;
-  setPlot(gs, map, x, y, { stage: 1, growsAt: null });
-  return { ok: true, msg: 'Planted a seed. It needs water.' };
+// Which crops can you plant right now? (the ones you carry seeds for)
+export function plantable(gs, crops = DEFAULT_CROPS) {
+  return Object.entries(crops).filter(([, c]) => (gs.items[c.seed] ?? 0) > 0).map(([id, c]) => ({ id, ...c, count: gs.items[c.seed] }));
 }
 
-export function water(gs, map, x, y, now = Date.now()) {
+export function plant(gs, map, x, y, cropId = 'wheat', crops = DEFAULT_CROPS) {
+  const crop = crops[cropId];
+  if (getPlot(gs, map, x, y).stage !== 0) return { ok: false, msg: 'Something is already growing here.' };
+  if (!crop || (gs.items[crop.seed] ?? 0) < 1) return { ok: false, msg: 'You have no seeds.' };
+  gs.items[crop.seed] -= 1;
+  setPlot(gs, map, x, y, { stage: 1, growsAt: null, crop: cropId });
+  return { ok: true, msg: `Planted ${crop.name.toLowerCase()}. It needs water.` };
+}
+
+export function water(gs, map, x, y, now = Date.now(), crops = DEFAULT_CROPS) {
   const p = getPlot(gs, map, x, y);
   if (p.stage < 1 || p.stage >= MAX_STAGE) return { ok: false, msg: 'Nothing to water here.' };
   if (p.growsAt !== null) return { ok: false, msg: 'Already watered. Give it time.' };
   if (gs.can.water < 1) return { ok: false, msg: 'Your can is empty. Fill it at the pump.' };
   gs.can.water -= 1;
-  setPlot(gs, map, x, y, { stage: p.stage, growsAt: now + GROW_MS });
+  const crop = crops[p.crop ?? 'wheat'] ?? DEFAULT_CROPS.wheat;
+  setPlot(gs, map, x, y, { stage: p.stage, growsAt: now + (crop.growMs ?? GROW_MS), crop: p.crop ?? 'wheat' });
   return { ok: true, msg: 'Watered.' };
 }
 
-export function harvest(gs, map, x, y, rng = Math.random) {
-  if (getPlot(gs, map, x, y).stage !== MAX_STAGE) return { ok: false, msg: 'Not ready yet.' };
-  const seeds = 1 + (rng() < 0.5 ? 1 : 0); // always get a seed back, sometimes two
-  gs.items.wheat += 1;
-  gs.items.seeds += seeds;
+export function harvest(gs, map, x, y, rng = Math.random, crops = DEFAULT_CROPS) {
+  const p = getPlot(gs, map, x, y);
+  if (p.stage !== MAX_STAGE) return { ok: false, msg: 'Not ready yet.' };
+  const crop = crops[p.crop ?? 'wheat'] ?? DEFAULT_CROPS.wheat;
+  const [lo, hi] = crop.seedsBack ?? [1, 2];
+  const seeds = lo + (rng() < 0.5 ? 0 : hi - lo); // always get seeds back, sometimes more
+  gs.items[crop.item] = (gs.items[crop.item] ?? 0) + 1;
+  gs.items[crop.seed] = (gs.items[crop.seed] ?? 0) + seeds;
   setPlot(gs, map, x, y, { stage: 0, growsAt: null });
-  return { ok: true, msg: `Harvested wheat! +${seeds} seed${seeds > 1 ? 's' : ''}` };
+  return { ok: true, msg: `Harvested ${crop.name.toLowerCase()}! +${seeds} seed${seeds > 1 ? 's' : ''}` };
 }
 
 // The rabbit eats whatever is growing on a plot and leaves bare dirt. Returns true if something was eaten.

@@ -1,4 +1,36 @@
 const CHARS_PER_SEC = 45;
+const MAX_CHARS = 88; // about two lines of text fit in the box
+
+// Long lines are split into pages (at sentence ends where possible) so nothing runs past the bottom of the box
+export function paginate(lines, max = MAX_CHARS) {
+  const pages = [];
+  lines.forEach((line) => {
+    const sentences = line.match(/[^.!?]+[.!?]*\s*/g) ?? [line];
+    let page = '';
+    const flush = () => {
+      if (page.trim()) pages.push(page.trim());
+      page = '';
+    };
+    sentences.forEach((sent) => {
+      if ((page + sent).trim().length <= max) {
+        page += sent;
+        return;
+      }
+      flush();
+      if (sent.trim().length <= max) {
+        page = sent;
+        return;
+      }
+      // one very long sentence: break it at spaces
+      sent.trim().split(' ').forEach((w) => {
+        if ((page + ' ' + w).trim().length > max) flush();
+        page += (page ? ' ' : '') + w;
+      });
+    });
+    flush();
+  });
+  return pages;
+}
 
 // A tap/key-to-advance dialogue box with a typewriter effect.
 // Usage: dialogue.open(['line 1', 'line 2'], 'Speaker Name', () => { ...when closed... })
@@ -48,7 +80,7 @@ export default class DialogueBox {
   open(lines, name = '', onClose = null) {
     if (this.isOpen || !lines || lines.length === 0) return;
     this.isOpen = true;
-    this.lines = lines;
+    this.lines = paginate(lines);
     this.index = 0;
     this.onClose = onClose;
 

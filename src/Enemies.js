@@ -20,6 +20,7 @@ export default class Enemies {
       const def = enemyDefs[p.type];
       if (!def) return;
       if (p.requiresFlag && !gs.flags[p.requiresFlag]) return;
+      if (p.hideIfFlag && gs.flags[p.hideIfFlag]) return; // e.g. the sprouts vanish once the treant is freed
       const id = p.id ?? o.name;
       const saved = gs.enemies[gs.map]?.[id];
       const x = Math.floor(o.x / TILE);
@@ -32,6 +33,35 @@ export default class Enemies {
         rec.sprite = this.makeSprite(rec);
       }
       this.list.push(rec);
+    });
+  }
+
+  // an extra enemy made during a fight (boss helpers): never saved, never respawns
+  spawnAt(typeId, x, y) {
+    const def = enemyDefs[typeId];
+    if (!def) return null;
+    const rec = { id: `dyn${this.list.length}-${Date.now()}`, def, home: { x, y }, x, y, hp: def.hp, moving: false, nextMove: 0, nextAttack: this.scene.time.now + 800, dead: false, respawnAt: 0, sprite: null, noRespawn: true };
+    rec.sprite = this.makeSprite(rec);
+    rec.sprite.setAlpha(0);
+    this.scene.tweens.add({ targets: rec.sprite, alpha: 1, duration: 300 });
+    this.list.push(rec);
+    return rec;
+  }
+
+  countOf(texture) {
+    return this.list.filter((e) => !e.dead && e.def.texture === texture).length;
+  }
+
+  // everything fades away (the boss was freed)
+  clearAll() {
+    this.list.forEach((e) => {
+      if (e.sprite) {
+        const spr = e.sprite;
+        this.scene.tweens.add({ targets: spr, alpha: 0, duration: 500, onComplete: () => spr.destroy() });
+      }
+      e.sprite = null;
+      e.dead = true;
+      e.respawnAt = Infinity;
     });
   }
 
@@ -54,7 +84,7 @@ export default class Enemies {
     const now = Date.now();
     this.list.forEach((e) => {
       if (e.dead) {
-        if (now >= e.respawnAt && this.free(e.home.x, e.home.y, e)) this.revive(e);
+        if (now >= e.respawnAt && this.free(e.home.x, e.home.y, e)) this.revive(e); // (Infinity = never)
         return;
       }
       if (e.moving) return;
@@ -119,9 +149,13 @@ export default class Enemies {
     const s = this.scene;
     const gs = s.gameState;
     e.dead = true;
-    e.respawnAt = Date.now() + e.def.respawnMs;
-    if (!gs.enemies[gs.map]) gs.enemies[gs.map] = {};
-    gs.enemies[gs.map][e.id] = { respawnAt: e.respawnAt };
+    if (e.noRespawn) {
+      e.respawnAt = Infinity; // helpers don't come back
+    } else {
+      e.respawnAt = Date.now() + e.def.respawnMs;
+      if (!gs.enemies[gs.map]) gs.enemies[gs.map] = {};
+      gs.enemies[gs.map][e.id] = { respawnAt: e.respawnAt };
+    }
     const spr = e.sprite;
     e.sprite = null;
     s.tweens.add({ targets: spr, alpha: 0, duration: 300, onComplete: () => spr.destroy() });

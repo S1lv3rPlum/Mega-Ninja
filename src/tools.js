@@ -56,7 +56,8 @@ export function hitTarget(gs, defs, map, t, now = Date.now()) {
   const state = gs.targets[map][t.id];
   if (state.cleared) return { ok: false, msg: 'Already cleared.' };
 
-  const use = useTool(gs, defs, t.tool);
+  // a target with no tool (a bush you pick by hand) needs nothing and wears nothing
+  const use = t.tool ? useTool(gs, defs, t.tool) : { ok: true, broke: false, msg: null };
   if (!use.ok) return { ok: false, msg: !hasTool(gs, t.tool) && t.hint ? t.hint : use.msg };
 
   state.hits -= 1;
