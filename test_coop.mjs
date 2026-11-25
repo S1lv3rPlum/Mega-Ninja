@@ -84,3 +84,21 @@ const live = C.livePlayers({ me: { t: now }, ann: { t: now - 1000, x: 1 }, old: 
 assert.deepEqual(Object.keys(live), ['ann']);
 
 console.log('coop ok');
+
+// ---- defeated enemies are shared; everything else about enemies stays out of the personal save ----
+{
+  const gs = { plots: {}, targets: {}, flags: {}, hp: 5, enemies: { forest: { s1: { respawnAt: 123 } }, cave: {} } };
+  const flat = C.flattenShared(gs);
+  assert.deepEqual(flat['enemies/forest/s1'], { respawnAt: 123 });
+  assert.equal(C.personalPart(gs).enemies, undefined);
+  const other = { plots: {}, targets: {}, flags: {}, enemies: {} };
+  C.applyInitial(other, { enemies: { forest: { s1: { respawnAt: 123 } } } });
+  assert.deepEqual(other.enemies, { forest: { s1: { respawnAt: 123 } } });
+  C.applyPath(other, 'enemies/forest/s1', null);
+  assert.deepEqual(other.enemies.forest, {});
+  C.applyPath(other, 'enemies/cave/b1', { respawnAt: 9 });
+  assert.equal(other.enemies.cave.b1.respawnAt, 9);
+  const patch = C.diffFlat(flat, C.flattenShared({ ...gs, enemies: { forest: {} } }));
+  assert.deepEqual(patch, { 'enemies/forest/s1': null }); // it grew back
+  console.log('coop enemies ok');
+}

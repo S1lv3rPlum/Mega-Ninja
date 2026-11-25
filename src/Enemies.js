@@ -167,6 +167,23 @@ export default class Enemies {
     }
   }
 
+  // another player (co-op) defeated or befriended this one: it vanishes here too, without a reward
+  removeRemote(id, respawnAt) {
+    const e = this.list.find((x) => x.id === id);
+    if (!e || e.dead || e.noRespawn) return;
+    e.dead = true;
+    e.respawnAt = respawnAt;
+    const spr = e.sprite;
+    e.sprite = null;
+    if (spr) this.scene.tweens.add({ targets: spr, alpha: 0, duration: 300, onComplete: () => spr.destroy() });
+  }
+
+  // the other player's record was cleared (it grew back there): grow back here when its time is up
+  reviveRemote(id) {
+    const e = this.list.find((x) => x.id === id);
+    if (e && e.dead && !e.noRespawn && Date.now() >= e.respawnAt && this.free(e.home.x, e.home.y, e)) this.revive(e);
+  }
+
   revive(e) {
     const gs = this.scene.gameState;
     e.dead = false;

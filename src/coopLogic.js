@@ -1,7 +1,7 @@
 // Co-op world: the pure logic (no Phaser, no network), so it can be tested in Node.
 //
-// SHARED by everyone in a co-op world: farm plots, targets (rocks, trees, boulders, bushes) and
-// "world flags" (boulder cleared, treant defeated...).
+// SHARED by everyone in a co-op world: farm plots, targets (rocks, trees, boulders, bushes), defeated
+// (or befriended) enemies and "world flags" (boulder cleared, treant defeated...).
 // PERSONAL to each player: bag, tools, hearts, gold, quests, ground drops, other flags, position.
 //
 // The shared part is flattened into "paths" like  plots/farm/3,8   targets/forest/boulder   flags/treant_defeated
@@ -55,6 +55,7 @@ export function flattenShared(gs) {
   const out = {};
   flattenInto(out, 'plots', gs.plots);
   flattenInto(out, 'targets', gs.targets);
+  flattenInto(out, 'enemies', gs.enemies);
   for (const [f, on] of Object.entries(gs.flags ?? {})) {
     if (on && isWorldFlag(f)) out[`flags/${safeKey(f)}`] = true;
   }
@@ -66,6 +67,7 @@ export function flattenTree(tree) {
   const out = {};
   flattenInto(out, 'plots', tree?.plots);
   flattenInto(out, 'targets', tree?.targets);
+  flattenInto(out, 'enemies', tree?.enemies);
   for (const [f, on] of Object.entries(tree?.flags ?? {})) if (on) out[`flags/${f}`] = true;
   return out;
 }
@@ -94,7 +96,7 @@ export function applyPath(gs, path, value) {
     else delete gs.flags[a];
     return;
   }
-  if (section !== 'plots' && section !== 'targets') return;
+  if (section !== 'plots' && section !== 'targets' && section !== 'enemies') return;
   if (!gs[section]) gs[section] = {};
   if (value === null || value === undefined) {
     if (gs[section][a]) delete gs[section][a][b];
@@ -108,6 +110,7 @@ export function applyPath(gs, path, value) {
 export function applyInitial(gs, tree) {
   gs.plots = {};
   gs.targets = {};
+  gs.enemies = {};
   if (!gs.flags) gs.flags = {};
   for (const f of Object.keys(gs.flags)) if (isWorldFlag(f)) delete gs.flags[f];
   for (const [p, v] of Object.entries(flattenTree(tree))) applyPath(gs, p, v);
@@ -118,6 +121,7 @@ export function personalPart(gs) {
   const copy = JSON.parse(JSON.stringify(gs));
   delete copy.plots;
   delete copy.targets;
+  delete copy.enemies;
   for (const f of Object.keys(copy.flags ?? {})) if (isWorldFlag(f)) delete copy.flags[f];
   return copy;
 }

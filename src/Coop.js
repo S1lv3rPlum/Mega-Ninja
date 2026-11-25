@@ -11,6 +11,7 @@ import {
   livePlayers, nameKey, personalPart,
 } from './coopLogic.js';
 import { SaveManager } from './SaveManager.js';
+import { companionPet } from './pets.js';
 
 const PERSONAL_EVERY_MS = 8000; // how often the character is backed up to the cloud
 const HEARTBEAT_EVERY = 10; // seconds between "I'm still here" updates
@@ -147,6 +148,11 @@ export const Coop = {
   sendPresence(map, x, y, d) {
     if (!this.active) return;
     this.me = { n: this.name, m: map, x, y, d, t: Date.now() };
+    const pet = this.scene?.gameState ? companionPet(this.scene.gameState) : null;
+    if (pet) {
+      this.me.c = pet.kind; // your friend is visible to the others
+      this.me.cn = pet.name;
+    }
     if (this.presenceBusy) {
       this.presenceDirty = true;
       return;

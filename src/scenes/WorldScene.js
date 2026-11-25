@@ -26,6 +26,7 @@ import InventoryScreen, { iconKey } from '../InventoryScreen.js';
 import { lowTools } from '../inventory.js';
 import { Coop } from '../Coop.js';
 import Friends from '../Friends.js';
+import friendDefs from '../data/friends.json';
 
 const TILE = 16;
 // NPCs that have walking animation: for each name here, public/assets/sprites/<name>-walk.png is a sheet laid out
@@ -1130,6 +1131,7 @@ export default class WorldScene extends Phaser.Scene {
       if (here[k]) return;
       this.remoteSprites[k].sprite.destroy();
       this.remoteSprites[k].label.destroy();
+      this.remoteSprites[k].pet?.destroy();
       delete this.remoteSprites[k];
     });
     Object.entries(here).forEach(([k, p]) => {
@@ -1143,12 +1145,13 @@ export default class WorldScene extends Phaser.Scene {
           .text(px + 8, py - 26, p.n ?? k, { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', stroke: '#000000', strokeThickness: 2 })
           .setOrigin(0.5, 1)
           .setDepth(11);
-        r = { sprite, label, x: p.x, y: p.y };
+        r = { sprite, label, x: p.x, y: p.y, pet: null, petKind: null };
         this.remoteSprites[k] = r;
         this.standRemote(sprite, dir);
-        return;
       }
+      this.syncRemotePet(r, p);
       if (r.x === p.x && r.y === p.y) return;
+      if (r.pet) this.tweens.add({ targets: r.pet, x: r.x * TILE, y: r.y * TILE, duration: 150 }); // it hops into the tile they left
       r.x = p.x;
       r.y = p.y;
       this.tweens.killTweensOf(r.sprite);
@@ -1162,6 +1165,25 @@ export default class WorldScene extends Phaser.Scene {
         onComplete: () => this.standRemote(r.sprite, dir),
       });
     });
+  }
+
+  // show (or hide) the friend a co-op player has brought along
+  syncRemotePet(r, p) {
+    const kind = friendDefs.kinds[p.c];
+    if (!kind) {
+      if (r.pet) r.pet.destroy();
+      r.pet = null;
+      r.petKind = null;
+      return;
+    }
+    if (r.pet && r.petKind !== p.c) {
+      r.pet.destroy();
+      r.pet = null;
+    }
+    if (!r.pet) {
+      r.pet = this.add.image(r.x * TILE, r.y * TILE, kind.texture).setOrigin(0, 0).setDepth(7);
+      r.petKind = p.c;
+    }
   }
 
   standRemote(sprite, dir) {
@@ -1181,6 +1203,10 @@ export default class WorldScene extends Phaser.Scene {
       } else if (section === 'targets' && a === gs.map) {
         const t = this.targets.find((o) => o.id === b);
         if (t) this.syncTargetVisual(t);
+      } else if (section === 'enemies' && a === gs.map && this.enemies) {
+        const rec = gs.enemies[a]?.[b];
+        if (rec) this.enemies.removeRemote(b, rec.respawnAt);
+        else this.enemies.reviveRemote(b);
       } else if (this.boss && path === `flags/${this.boss.flag}`) {
         freed = true;
       } else if (this.npcs.some((n) => n.openFlag && path === `flags/${n.openFlag}`)) {

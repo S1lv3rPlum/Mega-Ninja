@@ -2,6 +2,7 @@ import friendDefs from './data/friends.json';
 import itemsData from './data/items.json';
 import toolDefs from './data/tools.json';
 import { giveTool } from './tools.js';
+import { Coop } from './Coop.js';
 import { rabbitOnMap, canCatch, throwRabbit } from './rabbit.js';
 import { ensurePets, befriend, setCompanion, renamePet, releasePet, isFull, hasTreat, companionPet, cleanPetName } from './pets.js';
 
@@ -25,6 +26,7 @@ export default class Friends {
   // make the follower sprite match gs.companion
   refresh(place = false) {
     const s = this.scene;
+    if (Coop.active && Coop.me) Coop.sendPresence(Coop.me.m, Coop.me.x, Coop.me.y, Coop.me.d); // tell the others
     const pet = companionPet(s.gameState);
     if (!pet) {
       if (this.sprite) this.sprite.destroy();
