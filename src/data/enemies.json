@@ -31,5 +31,16 @@
     "sight": 6,
     "respawnMs": 40000,
     "gold": 4
+  },
+  "pebble": {
+    "name": "Pebble",
+    "texture": "pebble",
+    "hp": 2,
+    "damage": 1,
+    "moveMs": 700,
+    "attackMs": 1300,
+    "sight": 9,
+    "respawnMs": 0,
+    "gold": 0
   }
 }

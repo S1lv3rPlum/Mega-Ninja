@@ -95,6 +95,12 @@
       "icon": "lantern",
       "color": "#ffc860",
       "desc": "A gift from the treant. It never needs oil. Lights the way into dark caves."
+    },
+    "crest-stone": {
+      "name": "Crest Stone",
+      "icon": "crest",
+      "color": "#c9a24a",
+      "desc": "Carved with a ninja crest. Granite guarded it for the cave builders. It fits the stone door."
     }
   },
   "tools": {

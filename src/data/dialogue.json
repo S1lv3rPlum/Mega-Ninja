@@ -132,11 +132,30 @@
     "name": "Stone Door",
     "lines": [
       "A huge stone door, carved with a ninja crest.",
-      "Three round sockets sit empty beneath it. It will not budge.",
-      "Whatever sleeps beyond must wait... (To be continued)"
+      "Beneath it are four sockets: a ruby, a sapphire and an emerald, and a round crest in the middle."
     ],
     "repeatLines": [
-      "The door is sealed tight. Three empty sockets wait below the crest."
+      "The stone door is sealed tight. Four sockets wait below the crest."
+    ]
+  },
+  "sealeddooropen": {
+    "name": "Stone Door",
+    "lines": [
+      "The door stands open. A cold wind blows up from a dark passage, and it goes a long way down.",
+      "It is not ready for you yet... (To be continued)"
+    ],
+    "repeatLines": [
+      "The dark passage waits. (To be continued)"
+    ]
+  },
+  "granite": {
+    "name": "Granite",
+    "lines": [
+      "Granite is sorry for the rockfall. Granite is very glad the voice is gone."
+    ],
+    "repeatLines": [
+      "Granite likes pickaxes now. They tickle.",
+      "Say hi to the bats for Granite. They are not so bad."
     ]
   }
 }

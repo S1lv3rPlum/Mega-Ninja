@@ -1,0 +1,4 @@
+{
+  "flag": "stonedoor_cleared",
+  "requires": { "ruby": 1, "sapphire": 1, "emerald": 1, "crest-stone": 1 }
+}
