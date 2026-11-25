@@ -39,6 +39,8 @@ export default class Boss {
     this.scene = scene;
     this.x = Math.floor(obj.x / TILE);
     this.y = Math.floor(obj.y / TILE);
+    this.name = BOSS.name;
+    this.flag = 'treant_defeated';
     this.max = BOSS.hp;
     this.hp = this.max;
     this.phase = 1;
@@ -187,6 +189,10 @@ export default class Boss {
       s.showToast('Gnarl roars! Saplings spring up!');
       this.nextSummon = s.time.now + 800;
     }
+  }
+
+  toolHit() {
+    return this.axeHit();
   }
 
   axeHit() {

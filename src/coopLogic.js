@@ -12,7 +12,7 @@ export const CODE_LENGTH = 6;
 export const STALE_MS = 45000; // a player who has not checked in for this long is treated as gone
 
 // A flag is shared if it is about the world, not about one player's story
-export const isWorldFlag = (f) => f === 'treant_defeated' || f.endsWith('_cleared');
+export const isWorldFlag = (f) => f.endsWith('_defeated') || f.endsWith('_cleared');
 
 // The cloud database does not allow . $ # [ ] / in keys
 export const safeKey = (s) => String(s).replace(/[.$#[\]/]/g, '_');
