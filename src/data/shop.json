@@ -10,6 +10,14 @@
         "price": 10
       },
       {
+        "id": "carrot-seeds",
+        "type": "item",
+        "item": "carrot-seeds",
+        "amount": 5,
+        "label": "5 Carrot Seeds",
+        "price": 20
+      },
+      {
         "id": "pail",
         "type": "upgrade",
         "label": "Bigger Pail",
@@ -53,7 +61,10 @@
       "sapphire": 30,
       "emerald": 50,
       "ruby": 80,
-      "diamond": 250
+      "diamond": 250,
+      "carrot": 6,
+      "pumpkin": 25,
+      "herb": 3
     }
   }
 }

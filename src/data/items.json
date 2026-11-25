@@ -4,10 +4,22 @@
   },
   "items": {
     "seeds": {
-      "name": "Seeds",
+      "name": "Wheat Seeds",
       "icon": "seeds",
       "color": "#c9a24a",
       "desc": "Plant them in a dirt plot, then keep them watered."
+    },
+    "carrot-seeds": {
+      "name": "Carrot Seeds",
+      "icon": "seeds",
+      "color": "#e8923a",
+      "desc": "Carrots grow fast. Plant them in a dirt plot."
+    },
+    "pumpkin-seeds": {
+      "name": "Pumpkin Seeds",
+      "icon": "seeds",
+      "color": "#d9a43a",
+      "desc": "Pumpkins take a long time to grow, but they are worth it."
     },
     "wheat": {
       "name": "Wheat",
@@ -15,6 +27,26 @@
       "color": "#e8c84a",
       "desc": "Harvested from the farm. The farmer pays for it. Eat it to heal a heart.",
       "heal": 2
+    },
+    "carrot": {
+      "name": "Carrot",
+      "icon": "carrot",
+      "color": "#e8923a",
+      "desc": "Crunchy. Sells at the market. Eat it to heal a heart.",
+      "heal": 2
+    },
+    "pumpkin": {
+      "name": "Pumpkin",
+      "icon": "pumpkin",
+      "color": "#e07a1a",
+      "desc": "A big pumpkin. Sells for a good price. Eat it to heal two hearts.",
+      "heal": 4
+    },
+    "herb": {
+      "name": "Herb",
+      "icon": "leaf",
+      "color": "#4fae5a",
+      "desc": "A fragrant wild herb. Useful for brewing, one day."
     },
     "wood": {
       "name": "Wood",
@@ -40,23 +72,29 @@
       "color": "#3a6fe0",
       "desc": "A deep blue gem."
     },
-    "ruby": {
-      "name": "Ruby",
-      "icon": "gem",
-      "color": "#d63a4a",
-      "desc": "A fiery red gem. Rare."
-    },
     "emerald": {
       "name": "Emerald",
       "icon": "gem",
       "color": "#2faa5a",
       "desc": "A bright green gem. Rare."
     },
+    "ruby": {
+      "name": "Ruby",
+      "icon": "gem",
+      "color": "#d63a4a",
+      "desc": "A fiery red gem. Rare."
+    },
     "diamond": {
       "name": "Diamond",
       "icon": "gem",
       "color": "#bff4ff",
       "desc": "The rarest gem of all."
+    },
+    "lantern": {
+      "name": "Heartwood Lantern",
+      "icon": "lantern",
+      "color": "#ffc860",
+      "desc": "A gift from the treant. It never needs oil. Lights the way into dark caves."
     }
   },
   "tools": {

@@ -9,5 +9,16 @@
     "sight": 5,
     "respawnMs": 45000,
     "gold": 3
+  },
+  "sapling": {
+    "name": "Sapling",
+    "texture": "sapling",
+    "hp": 2,
+    "damage": 1,
+    "moveMs": 600,
+    "attackMs": 1300,
+    "sight": 9,
+    "respawnMs": 0,
+    "gold": 0
   }
 }

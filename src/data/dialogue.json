@@ -92,5 +92,30 @@
     "notEnough": "I need {amount} {item}. You have {have}. Keep at it.",
     "thanks": "Well done. Here is your {reward} gold.",
     "nextAsk": "When you are ready, bring me {amount} {item}. I will pay {reward} gold."
+  },
+  "treant": {
+    "name": "Gnarl",
+    "lines": [
+      "Thank you again, little ninja. The forest feels light again."
+    ],
+    "repeatLines": [
+      "The sun is warm and my roots are quiet. Thank you.",
+      "Keep the lantern close. The deep cave is no place to be without a light."
+    ]
+  },
+  "cavesign": {
+    "name": "Sign",
+    "lines": [
+      "DANGER! Unstable cave. Bring a light."
+    ],
+    "repeatLines": [
+      "DANGER! Unstable cave. Bring a light."
+    ],
+    "flagLines": {
+      "treant_defeated": [
+        "Your Heartwood Lantern glows warmly. From deep inside the cave, something rumbles.",
+        "The way in is still blocked. (To be continued...)"
+      ]
+    }
   }
 }

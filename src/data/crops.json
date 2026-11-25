@@ -1,0 +1,5 @@
+{
+  "wheat":   { "name": "Wheat",   "seed": "seeds",         "item": "wheat",   "growMs": 15000, "seedsBack": [1, 2] },
+  "carrot":  { "name": "Carrot",  "seed": "carrot-seeds",  "item": "carrot",  "growMs": 9000,  "seedsBack": [1, 2] },
+  "pumpkin": { "name": "Pumpkin", "seed": "pumpkin-seeds", "item": "pumpkin", "growMs": 30000, "seedsBack": [1, 1] }
+}
