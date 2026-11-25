@@ -5,7 +5,7 @@ import { giveTool } from './tools.js';
 import { Coop } from './Coop.js';
 import { rabbitOnMap, canCatch, throwRabbit } from './rabbit.js';
 import { ensureJournal, claimRewards } from './journal.js';
-import { ensurePets, befriend, setCompanion, renamePet, releasePet, isFull, hasTreat, companionPet, cleanPetName } from './pets.js';
+import { ensurePets, befriend, setCompanion, renamePet, releasePet, isFull, hasTreat, treatFor, companionPet, cleanPetName } from './pets.js';
 
 const TILE = 16;
 
@@ -77,7 +77,8 @@ export default class Friends {
     }
     if (!kindId) return false;
     const kind = friendDefs.kinds[kindId];
-    const treat = itemsData.items[kind.treat].name;
+    const have = treatFor(gs, kind);
+    const treat = itemsData.items[have ?? kind.treat].name;
     if (isFull(gs, friendDefs)) {
       s.showToast(`You have ${friendDefs.max} friends already.`);
       return true;

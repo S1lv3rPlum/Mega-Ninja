@@ -183,5 +183,90 @@
         }
       }
     ]
+  },
+  "grill": {
+    "offers": [
+      {
+        "id": "fish-stew",
+        "out": "fish-stew",
+        "amount": 1,
+        "needs": {
+          "pond-minnow": 2,
+          "herb": 1
+        }
+      },
+      {
+        "id": "sunfish-fry",
+        "out": "sunfish-fry",
+        "amount": 1,
+        "needs": {
+          "sunfish": 1,
+          "wheat": 1
+        }
+      },
+      {
+        "id": "grilled-trout",
+        "out": "grilled-trout",
+        "amount": 1,
+        "needs": {
+          "forest-trout": 1,
+          "herb": 1
+        }
+      },
+      {
+        "id": "bass-bake",
+        "out": "bass-bake",
+        "amount": 1,
+        "needs": {
+          "mossy-bass": 1,
+          "carrot": 1
+        }
+      },
+      {
+        "id": "moon-curry",
+        "out": "moon-curry",
+        "amount": 1,
+        "needs": {
+          "moon-carp": 1,
+          "pumpkin": 1
+        }
+      },
+      {
+        "id": "eel-soup",
+        "out": "eel-soup",
+        "amount": 1,
+        "needs": {
+          "glow-eel": 1,
+          "herb": 1
+        }
+      },
+      {
+        "id": "frosty-skewer",
+        "out": "frosty-skewer",
+        "amount": 1,
+        "needs": {
+          "frost-perch": 1,
+          "frostberry": 1
+        }
+      },
+      {
+        "id": "koi-feast",
+        "out": "koi-feast",
+        "amount": 1,
+        "needs": {
+          "golden-koi": 1,
+          "herb": 1
+        }
+      },
+      {
+        "id": "aurora-sushi",
+        "out": "aurora-sushi",
+        "amount": 1,
+        "needs": {
+          "aurora-char": 1,
+          "seaweed": 1
+        }
+      }
+    ]
   }
 }

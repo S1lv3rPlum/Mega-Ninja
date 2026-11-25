@@ -333,6 +333,158 @@
       "icon": "leaf",
       "color": "#7dffb0",
       "desc": "A glowing mushroom that only grows at night. Fireflies love it."
+    },
+    "fishing-rod": {
+      "name": "Fishing Rod",
+      "icon": "rod",
+      "color": "#b07840",
+      "desc": "Face a pond and press Space to cast. Press Space again when the fish bites!"
+    },
+    "pond-minnow": {
+      "name": "Pond Minnow",
+      "icon": "fish",
+      "color": "#8ac4e8",
+      "desc": "Tiny and quick. Good in a stew. Cook it at the Fish Grill.",
+      "heal": 1
+    },
+    "sunfish": {
+      "name": "Garden Sunfish",
+      "icon": "fish",
+      "color": "#f0b030",
+      "desc": "Round and golden. It likes the sun. Cook it at the Fish Grill.",
+      "heal": 1
+    },
+    "moon-carp": {
+      "name": "Moon Carp",
+      "icon": "fish",
+      "color": "#b8c0f0",
+      "desc": "A pale carp that only wakes at night. Cook it at the Fish Grill.",
+      "heal": 1
+    },
+    "golden-koi": {
+      "name": "Golden Koi",
+      "icon": "fish",
+      "color": "#ffc830",
+      "desc": "A rare koi. Shiny as a coin. Cook it at the Fish Grill.",
+      "heal": 1
+    },
+    "forest-trout": {
+      "name": "Forest Trout",
+      "icon": "fish",
+      "color": "#6aa86a",
+      "desc": "A speckled trout from the forest pond. Cook it at the Fish Grill.",
+      "heal": 1
+    },
+    "mossy-bass": {
+      "name": "Mossy Bass",
+      "icon": "fish",
+      "color": "#58803c",
+      "desc": "Green as the moss on the rocks. Cook it at the Fish Grill.",
+      "heal": 1
+    },
+    "glow-eel": {
+      "name": "Glow Eel",
+      "icon": "fish",
+      "color": "#7affc8",
+      "desc": "It glows softly in the dark water. Cook it at the Fish Grill.",
+      "heal": 1
+    },
+    "silver-salmon": {
+      "name": "Silver Salmon",
+      "icon": "fish",
+      "color": "#d8e0e8",
+      "desc": "A rare, strong fish. It fights hard! Cook it at the Fish Grill.",
+      "heal": 1
+    },
+    "frost-perch": {
+      "name": "Frost Perch",
+      "icon": "fish",
+      "color": "#a0d8f0",
+      "desc": "A chilly little fish from under the ice. Cook it at the Fish Grill.",
+      "heal": 1
+    },
+    "icicle-pike": {
+      "name": "Icicle Pike",
+      "icon": "fish",
+      "color": "#70b0e0",
+      "desc": "Long and sharp, like an icicle. Cook it at the Fish Grill.",
+      "heal": 1
+    },
+    "aurora-char": {
+      "name": "Aurora Char",
+      "icon": "fish",
+      "color": "#c890f0",
+      "desc": "Its scales shimmer like the northern lights. Cook it at the Fish Grill.",
+      "heal": 1
+    },
+    "soggy-boot": {
+      "name": "Soggy Boot",
+      "icon": "boots",
+      "color": "#8a6a48",
+      "desc": "Someone lost this. It smells awful."
+    },
+    "fish-stew": {
+      "name": "Fish Stew",
+      "icon": "fish",
+      "color": "#c89050",
+      "desc": "Warm and savoury. Eat it to heal.",
+      "heal": 5
+    },
+    "sunfish-fry": {
+      "name": "Sunfish Fry",
+      "icon": "fish",
+      "color": "#f0b030",
+      "desc": "Crispy and golden. Eat it to heal.",
+      "heal": 5
+    },
+    "grilled-trout": {
+      "name": "Grilled Trout",
+      "icon": "fish",
+      "color": "#6aa86a",
+      "desc": "Smoky and juicy. Eat it to heal.",
+      "heal": 6
+    },
+    "bass-bake": {
+      "name": "Bass Bake",
+      "icon": "fish",
+      "color": "#58803c",
+      "desc": "Baked with carrots. Eat it to heal.",
+      "heal": 6
+    },
+    "moon-curry": {
+      "name": "Moon Curry",
+      "icon": "fish",
+      "color": "#b8a0f0",
+      "desc": "Spicy, with a moonlit glow. Eat it to heal.",
+      "heal": 8
+    },
+    "eel-soup": {
+      "name": "Glow Eel Soup",
+      "icon": "fish",
+      "color": "#7affc8",
+      "desc": "It really does glow. Eat it to heal.",
+      "heal": 9
+    },
+    "frosty-skewer": {
+      "name": "Frosty Skewer",
+      "icon": "fish",
+      "color": "#a0d8f0",
+      "desc": "Fish and berries on a stick. Eat it to heal.",
+      "heal": 7
+    },
+    "koi-feast": {
+      "name": "Koi Feast",
+      "icon": "fish",
+      "color": "#ffc830",
+      "desc": "A fancy feast. Eat it to heal a lot.",
+      "heal": 12
+    },
+    "aurora-sushi": {
+      "name": "Aurora Sushi",
+      "icon": "fish",
+      "color": "#c890f0",
+      "desc": "Shimmering sushi. Eat it to heal a lot.",
+      "heal": 12
     }
   },
   "tools": {

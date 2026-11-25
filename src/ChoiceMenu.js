@@ -1,5 +1,7 @@
 const LINE_H = 14;
-const WIDTH = 172;
+const MIN_WIDTH = 172;
+const MAX_WIDTH = 300;
+const CHAR_W = 6; // 10px monospace
 
 // A small tappable choice menu (also works with the keyboard).
 // Usage:
@@ -27,6 +29,8 @@ export default class ChoiceMenu {
     this.onCancel = onCancel;
 
     const s = this.scene;
+    const longest = Math.max(...this.options.map((o) => o.label.length + 2)); // +2 for the ▶ arrow
+    const WIDTH = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, longest * CHAR_W + 20)); // wide enough for long recipe lines
     const h = this.options.length * LINE_H + 12;
     const x = 312 - WIDTH; // bottom-right, just above where the dialogue box sits
     const y = 168 - h;

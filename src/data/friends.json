@@ -35,21 +35,30 @@
       "baseName": "Frosty",
       "texture": "snowfox",
       "treat": "frostberry",
-      "hint": "Prowls the Snowy Peaks."
+      "hint": "Prowls the Snowy Peaks.",
+      "likes": [
+        "frost-perch"
+      ]
     },
     "crab": {
       "name": "Tide Crab",
       "baseName": "Pinchy",
       "texture": "crab",
       "treat": "seaweed",
-      "hint": "Scuttles around the Sunken Ruins."
+      "hint": "Scuttles around the Sunken Ruins.",
+      "likes": [
+        "pond-minnow"
+      ]
     },
     "sandlizard": {
       "name": "Sand Lizard",
       "baseName": "Dune",
       "texture": "sandlizard",
       "treat": "cactus-fruit",
-      "hint": "Basks in the hot desert."
+      "hint": "Basks in the hot desert.",
+      "likes": [
+        "sunfish"
+      ]
     },
     "firefly": {
       "name": "Glow Firefly",
@@ -65,7 +74,10 @@
       "texture": "owl",
       "treat": "moonbloom",
       "hint": "Perches in the town and the forest.",
-      "when": "Only out at night."
+      "when": "Only out at night.",
+      "likes": [
+        "forest-trout"
+      ]
     },
     "moonhare": {
       "name": "Moon Hare",

@@ -23,6 +23,9 @@ import { ensureCombatState, hurtPlayer as applyHurt, faint as applyFaint, eat } 
 import shopData from '../data/shop.json';
 import { talkToShopkeeper } from '../shop.js';
 import { talkToCrafter } from '../craft.js';
+import FishingUI from '../FishingUI.js';
+import fishDefs from '../data/fish.json';
+import { talkFisher } from '../fishing.js';
 import { hitDummy, sparBonus, talkSparMaster, talkLibrarian, talkFeeder, rest, talkHeadmaster } from '../school.js';
 import { enchantBonus, talkEnchanter } from '../enchant.js';
 import { NINJA_COLORS, NINJA_IDS, ninjaId, recolorData, talkTailor } from '../ninja.js';
@@ -84,7 +87,7 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('stump', 'assets/sprites/stump.png');
     this.load.image('lumberjack', 'assets/sprites/lumberjack.png'); // textures for NPCs go here
     this.load.image('shopkeeper', 'assets/sprites/shopkeeper.png');
-    ['firefly', 'owl', 'moonhare', 'cook', 'trainer', 'enchanter', 'student1', 'student2', 'student3', 'bookshelf', 'bed', 'dummy'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
+    ['fisher', 'firefly', 'owl', 'moonhare', 'cook', 'trainer', 'enchanter', 'student1', 'student2', 'student3', 'bookshelf', 'bed', 'dummy'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
     this.load.image('alchemist', 'assets/sprites/alchemist.png');
     ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond', 'crystal', 'sun'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
     this.load.image('rubble', 'assets/sprites/rubble.png');
@@ -334,6 +337,7 @@ export default class WorldScene extends Phaser.Scene {
     this.darkRT = null;
     if (readProps(raw.properties).dark) this.createDarkness();
     this.thinIceGid = readProps(raw.properties).thinIceGid ?? 0;
+    this.fishing = new FishingUI(this, { gid: readProps(raw.properties).fishGid ?? 0, area: readProps(raw.properties).fishArea ?? null }); // ponds: see fishing.js
     this.createDayNight();
 
     // --- Dialogue ---
@@ -375,7 +379,8 @@ export default class WorldScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-DOWN', nav(1));
     this.input.keyboard.on('keydown-S', nav(1));
     const cancelKey = () => {
-      if (this.bag.isOpen) this.bag.close();
+      if (this.fishing?.active) this.fishing.cancel('You pulled in your line.');
+      else if (this.bag.isOpen) this.bag.close();
       else this.choice.cancel();
     };
     this.input.keyboard.on('keydown-ESC', cancelKey);
@@ -557,6 +562,7 @@ export default class WorldScene extends Phaser.Scene {
   // J / the B button: swing the weapon at the tile in front of you
   attack() {
     if (this.bag.isOpen || this.dialogue.isOpen || this.choice.isOpen || this.moving || this.transitioning) return;
+    this.fishing.cancel();
     const gs = this.gameState;
     const w = weaponDefs[gs.weapon];
     if (!w) {
@@ -592,6 +598,7 @@ export default class WorldScene extends Phaser.Scene {
     const now = this.time.now;
     if (now < this.invulnUntil || this.transitioning) return;
     this.invulnUntil = now + 1000;
+    this.fishing.cancel('Ouch! Your line snapped.');
     const r = applyHurt(this.gameState, reduceDamage(amount, { defense: (armorDefs[this.gameState.armor]?.defense ?? 0) + enchantBonus(this.gameState, enchantDefs).defense }));
     this.cameras.main.shake(120, 0.004);
     this.tweens.add({ targets: this.player, alpha: 0.3, duration: 80, yoyo: true, repeat: 4, onComplete: () => this.player.setAlpha(1) });
@@ -1058,6 +1065,10 @@ export default class WorldScene extends Phaser.Scene {
       return;
     }
     if (this.moving || this.transitioning) return;
+    if (this.fishing.active) {
+      this.fishing.press(); // a line is out: Space bites / reels
+      return;
+    }
 
     const tx = this.tile.x + this.facing.x;
     const ty = this.tile.y + this.facing.y;
@@ -1075,7 +1086,7 @@ export default class WorldScene extends Phaser.Scene {
       this.updateHud();
     } else if (this.isPlot(tx, ty)) {
       this.farmAt(tx, ty);
-    }
+    } else this.fishing.tryCast(tx, ty);
   }
 
   npcAt(x, y) {
@@ -1130,6 +1141,10 @@ export default class WorldScene extends Phaser.Scene {
     if (npc.role === 'sparmaster') { this.runConvo(talkSparMaster(this.gameState, data), data.name); return; }
     if (npc.role === 'dummy') { this.showToast(hitDummy(this.gameState).msg); return; }
     if (npc.role === 'bed') { this.runConvo(rest(this.gameState, data), data.name); return; }
+    if (npc.role === 'fisher') {
+      this.runConvo(talkFisher(this.gameState, npc.id, data, { fishDefs, areaNames: { garden: 'Garden pond', forest: 'Forest pond', peaks: 'Frozen lake' } }), data.name);
+      return;
+    }
     if (npc.role === 'feeder') { this.runConvo(talkFeeder(this.gameState, npc.id, data), data.name); return; }
     if (npc.role === 'librarian') {
       const step = talkLibrarian(this.gameState, data, npc.books ?? []);
@@ -1490,6 +1505,7 @@ export default class WorldScene extends Phaser.Scene {
   update(_time, delta) {
     this.updateDarkness(_time);
     this.updateDayNight(_time);
+    this.fishing.update(this.time.now);
     this.updateRabbit(delta);
     if (!(this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen)) {
       this.enemies.update(_time);
@@ -1659,6 +1675,7 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   tryMove(dx, dy) {
+    if (this.fishing.active) this.fishing.cancel('You pulled in your line.');
     this.facing = { x: dx, y: dy }; // turn to face that way, even if blocked
 
     const nx = this.tile.x + dx;

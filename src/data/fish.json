@@ -1,0 +1,17 @@
+{
+  "pond-minnow":   { "name": "Pond Minnow",    "area": ["garden"], "when": "any",   "weight": 50, "zone": 0.34, "speed": 1500, "reel": 1, "sell": 4,  "color": "#8ac4e8", "desc": "Tiny and quick. Good in a stew." },
+  "sunfish":       { "name": "Garden Sunfish", "area": ["garden"], "when": "day",   "weight": 30, "zone": 0.28, "speed": 1400, "reel": 1, "sell": 8,  "color": "#f0b030", "desc": "Round and golden. It likes the sun." },
+  "moon-carp":     { "name": "Moon Carp",      "area": ["garden"], "when": "night", "weight": 35, "zone": 0.26, "speed": 1300, "reel": 2, "sell": 12, "color": "#b8c0f0", "desc": "A pale carp that only wakes at night." },
+  "golden-koi":    { "name": "Golden Koi",     "area": ["garden"], "when": "day",   "weight": 8,  "zone": 0.2,  "speed": 1100, "reel": 2, "sell": 45, "color": "#ffc830", "desc": "A rare koi. Shiny as a coin." },
+
+  "forest-trout":  { "name": "Forest Trout",   "area": ["forest"], "when": "any",   "weight": 50, "zone": 0.32, "speed": 1450, "reel": 1, "sell": 6,  "color": "#6aa86a", "desc": "A speckled trout from the forest pond." },
+  "mossy-bass":    { "name": "Mossy Bass",     "area": ["forest"], "when": "day",   "weight": 30, "zone": 0.26, "speed": 1350, "reel": 1, "sell": 9,  "color": "#58803c", "desc": "Green as the moss on the rocks." },
+  "glow-eel":      { "name": "Glow Eel",       "area": ["forest"], "when": "night", "weight": 28, "zone": 0.2,  "speed": 1100, "reel": 2, "sell": 25, "color": "#7affc8", "desc": "It glows softly in the dark water." },
+  "silver-salmon": { "name": "Silver Salmon",  "area": ["forest"], "when": "any",   "weight": 6,  "zone": 0.16, "speed": 1000, "reel": 3, "sell": 35, "color": "#d8e0e8", "desc": "A rare, strong fish. It fights hard!" },
+
+  "frost-perch":   { "name": "Frost Perch",    "area": ["peaks"],  "when": "any",   "weight": 50, "zone": 0.3,  "speed": 1400, "reel": 1, "sell": 7,  "color": "#a0d8f0", "desc": "A chilly little fish from under the ice." },
+  "icicle-pike":   { "name": "Icicle Pike",    "area": ["peaks"],  "when": "day",   "weight": 30, "zone": 0.24, "speed": 1200, "reel": 2, "sell": 14, "color": "#70b0e0", "desc": "Long and sharp, like an icicle." },
+  "aurora-char":   { "name": "Aurora Char",    "area": ["peaks"],  "when": "night", "weight": 14, "zone": 0.16, "speed": 1000, "reel": 3, "sell": 40, "color": "#c890f0", "desc": "Its scales shimmer like the northern lights." },
+
+  "soggy-boot":    { "name": "Soggy Boot",     "area": ["garden", "forest", "peaks"], "when": "any", "weight": 7, "reel": 0, "sell": 1, "junk": true, "color": "#8a6a48", "desc": "Someone lost this. It smells awful." }
+}

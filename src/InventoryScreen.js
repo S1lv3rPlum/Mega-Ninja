@@ -25,6 +25,8 @@ const ICONS = {
   lantern: ['...oooo...', '..o....o..', '...oooo...', '..o####o..', '.o#hhh##o.', '.o#h#o##o.', '.o#hhh##o.', '.o######o.', '..oooooo..', '..........'],
   armor:   ['..oo..oo..', '.o##oo##o.', 'o###oo###o', 'o#h#oo#h#o', '.o##oo##o.', '..o#oo#o..', '..o#oo#o..', '..o#oo#o..', '...oooo...', '..........'],
   boots:   ['..........', '..oooo....', '.o####o...', '.o#hh#o...', '.o####o...', '.o####oooo', '.o#######o', '.o########', '..oooooooo', '..........'],
+  fish:    ['..........', '....oooo..', '..oo####o.', '.o#h####oo', 'o##o######', 'o#####o##o', '.o#h###oo.', '..oo###o..', '....oooo..', '..........'],
+  rod:     ['.........o', '........o.', '.......o..', '......o...', '.....o#...', '....o#o...', '...o#o....', '..o#o.....', '.o#o...oo.', 'o#o...o##o'],
   coin:    ['..oooooo..', '.o######o.', 'o##hh###oo', 'o#h##.##o.', 'o#h#.o##o.', 'o#h##.##o.', 'o###oo##o.', '.o######o.', '..oooooo..', '..........'],
 };
 
@@ -296,7 +298,7 @@ export default class InventoryScreen {
     this.jCursor.setPosition(JX + (this.jIndex % JCOLS) * (JSLOT + 6) - 1, JY + Math.floor(this.jIndex / JCOLS) * (JSLOT + 6) - 1);
     if (e.met) {
       this.jName.setText(e.name);
-      const lines = [e.hint, `Favourite treat: ${e.treat}.`];
+      const lines = [e.hint, `Favourite treat: ${e.treat}${e.also.length ? ` (or ${e.also.join(', ')})` : ''}.`];
       if (e.when) lines.push(e.when);
       lines.push(e.yours.length ? `Your friends: ${e.yours.join(', ')}` : 'You have said goodbye to this one, but you will always remember it.');
       this.jDesc.setText(lines.join('\n'));

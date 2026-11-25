@@ -241,3 +241,13 @@ without being run in a browser, so test new features on desktop and phone.
 - Open it from the Friends menu ("Friend Journal") or the JOURNAL button in the bag. It's a mode of InventoryScreen (`openJournal`), so key routing is unchanged.
 - Unmet kinds show a black silhouette + "?" with a hint (`hint`/`when` in friends.json). Saying goodbye never erases a page.
 - Rewards (journal.js REWARDS): 3 friends -> 2 healing potions, 6 -> 2 greater potions, 10 -> 3 elixirs; claimed once via flags `journal_reward_<n>`.
+
+## Fishing
+- `src/fishing.js` (rules, no Phaser) + `src/FishingUI.js` (bobber, "!" and reel bar) + `src/data/fish.json` (fish: area, when any/day/night, weight, zone, speed, reel pulls, sell, colour).
+- Map properties: `fishGid` (the obstacle tile you can fish from) and `fishArea`. Garden pond = school-tiles 11, forest pond = 3 (new, added by make_fishing.py), Snowy Peaks frozen lake = 4 (deep ice).
+- How a cast goes: face water with the Fishing Rod, Space = cast; Space again when "!" shows (too early scares it, too late loses it); then keep the marker inside the green bar. Rare fish need 2-3 good pulls, 2 misses lose the fish. Moving, J, ESC or getting hurt pulls the line in.
+- The Old Fisher (forest, next to the new pond) gives the rod, buys fish by the pile, shows the Fish Log, tips, and gives prizes at 4 / 8 / 11 kinds (flags `fishlog_reward_N`). `gs.fishLog` = { fishId: count }. The Soggy Boot is junk and does not count.
+- Cooking: a second cook, the Angler Chef, in the school kitchen (`craft: 'grill'`, recipes.json `grill`, 9 dishes). Raw fish heal 1.
+- Fish as friend treats: friends.json `likes` (crab: pond minnow, owl: forest trout, snow fox: frost perch, sand lizard: sunfish). The favourite treat is used first (`treatFor` in pets.js). The Friend Journal shows "(or ...)".
+- ChoiceMenu now widens to fit its longest option (long recipe lines were cut off).
+- Regenerate with `python3 make_fishing.py` (after make_school / make_daynight). It overwrites hand edits to those map objects but not fish.json.

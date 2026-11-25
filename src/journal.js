@@ -29,6 +29,7 @@ export function journalEntries(gs, friendDefs, itemDefs) {
     name: k.name,
     texture: k.texture,
     treat: itemDefs[k.treat]?.name ?? k.treat,
+    also: (k.likes ?? []).map((t) => itemDefs[t]?.name ?? t),
     hint: k.hint ?? '',
     when: k.when ?? '',
     yours: (gs.pets ?? []).filter((p) => p.kind === id).map((p) => p.name),

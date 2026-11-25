@@ -1015,5 +1015,43 @@
     "menu": "Which colour today?",
     "farewell": "Come back any time!",
     "doneLine": "Perfect! That suits you."
+  },
+  "fisher": {
+    "name": "Old Fisher",
+    "lines": [
+      "Ho there, young ninja! Patience is a ninja skill, and fishing is the best way to practise it.",
+      "Take this rod. Face a pond, press Space to cast, and press Space AGAIN the moment the fish bites.",
+      "Then keep the marker inside the green bar to reel it in. Rare fish need more than one pull!"
+    ],
+    "repeatLines": [
+      "Any luck at the water today?"
+    ],
+    "menu": "What can I do for you?",
+    "farewell": "Tight lines, ninja!",
+    "tips": [
+      "Some fish only come out at night. Others only in the daytime.",
+      "There are ponds in the school garden, here in the forest, and a frozen lake up in the Snowy Peaks.",
+      "Cook your catch at the Fish Grill in the school kitchen. And some friends love a fish treat!"
+    ]
+  },
+  "grillcook": {
+    "name": "Angler Chef",
+    "lines": [
+      "I am the Angler Chef! Bring me your catch and I will grill it into something that heals."
+    ],
+    "repeatLines": [
+      "Fresh fish? Let me fire up the grill!"
+    ],
+    "menu": "What shall I grill?",
+    "farewell": "Eat up, ninja!"
+  },
+  "fishsign": {
+    "name": "Sign",
+    "lines": [
+      "FISHING POND. Face the water with a rod and press Space."
+    ],
+    "repeatLines": [
+      "FISHING POND. Face the water with a rod and press Space."
+    ]
   }
 }

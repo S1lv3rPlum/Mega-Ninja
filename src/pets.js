@@ -12,7 +12,9 @@ export function ensurePets(gs) {
 export const cleanPetName = (text, fallback) => String(text ?? '').trim().slice(0, 12).trim() || fallback;
 
 export const isFull = (gs, defs) => gs.pets.length >= defs.max;
-export const hasTreat = (gs, kind) => (gs.items[kind.treat] ?? 0) > 0;
+// the favourite treat first, then anything else the kind likes (fish, see data/friends.json 'likes'); null if you have none
+export const treatFor = (gs, kind) => [kind.treat, ...(kind.likes ?? [])].find((t) => (gs.items[t] ?? 0) > 0) ?? null;
+export const hasTreat = (gs, kind) => treatFor(gs, kind) !== null;
 export const companionPet = (gs) => gs.pets.find((p) => p.id === gs.companion) ?? null;
 
 // Win a creature over: uses up one treat and adds the friend (the first one starts following you).
@@ -22,7 +24,7 @@ export function befriend(gs, kindId, name, defs) {
   if (!kind) return { ok: false, reason: 'unknown' };
   if (isFull(gs, defs)) return { ok: false, reason: 'full' };
   if (!hasTreat(gs, kind)) return { ok: false, reason: 'no-treat' };
-  gs.items[kind.treat] -= 1;
+  gs.items[treatFor(gs, kind)] -= 1;
   let n = 1;
   while (gs.pets.some((p) => p.id === `${kindId}${n}`)) n += 1;
   const pet = { id: `${kindId}${n}`, kind: kindId, name: cleanPetName(name, kind.baseName) };
