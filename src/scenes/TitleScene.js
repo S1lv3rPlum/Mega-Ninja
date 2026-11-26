@@ -34,6 +34,13 @@ export default class TitleScene extends Phaser.Scene {
       audio.toggleMute();
       this.muteIcon.setText(audio.muted ? '♪x' : '♪');
     });
+    // full screen on phones/tablets that allow it (an iPhone: use "Add to Home Screen" instead)
+    if (this.sys.game.device.input.touch && this.sys.game.device.fullscreen.available) {
+      const full = this.add
+        .text(4, 3, 'FULL SCREEN', { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 3, y: 2 } })
+        .setDepth(50).setInteractive({ useHandCursor: true });
+      full.on('pointerdown', () => (this.scale.isFullscreen ? this.scale.stopFullscreen() : this.scale.startFullscreen()));
+    }
     this.starting = false;
     this.connecting = false;
     this.selected = 0;

@@ -1110,13 +1110,16 @@ export default class WorldScene extends Phaser.Scene {
     const knob = this.add.circle(0, 0, 10, 0xffffff, 0.45).setStrokeStyle(1, 0xffffff, 0.8).setScrollFactor(0).setDepth(101).setVisible(false);
     const hint = this.add.circle(46, 196, STICK.radius, 0xffffff, 0.06).setStrokeStyle(1, 0xffffff, 0.25).setScrollFactor(0).setDepth(100); // where to put your thumb
     this.stick = null; // { id, x, y } while a finger is down
-    const release = (pointer) => {
-      if (!this.stick || pointer.id !== this.stick.id) return;
+    const releaseStick = () => {
       this.stick = null;
       this.touchDir = { x: 0, y: 0 };
       ring.setVisible(false);
       knob.setVisible(false);
       hint.setVisible(true);
+    };
+    const release = (pointer) => {
+      if (!this.stick || pointer.id !== this.stick.id) return;
+      releaseStick();
     };
     this.input.on('pointerdown', (pointer, over) => {
       if (this.stick || over.length > 0 || !inStickZone(pointer.x, pointer.y)) return;
@@ -1136,6 +1139,53 @@ export default class WorldScene extends Phaser.Scene {
     });
     this.input.on('pointerup', release);
     this.input.on('pointerupoutside', release);
+
+    // A thumb that starts in the black bars beside the game (a wide phone) still works the stick: those touches never
+    // reach the game canvas, so listen on the page. (A finger that starts INSIDE the game and drifts out into the
+    // black keeps working by itself: the browser keeps sending its moves to the canvas.)
+    const canvas = this.sys.game.canvas;
+    const toGame = (t) => {
+      const r = canvas.getBoundingClientRect();
+      return { x: ((t.clientX - r.left) / r.width) * 320, y: ((t.clientY - r.top) / r.height) * 240 };
+    };
+    const find = (e, id) => [...e.changedTouches].find((t) => t.identifier === id);
+    const onTouchStart = (e) => {
+      if (this.stick || e.target === canvas) return; // inside the game: Phaser handles it
+      if (this.bag.isOpen || this.choice.isOpen || this.dialogue.isOpen) return;
+      const t = e.changedTouches[0];
+      const g = toGame(t);
+      if (!inStickZone(g.x, g.y)) return;
+      const rx = Math.max(0, Math.min(320, g.x)); // draw the ring on the edge of the game so you can see it
+      const ry = Math.max(STICK.zoneTop, Math.min(240, g.y));
+      this.stick = { id: 1000 + t.identifier, x: g.x, y: g.y, pointer: { x: g.x, y: g.y }, dom: t.identifier };
+      ring.setPosition(rx, ry).setVisible(true);
+      knob.setPosition(rx, ry).setVisible(true);
+      hint.setVisible(false);
+      this.stick.ring = { x: rx, y: ry };
+    };
+    const onTouchMove = (e) => {
+      if (!this.stick || this.stick.dom === undefined) return;
+      const t = find(e, this.stick.dom);
+      if (!t) return;
+      const g = toGame(t);
+      this.stick.pointer.x = g.x;
+      this.stick.pointer.y = g.y;
+      const dx = g.x - this.stick.x;
+      const dy = g.y - this.stick.y;
+      const k = clampKnob(dx, dy);
+      knob.setPosition(this.stick.ring.x + k.x, this.stick.ring.y + k.y);
+      this.touchDir = stickDir(dx, dy, this.touchDir);
+    };
+    const onTouchEnd = (e) => {
+      if (this.stick && this.stick.dom !== undefined && find(e, this.stick.dom)) releaseStick();
+    };
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchmove', onTouchMove, { passive: true });
+    document.addEventListener('touchend', onTouchEnd, { passive: true });
+    document.addEventListener('touchcancel', onTouchEnd, { passive: true });
+    this.events.once('shutdown', () => {
+      ['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach((n, i) => document.removeEventListener(n, [onTouchStart, onTouchMove, onTouchEnd, onTouchEnd][i]));
+    });
 
     // A button = talk / interact (same as Space on a keyboard)
     make(292, 220, 'A', () => this.onAction());
@@ -1161,6 +1211,12 @@ export default class WorldScene extends Phaser.Scene {
     // world map (the N key on a keyboard)
     const mapBtn = make(292, 136, 'MAP', () => this.openMap());
     mapBtn.setStyle({ fixedWidth: 44, fontSize: '10px' });
+
+    // full screen (Android Chrome and iPad; an iPhone needs "Add to Home Screen" instead)
+    if (this.sys.game.device.fullscreen.available) {
+      const fs = make(292, 166, 'FULL', () => (this.scale.isFullscreen ? this.scale.stopFullscreen() : this.scale.startFullscreen()));
+      fs.setStyle({ fixedWidth: 44, fontSize: '10px' });
+    }
 
     // sound on / off (the M key on a keyboard)
     const soundBtn = make(292, 106, audio.muted ? 'MUTE' : 'SND', () => {

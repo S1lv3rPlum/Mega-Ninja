@@ -322,3 +322,8 @@ without being run in a browser, so test new features on desktop and phone.
 ## Shovel/tool repair at the farm stall; cleared targets stay cleared
 - The farm market stall now fixes the shovel (15g), axe (25g) and pickaxe (25g) for gold (`repairgold` offers, shown only for a tool you own that is worn). Before, a broken shovel could only be fixed at the far-away Tinkers. No "New Shovel" is sold (the shovel comes from the rabbit quest).
 - A target with a `flag` (the Town landslide: `landslide_cleared`) is never rebuilt while that flag is set, even if the saved target state is missing (co-op: the cloud's shared world replaces local state on every launch, so a lost target entry used to bring the pile back).
+
+## Full screen on phones + joystick in the black bars
+- `index.html`: viewport `viewport-fit=cover`, no pinch zoom, `100dvh` game area, no page scroll/bounce; `manifest.webmanifest` (display fullscreen, landscape) + apple meta tags so **Add to Home Screen** opens the game with no address bar (iPhone: Share > Add to Home Screen; Android: menu > Install app / Add to Home screen). Icons `assets/ui/icon-192.png` / `icon-512.png` are made from icon.png (regenerate if the icon changes).
+- **FULL** button (touch HUD, below MAP) and **FULL SCREEN** on the title screen use the browser Fullscreen API: Android Chrome and iPad yes; iPhone Safari does not allow it, so the buttons only appear where it is available.
+- Joystick: a finger that starts inside the game and drags out into the black bars keeps steering (the browser keeps sending its moves to the canvas). A finger that starts in the black bar on the left side also starts the stick (page-level touch listeners in `createTouchControls`, removed on scene shutdown). Tested with real touch events (CDP).
