@@ -99,7 +99,7 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('alchemist', 'assets/sprites/alchemist.png');
     ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond', 'crystal', 'sun'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
     this.load.image('rubble', 'assets/sprites/rubble.png');
-    ['treant-boss', 'treant-good', 'sapling', 'sign', 'bat-queen', 'moth', 'hexsmith', 'hexcreature', 'hexcharm', 'yeti', 'snowfox', 'frostimp', 'snow-bush', 'snow-bush-bare', 'serpent', 'jelly', 'crab', 'kelp', 'kelp-bare', 'rune-off', 'rune-on', 'ruinsdoor', 'ruinsdoor-open', 'scorpion', 'sandlizard', 'scorpionking', 'cactus-fruit', 'cactus-fruit-bare', 'princess', 'bzsmith', 'bzspice', 'bzgem', 'waystone-off', 'waystone-on'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
+    ['treant-boss', 'treant-good', 'sapling', 'sign', 'bat-queen', 'moth', 'hexsmith', 'hexcreature', 'hexcharm', 'yeti', 'snowfox', 'frostimp', 'snow-bush', 'snow-bush-bare', 'serpent', 'jelly', 'crab', 'kelp', 'kelp-bare', 'rune-off', 'rune-on', 'ruinsdoor', 'ruinsdoor-open', 'scorpion', 'sandlizard', 'scorpionking', 'cactus-fruit', 'cactus-fruit-bare', 'princess', 'bzsmith', 'bzspice', 'bzgem', 'waystone-off', 'waystone-on', 'tinker', 'snow-pine', 'snow-pine-stump'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
     this.load.image('bush', 'assets/sprites/bush.png');
     this.load.image('bush-bare', 'assets/sprites/bush-bare.png');
     ['carrot', 'pumpkin', 'frostberry', 'seaweed', 'cactus-fruit', 'moonbloom', 'glowcap'].forEach((c) => [2, 3, 4].forEach((n) => this.load.image(`crop-${c}-${n}`, `assets/sprites/crop-${c}-${n}.png`)));

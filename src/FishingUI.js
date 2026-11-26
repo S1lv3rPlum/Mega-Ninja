@@ -4,7 +4,7 @@ import fishDefs from './data/fish.json';
 import itemsData from './data/items.json';
 import { iconKey } from './InventoryScreen.js';
 import { isNightPhase } from './daynight.js';
-import { hasRod, startCast, castStatus, pressCast, startReel, markerPos, pressReel, pickFish, landFish, loggedCount, BITE_WINDOW } from './fishing.js';
+import { hasRod, startCast, castStatus, pressCast, startReel, markerPos, pressReel, pickFish, landFish, loggedCount, rodBonus } from './fishing.js';
 
 const BAR_X = 100;
 const BAR_W = 120;
@@ -52,7 +52,7 @@ export default class FishingUI {
     const bobber = s.add.circle(x, y, 2.5, 0xff3030).setDepth(9).setStrokeStyle(1, 0xffffff);
     const line = s.add.graphics().setDepth(8);
     parts.push(ripple, bobber, line);
-    this.state = { phase: 'wait', cast: startCast(now), tile: { tx, ty }, bobber, line, parts, bx: x, by: y };
+    this.state = { phase: 'wait', cast: startCast(now, Math.random, rodBonus(this.scene.gameState)), tile: { tx, ty }, bobber, line, parts, bx: x, by: y };
     this.drawLine(0);
     audio.sfx('cast');
     s.time.delayedCall(220, () => audio.sfx('splash'));
@@ -110,7 +110,7 @@ export default class FishingUI {
       }
       st.fish = fish;
       st.phase = 'reel';
-      st.reel = startReel(fish, now);
+      st.reel = startReel(fish, now, Math.random, rodBonus(this.scene.gameState));
       st.bar = s.add.graphics().setScrollFactor(0).setDepth(250);
       st.label = s.add.text(BAR_X + BAR_W / 2, BAR_Y - 14, '', { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', stroke: '#000000', strokeThickness: 2 }).setOrigin(0.5).setScrollFactor(0).setDepth(251);
       st.parts.push(st.bar, st.label);

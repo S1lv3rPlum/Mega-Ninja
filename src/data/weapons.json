@@ -17,7 +17,8 @@
       "gold": 120,
       "items": {
         "crystal": 4,
-        "copper": 3
+        "copper": 3,
+        "wood": 4
       }
     }
   },
@@ -33,7 +34,8 @@
       "items": {
         "crystal": 8,
         "ruby": 1,
-        "sapphire": 2
+        "sapphire": 2,
+        "wood": 8
       }
     }
   }

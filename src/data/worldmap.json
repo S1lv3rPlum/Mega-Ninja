@@ -290,11 +290,6 @@
       "how": "The Miner, so you do not have to walk back."
     },
     {
-      "what": "Fishing rod, sell fish",
-      "where": "forest",
-      "how": "The Old Fisher."
-    },
-    {
       "what": "Brews (speed, night sight)",
       "where": "market",
       "how": "The Brewer at the east end of the Shadow Market."
@@ -323,6 +318,21 @@
       "what": "Train your pets",
       "where": "upper",
       "how": "The trainer in the Dojo."
+    },
+    {
+      "what": "Fishing rod, sell fish, better rods",
+      "where": "forest",
+      "how": "The Old Fisher. Better rods cost wood and gold."
+    },
+    {
+      "what": "Tool repair (gold or materials)",
+      "where": "peaks",
+      "how": "The Wandering Tinker by the waystone in the Frozen Peaks. A second Tinker works in the Desert Bazaar."
+    },
+    {
+      "what": "Chop pine trees for wood",
+      "where": "peaks",
+      "how": "Snowy pines in the Frozen Peaks give 2 wood each. Use wood for weapon orders, rods, repairs or sell it."
     }
   ]
 }

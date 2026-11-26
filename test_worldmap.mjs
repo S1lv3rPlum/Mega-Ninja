@@ -36,4 +36,13 @@ assert.equal(neighbor(data, 'town', -1, 0), 'school'); assert.equal(neighbor(dat
 assert.equal(neighbor(data, 'crystal', 0, 1), 'market'); assert.equal(neighbor(data, 'crystal', 1, 0), 'desert'); assert.equal(neighbor(data, 'crystal', 0, -1), 'peaks');
 assert.equal(neighbor(data, 'garden', -1, 0), 'garden'); // nothing there: stay
 for (const id of Object.keys(data.nodes)) assert.ok(data.nodes[id].short || data.nodes[id].label.length <= 11, id);
+// the tinkers and the pines exist on the maps, with textures that are actually loaded
+const ws = fs.readFileSync('src/scenes/WorldScene.js', 'utf8');
+const objs = (map, layer) => JSON.parse(fs.readFileSync(`public/assets/maps/${map}.json`)).layers.find((l) => l.name === layer).objects;
+const P = (o) => Object.fromEntries(o.properties.map((p) => [p.name, p.value]));
+for (const map of ['peaks', 'bazaar']) { const t = objs(map, 'npcs').find((o) => P(o).dialogue === 'tinker'); assert.ok(t, map); assert.equal(P(t).shop, 'tinker'); }
+const pines = objs('peaks', 'targets').filter((o) => P(o).texture === 'snow-pine');
+assert.ok(pines.length >= 10); assert.ok(pines.every((o) => P(o).tool === 'axe' && P(o).drop === 'wood' && P(o).stump === 'snow-pine-stump'));
+assert.equal(new Set(objs('peaks', 'targets').map((o) => P(o).id)).size, objs('peaks', 'targets').length, 'unique target ids');
+for (const tex of ['tinker', 'snow-pine', 'snow-pine-stump']) { assert.ok(ws.includes(`'${tex}'`)); assert.ok(fs.existsSync(`public/assets/sprites/${tex}.png`)); }
 console.log('worldmap ok');

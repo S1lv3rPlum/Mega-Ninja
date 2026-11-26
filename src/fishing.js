@@ -14,6 +14,30 @@ export const BITE_MAX = 4200;
 export const BITE_WINDOW = 1300;
 export const MAX_STRIKES = 2;
 
+// Better rods, built by the Old Fisher from wood + gold (gs.rodLevel 0..3). Each level gives a longer bite window and a wider green reel zone.
+export const ROD_LEVELS = [
+  { name: 'Pine Rod', wood: 10, gold: 50, window: 500, zone: 0.06 },
+  { name: 'Frostwood Rod', wood: 20, gold: 150, window: 900, zone: 0.12 },
+  { name: 'Master Rod', wood: 30, gold: 400, window: 1300, zone: 0.18 },
+];
+export const rodLevel = (gs) => Math.min(gs.rodLevel ?? 0, ROD_LEVELS.length);
+export const rodName = (gs) => (rodLevel(gs) > 0 ? ROD_LEVELS[rodLevel(gs) - 1].name : 'Fishing Rod');
+export const rodBonus = (gs) => (rodLevel(gs) > 0 ? ROD_LEVELS[rodLevel(gs) - 1] : { window: 0, zone: 0 });
+export const nextRod = (gs) => ROD_LEVELS[rodLevel(gs)] ?? null;
+export const canBuildRod = (gs) => {
+  const r = nextRod(gs);
+  return !!r && gs.gold >= r.gold && (gs.items.wood ?? 0) >= r.wood;
+};
+export function buildRod(gs) {
+  const r = nextRod(gs);
+  if (!r) return { ok: false, msg: 'Your rod is already the best I can make.' };
+  if (!canBuildRod(gs)) return { ok: false, msg: 'You are missing something.' };
+  gs.gold -= r.gold;
+  gs.items.wood -= r.wood;
+  gs.rodLevel = rodLevel(gs) + 1;
+  return { ok: true, msg: `You got the ${r.name}! Longer bite window, wider green zone.` };
+}
+
 export const ROD = 'fishing-rod';
 export const hasRod = (gs) => (gs.items[ROD] ?? 0) > 0;
 
@@ -42,14 +66,14 @@ export function pickFish(area, night, fishDefs, rng = Math.random) {
 }
 
 // ---- part 1: the cast
-export function startCast(now, rng = Math.random) {
-  return { castAt: now, biteAt: now + BITE_MIN + rng() * (BITE_MAX - BITE_MIN) };
+export function startCast(now, rng = Math.random, bonus = {}) {
+  return { castAt: now, biteAt: now + BITE_MIN + rng() * (BITE_MAX - BITE_MIN), window: BITE_WINDOW + (bonus.window ?? 0) };
 }
 
 // 'wait' (nothing yet) | 'bite' (press now!) | 'lost' (you were too slow)
 export function castStatus(c, now) {
   if (now < c.biteAt) return 'wait';
-  return now <= c.biteAt + BITE_WINDOW ? 'bite' : 'lost';
+  return now <= c.biteAt + (c.window ?? BITE_WINDOW) ? 'bite' : 'lost';
 }
 
 // Space during a cast: 'early' | 'hooked' | 'lost'
@@ -59,8 +83,8 @@ export function pressCast(c, now) {
 }
 
 // ---- part 2: the reel
-export function startReel(fish, now, rng = Math.random) {
-  const zone = fish.zone ?? 0.3;
+export function startReel(fish, now, rng = Math.random, bonus = {}) {
+  const zone = Math.min(0.7, (fish.zone ?? 0.3) + (bonus.zone ?? 0));
   return {
     fish,
     t0: now,
@@ -177,9 +201,14 @@ export function talkFisher(gs, npcId, data, { fishDefs, areaNames }) {
         { label: 'Sell my fish', disabled: sellable(gs, fishDefs).length === 0 },
         { label: 'My fish log', disabled: false },
         { label: 'Fishing tips', disabled: false },
+        ...(nextRod(gs) ? [{ label: `${nextRod(gs).name}: ${nextRod(gs).wood} wood + ${nextRod(gs).gold}g`, disabled: !canBuildRod(gs) }] : []),
         { label: 'Leave', disabled: false },
       ],
       onPick: (i) => {
+        if (i === 3 && nextRod(gs)) {
+          const r = buildRod(gs);
+          return { lines: [r.msg], afterClose: () => null, choice: mainMenu() };
+        }
         if (i === 0) return sellMenu();
         if (i === 1) return { lines: logLines(gs, fishDefs, areaNames), afterClose: () => null, choice: mainMenu() };
         if (i === 2) return { lines: data.tips, afterClose: () => null, choice: mainMenu() };

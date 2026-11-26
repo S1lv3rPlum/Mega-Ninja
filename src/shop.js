@@ -4,6 +4,7 @@ import { repairTool, maxDur } from './tools.js';
 // shop.json offers:
 //   { type: 'item',    item, amount, price, label }          buy N of an item (seeds)
 //   { type: 'upgrade', label, levels: [{ to, price }, ...] } watering can size, one level at a time
+//   { type: 'repairgold', tool, label, price }  fix a worn tool for gold instead of materials
 //   { type: 'toolup',  tool, label, levels: [{ to, price }] }  a sturdier axe / pickaxe (lasts `to` swings), needs the tool;
 //                                                            refills it too. Saved in gs.toolMax
 //   { type: 'tool',    tool, label }                         buy a tool (price from tools.json); only offered when
@@ -50,6 +51,9 @@ export function getOffers(gs, shopDef, toolDefs) {
         affordable: Object.entries(cost).every(([k, n]) => (gs.items[k] ?? 0) >= n),
       });
       continue;
+    } else if (o.type === 'repairgold') {
+      const st = gs.tools[o.tool];
+      if (!st || st.dur >= maxDur(gs, toolDefs, o.tool)) continue;
     } else if (o.type === 'tool') {
       const owned = gs.tools[o.tool];
       if (owned && owned.dur > 0) continue;
@@ -85,6 +89,10 @@ export function buy(gs, shopDef, toolDefs, id) {
     return { ok: r.ok, msg: r.msg };
   }
   gs.gold -= offer.price;
+  if (def.type === 'repairgold') {
+    gs.tools[def.tool].dur = maxDur(gs, toolDefs, def.tool);
+    return { ok: true, msg: `Your ${toolDefs[def.tool].name.toLowerCase()} is good as new.` };
+  }
   if (def.type === 'item') {
     gs.items[def.item] = (gs.items[def.item] ?? 0) + def.amount;
     return { ok: true, msg: `Bought ${def.amount} ${def.item}.` };

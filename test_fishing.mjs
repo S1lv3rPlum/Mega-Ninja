@@ -83,7 +83,7 @@ assert.equal(F.pickFish('nowhere', false, fish), null);
   assert.equal(F.sellFish(gs, fish, 'pond-minnow').ok, false);
   // log + tips + leave
   const log = s.choice.onPick(1); assert.equal(log.lines[0], 'You have caught 4 of 11 kinds.'); assert.match(log.lines[1], /Garden pond: Pond Minnow, Garden Sunfish, \?\?\?, \?\?\?/);
-  assert.equal(s.choice.onPick(2).lines, d.tips); assert.equal(s.choice.onPick(3).lines[0], d.farewell);
+  assert.equal(s.choice.onPick(2).lines, d.tips); assert.equal(s.choice.options.length, 5); assert.equal(s.choice.options[3].disabled, true); assert.equal(s.choice.onPick(4).lines[0], d.farewell);
   // all fish: the big prize
   for (const id of Object.keys(fish)) if (!fish[id].junk) F.landFish(gs, { id });
   const g0 = gs.gold; s = F.talkFisher(gs, 'fisher', d, ctx);
@@ -109,5 +109,5 @@ assert.equal(F.pickFish('nowhere', false, fish), null);
   Object.assign(gs.items, { 'pond-minnow': 2, herb: 1 });
   assert.equal(craft(gs, g, items, 'fish-stew').ok, true); assert.equal(gs.items['fish-stew'], 1); assert.equal(gs.items['pond-minnow'], 0);
   assert.equal(craft(gs, g, items, 'fish-stew').ok, false);
-  assert.ok(dlg.grillcook.menu && dlg.fisher.tips.length === 3); }
+  assert.ok(dlg.grillcook.menu && dlg.fisher.tips.length === 4); }
 console.log('fishing ok');

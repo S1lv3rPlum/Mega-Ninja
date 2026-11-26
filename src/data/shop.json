@@ -125,7 +125,8 @@
       "frostberry": 5,
       "seaweed": 4,
       "sunstone": 15,
-      "cactus-fruit": 5
+      "cactus-fruit": 5,
+      "wood": 3
     }
   },
   "hexcreature": {
@@ -305,5 +306,46 @@
       }
     ],
     "sell": {}
+  },
+  "tinker": {
+    "offers": [
+      {
+        "id": "gfixaxe",
+        "type": "repairgold",
+        "tool": "axe",
+        "label": "Fix Axe",
+        "price": 25
+      },
+      {
+        "id": "gfixpick",
+        "type": "repairgold",
+        "tool": "pickaxe",
+        "label": "Fix Pickaxe",
+        "price": 25
+      },
+      {
+        "id": "gfixshovel",
+        "type": "repairgold",
+        "tool": "shovel",
+        "label": "Fix Shovel",
+        "price": 15
+      },
+      {
+        "id": "fixaxe",
+        "type": "repair",
+        "tool": "axe",
+        "label": "Fix Axe"
+      },
+      {
+        "id": "fixpick",
+        "type": "repair",
+        "tool": "pickaxe",
+        "label": "Fix Pickaxe"
+      }
+    ],
+    "sell": {
+      "wood": 3,
+      "stone": 2
+    }
   }
 }

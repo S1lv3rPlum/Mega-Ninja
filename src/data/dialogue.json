@@ -1037,7 +1037,8 @@
     "tips": [
       "Some fish only come out at night. Others only in the daytime.",
       "There are ponds in the school garden, here in the forest, and a frozen lake up in the Snowy Peaks.",
-      "Cook your catch at the Fish Grill in the school kitchen. And some friends love a fish treat!"
+      "Cook your catch at the Fish Grill in the school kitchen. And some friends love a fish treat!",
+      "Bring me wood and gold and I will build you a better rod: a longer bite window and a wider green zone."
     ]
   },
   "grillcook": {
@@ -1072,5 +1073,19 @@
     ],
     "menu": "Which brew will it be?",
     "farewell": "Heh heh... mind the dark!"
+  },
+  "tinker": {
+    "name": "Wandering Tinker",
+    "lines": [
+      "Ha! A customer! I wander from market to market with a bag of spanners and a very small hammer.",
+      "Axe chipped? Pickaxe cracked? Shovel bent? I can fix any of them, right here, for gold or for materials.",
+      "And if you have spare wood or stone, I will happily buy it. Pine from these peaks is fine stuff."
+    ],
+    "repeatLines": [
+      "Back again! Anything need a tune-up?"
+    ],
+    "menu": "What can I fix for you?",
+    "nothing": "Your tools look fine to me, and you have nothing to sell. Come back when something is worn.",
+    "farewell": "Keep those edges sharp!"
   }
 }
