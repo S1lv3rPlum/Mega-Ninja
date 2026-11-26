@@ -1,3 +1,4 @@
+import audio from './audio.js';
 const LINE_H = 14;
 const MIN_WIDTH = 172;
 const MAX_WIDTH = 300;
@@ -102,6 +103,7 @@ export default class ChoiceMenu {
 
   setIndex(i) {
     if (!this.isOpen || !this.options[i] || this.options[i].disabled) return;
+    if (i !== this.index) audio.sfx('move');
     this.index = i;
     this.refresh();
   }
@@ -127,6 +129,7 @@ export default class ChoiceMenu {
       i = (i + dir + n) % n;
       if (!this.options[i].disabled) break;
     }
+    if (i !== this.index) audio.sfx('move');
     this.index = i;
     this.refresh();
   }
@@ -134,6 +137,7 @@ export default class ChoiceMenu {
   select() {
     if (!this.isOpen || this.options[this.index].disabled) return;
     const choice = this.index;
+    audio.sfx('select');
     const cb = this.onSelect;
     this.close();
     if (cb) cb(choice);
@@ -141,6 +145,7 @@ export default class ChoiceMenu {
 
   cancel() {
     if (!this.isOpen) return;
+    audio.sfx('back');
     const cb = this.onCancel;
     this.close();
     if (cb) cb();

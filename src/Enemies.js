@@ -1,3 +1,4 @@
+import audio from './audio.js';
 import enemyDefs from './data/enemies.json';
 import { markEarned } from './bossGifts.js';
 import { chooseStep, damageEnemy, isAdjacent } from './combat.js';
@@ -172,6 +173,7 @@ export default class Enemies {
   hit(e, damage, dx, dy) {
     const s = this.scene;
     const { dead } = damageEnemy(e, damage);
+    audio.sfx('hit');
     e.sprite.setTint(0xffffff);
     s.time.delayedCall(90, () => e.sprite && !e.dead && e.sprite.clearTint());
     if (dead) {

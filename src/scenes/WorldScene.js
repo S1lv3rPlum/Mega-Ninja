@@ -24,6 +24,8 @@ import shopData from '../data/shop.json';
 import { talkToShopkeeper } from '../shop.js';
 import { talkToCrafter } from '../craft.js';
 import FishingUI from '../FishingUI.js';
+import audio from '../audio.js';
+import { themeFor } from '../music.js';
 import brewDefs from '../data/brews.json';
 import { drink, moveMs, lightScale, nightTint, buffText } from '../brew.js';
 import fishDefs from '../data/fish.json';
@@ -107,6 +109,8 @@ export default class WorldScene extends Phaser.Scene {
 
   create() {
     this.cameras.main.fadeIn(300);
+    audio.attach(this); // music + sound effects (audio.js)
+    this.audioTick = 0;
     this.moving = false;
     this.transitioning = false;
     this.plotMarks = {}; // little icons drawn on plots: thirsty / watered / ready
@@ -399,6 +403,9 @@ export default class WorldScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-G', (event) => {
       if (!event.repeat) this.friends.open();
     });
+    this.input.keyboard.on('keydown-M', (event) => {
+      if (!event.repeat) this.toggleMute();
+    });
     this.input.keyboard.on('keydown-I', toggleBag);
     this.input.keyboard.on('keydown-TAB', toggleBag);
     const bagNav = (dx, dy) => (event) => {
@@ -418,6 +425,13 @@ export default class WorldScene extends Phaser.Scene {
     this.createTouchControls();
 
     // --- HUD: gold, water, seeds, wheat ---
+    this.muteIcon = null;
+    if (!this.sys.game.device.input.touch) {
+      this.muteIcon = this.add
+        .text(316, 3, audio.muted ? '♪x' : '♪', { fontSize: '10px', fontFamily: 'monospace', color: '#ffffff', stroke: '#000000', strokeThickness: 2 })
+        .setOrigin(1, 0).setScrollFactor(0).setDepth(101).setAlpha(0.7).setInteractive({ useHandCursor: true });
+      this.muteIcon.on('pointerdown', () => this.toggleMute());
+    }
     this.buffHud = null; // (re)made on the first updateBuffHud: the scene restarts on every map change
     this.hud = this.add
       .text(4, 4, '', { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 3, y: 2 }, lineSpacing: 1 })
@@ -503,6 +517,9 @@ export default class WorldScene extends Phaser.Scene {
       if (n > before && id !== 'shovel') gained.push(`+${n - before} ${itemsData.items[id]?.name ?? id} (${n})`);
     });
     this.lastItems = { ...gs.items };
+    if (this.lastGold !== undefined && gs.gold > this.lastGold) audio.sfx('coin');
+    this.lastGold = gs.gold;
+    if (gained.length > 0) audio.sfx('pickup');
     if (gained.length === 0 || !this.pickupText) return;
     this.pickupText.setText(gained.join('\n')).setAlpha(1).setPosition(4, this.hud.y + this.hud.height + 3);
     this.tweens.killTweensOf(this.pickupText);
@@ -576,6 +593,7 @@ export default class WorldScene extends Phaser.Scene {
     if (now < this.nextSwing) return;
     const ench = enchantBonus(gs, enchantDefs);
     this.nextSwing = now + w.cooldownMs * ench.cooldownMul;
+    audio.sfx('swing');
     this.touchDir = { x: 0, y: 0 };
 
     const { x: fx, y: fy } = this.facing;
@@ -601,6 +619,7 @@ export default class WorldScene extends Phaser.Scene {
     const now = this.time.now;
     if (now < this.invulnUntil || this.transitioning) return;
     this.invulnUntil = now + 1000;
+    audio.sfx('hurt');
     this.fishing.cancel('Ouch! Your line snapped.');
     const r = applyHurt(this.gameState, reduceDamage(amount, { defense: (armorDefs[this.gameState.armor]?.defense ?? 0) + enchantBonus(this.gameState, enchantDefs).defense }));
     this.cameras.main.shake(120, 0.004);
@@ -635,12 +654,29 @@ export default class WorldScene extends Phaser.Scene {
     });
   }
 
+  // M key / the sound button: music and effects on or off (remembered)
+  toggleMute() {
+    const muted = audio.toggleMute();
+    this.showToast(muted ? 'Sound off (press M to turn it on)' : 'Sound on');
+    this.muteIcon?.setText(muted ? '♪x' : '♪');
+  }
+
   // drink a brew from the bag (brew.js)
   drinkBrew(id) {
     const r = drink(this.gameState, brewDefs, id, Date.now());
+    if (r.ok) audio.sfx('drink');
     this.updateBuffHud();
     this.dnTick = 0; // repaint the night tint right away
     return r.msg;
+  }
+
+  // pick the tune for where you are: the area's theme (calm version after dark outdoors), or the boss music in a boss fight
+  updateAudio(time) {
+    if (time < this.audioTick) return;
+    this.audioTick = time + 500;
+    const map = this.gameState.map;
+    const boss = this.boss?.state === 'active';
+    audio.play(boss ? 'boss' : themeFor(map), !boss && this.isNight && OUTDOOR.includes(map));
   }
 
   updateBuffHud() {
@@ -653,6 +689,7 @@ export default class WorldScene extends Phaser.Scene {
 
   eatFood(id) {
     const r = eat(this.gameState, itemsData.items, id);
+    if (r.ok) audio.sfx('eat');
     this.updateHud();
     return r.msg;
   }
@@ -1067,6 +1104,13 @@ export default class WorldScene extends Phaser.Scene {
     // FRIENDS button (the G key on a keyboard)
     const friendBtn = make(292, 76, 'PETS', () => this.friends.open());
     friendBtn.setStyle({ fixedWidth: 44, fontSize: '10px' });
+
+    // sound on / off (the M key on a keyboard)
+    const soundBtn = make(292, 106, audio.muted ? 'MUTE' : 'SND', () => {
+      this.toggleMute();
+      soundBtn.setText(audio.muted ? 'MUTE' : 'SND');
+    });
+    soundBtn.setStyle({ fixedWidth: 44, fontSize: '10px' });
   }
 
   // Space / Enter / Z / the A button
@@ -1526,6 +1570,7 @@ export default class WorldScene extends Phaser.Scene {
     this.updateDayNight(_time);
     this.fishing.update(this.time.now);
     this.updateBuffHud();
+    this.updateAudio(_time);
     this.updateRabbit(delta);
     if (!(this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen)) {
       this.enemies.update(_time);
@@ -1766,6 +1811,7 @@ export default class WorldScene extends Phaser.Scene {
 
   useDoor(door) {
     this.transitioning = true;
+    audio.sfx('door');
     this.touchDir = { x: 0, y: 0 };
     this.cameras.main.fadeOut(250);
     this.cameras.main.once('camerafadeoutcomplete', () => {

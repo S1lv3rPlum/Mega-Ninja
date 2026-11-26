@@ -1,3 +1,4 @@
+import audio from './audio.js';
 import friendDefs from './data/friends.json';
 import itemsData from './data/items.json';
 import toolDefs from './data/tools.json';
@@ -103,6 +104,7 @@ export default class Friends {
   hopAway(creature, kind) {
     const s = this.scene;
     const gs = s.gameState;
+    audio.sfx('select');
     s.showToast(`The ${kind.name} knows you already! It hops away happily.`);
     const spr = creature.type === 'enemy' ? creature.e.sprite : s.rabbitSprite;
     if (spr) s.tweens.add({ targets: spr, y: spr.y - 4, duration: 110, yoyo: true, repeat: 3 });
@@ -147,9 +149,10 @@ export default class Friends {
       }
     }
     this.refresh();
+    audio.sfx('friend');
     s.showToast(`${r.pet.name} is your friend now!`);
     const rewards = claimRewards(gs, itemsData.items);
-    rewards.forEach((m, i) => s.time.delayedCall(2200 * (i + 1), () => s.showToast(m)));
+    rewards.forEach((m, i) => s.time.delayedCall(2200 * (i + 1), () => { audio.sfx('reward'); s.showToast(m); }));
     s.updateHud();
   }
 

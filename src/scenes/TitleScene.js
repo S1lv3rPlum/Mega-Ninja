@@ -3,6 +3,7 @@ import { SaveManager } from '../SaveManager.js';
 import { Coop } from '../Coop.js';
 import { cloudReady } from '../cloud.js';
 import { cleanCode, cleanName, makeCode } from '../coopLogic.js';
+import audio from '../audio.js';
 
 const ROW_Y = [108, 134, 160, 186]; // three solo slots, then the co-op world
 
@@ -20,6 +21,19 @@ export default class TitleScene extends Phaser.Scene {
 
   create() {
     this.cameras.main.fadeIn(300);
+    audio.attach(this);
+    audio.play('title');
+    this.input.keyboard.on('keydown-M', () => {
+      audio.toggleMute();
+      this.muteIcon.setText(audio.muted ? '♪x' : '♪');
+    });
+    this.muteIcon = this.add
+      .text(316, 3, audio.muted ? '♪x' : '♪', { fontSize: '10px', fontFamily: 'monospace', color: '#ffffff', stroke: '#000000', strokeThickness: 2 })
+      .setOrigin(1, 0).setDepth(50).setAlpha(0.8).setInteractive({ useHandCursor: true });
+    this.muteIcon.on('pointerdown', () => {
+      audio.toggleMute();
+      this.muteIcon.setText(audio.muted ? '♪x' : '♪');
+    });
     this.starting = false;
     this.connecting = false;
     this.selected = 0;

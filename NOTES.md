@@ -268,3 +268,11 @@ without being run in a browser, so test new features on desktop and phone.
 ## One friend per kind; Granite goes home
 - `befriend()` refuses a kind you already have (`reason: 'have'`). In the world, offering a treat to a wild animal of a kind you already have shows "...knows you already! It hops away happily." The animal hops and leaves for a while (normal respawn), and NO treat is used (`Friends.hopAway`). Saying goodbye to your friend lets you befriend that kind again. Saves that already have two of a kind keep both. (Idea parked: let every friend follow at once, an "entourage".)
 - Granite (Golem.js) slides back to his home spot when he is calmed, so he can no longer end up sitting in front of the stone door. (Leaving the cave and coming back also resets him, because his spot is not saved.)
+
+## Music and sound effects (no audio files)
+- `src/music.js` (data, no Phaser): scales, theme recipes (`THEMES`: key, scale, bpm, chord progression, waveforms, density), `MAP_THEME` (which map plays which theme; unknown maps use 'town'), `buildPattern(name, night)` (8 bars, deterministic, same tune every time) and `SFX` (little oscillator/noise recipes). The NIGHT version of any theme is slower, sparser, soft sine lead plus a pad.
+- `src/audio.js`: the Web Audio player (singleton). `audio.attach(scene)` per scene, `audio.play(theme, night)` crossfades, `audio.sfx(name)`, `audio.toggleMute()` (remembered in localStorage key `mega-ninja-muted`). It shares Phaser's AudioContext and waits quietly until the browser allows sound (first key press or tap).
+- WorldScene.updateAudio (twice a second): boss music while a boss/golem is `active`, else the map's theme, calm version after dark on OUTDOOR maps. Title screen has its own tune.
+- Sounds hooked in: sword swing, enemy hit, getting hurt, door, item pickup, gold, menu move/select/back (ChoiceMenu), eat/drink, fishing (cast, splash, bite, pull, miss, catch), making friends, journal rewards.
+- Mute: M key, the small ♪ in the top-right corner, or the SND/MUTE button on touch screens.
+- To change a tune, edit its line in THEMES (seed changes the melody, bpm/scale/prog change the feel) and run `node test_music.mjs`. New SFX: add an entry to SFX and call `audio.sfx('name')`.

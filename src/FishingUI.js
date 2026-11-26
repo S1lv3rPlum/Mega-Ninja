@@ -1,4 +1,5 @@
 // The fishing screen: bobber on the water, the "!" bite, and the reel bar. The rules live in fishing.js.
+import audio from './audio.js';
 import fishDefs from './data/fish.json';
 import itemsData from './data/items.json';
 import { iconKey } from './InventoryScreen.js';
@@ -53,6 +54,8 @@ export default class FishingUI {
     parts.push(ripple, bobber, line);
     this.state = { phase: 'wait', cast: startCast(now), tile: { tx, ty }, bobber, line, parts, bx: x, by: y };
     this.drawLine(0);
+    audio.sfx('cast');
+    s.time.delayedCall(220, () => audio.sfx('splash'));
     s.showToast('You cast your line... wait for a bite!');
     return true;
   }
@@ -70,9 +73,10 @@ export default class FishingUI {
     const s = this.scene;
     if (st.phase === 'wait' || st.phase === 'bite') {
       const status = castStatus(st.cast, now);
-      if (status === 'lost') return this.cancel('Too slow... it got away.');
+      if (status === 'lost') { audio.sfx('miss'); return this.cancel('Too slow... it got away.'); }
       if (status === 'bite' && st.phase === 'wait') {
         st.phase = 'bite';
+        audio.sfx('bite');
         st.bang = s.add.text(s.player.x + 8, s.player.y - 14, '!', { fontSize: '16px', fontFamily: 'monospace', color: '#ff4040', stroke: '#ffffff', strokeThickness: 3 }).setOrigin(0.5).setDepth(120);
         st.parts.push(st.bang);
       }
@@ -93,12 +97,13 @@ export default class FishingUI {
     const now = s.time.now;
     if (st.phase === 'wait' || st.phase === 'bite') {
       const r = pressCast(st.cast, now);
-      if (r === 'early') return this.cancel('Too early! You scared the fish.');
+      if (r === 'early') { audio.sfx('miss'); return this.cancel('Too early! You scared the fish.'); }
       if (r === 'lost') return this.cancel('Too slow... it got away.');
       const night = isNightPhase(s.phaseNow());
       const fish = pickFish(this.area, night, fishDefs);
       if (!fish) return this.cancel('Nothing is biting here.');
       st.bang?.destroy();
+      audio.sfx('splash');
       if (fish.junk) {
         this.land(fish);
         return;
@@ -116,9 +121,9 @@ export default class FishingUI {
     const r = pressReel(st.reel, now);
     st.flash = { ok: r.hit, until: now + 250 };
     if (r.done === 'caught') this.land(st.fish);
-    else if (r.done === 'escaped') this.cancel(`The ${st.fish.name} got away!`);
-    else if (r.hit) s.showToast('Nice pull! Keep going!');
-    else s.showToast('Missed! The line goes slack...');
+    else if (r.done === 'escaped') { audio.sfx('miss'); this.cancel(`The ${st.fish.name} got away!`); }
+    else if (r.hit) { audio.sfx('pull'); s.showToast('Nice pull! Keep going!'); }
+    else { audio.sfx('miss'); s.showToast('Missed! The line goes slack...'); }
   }
 
   drawBar(now) {
@@ -142,6 +147,7 @@ export default class FishingUI {
     const x = s.player.x + 8;
     const y = s.player.y - 6;
     this.clear();
+    audio.sfx(fish.junk ? 'splash' : 'catch');
     const icon = s.add.image(x, y, iconKey(s, fish.junk ? 'boots' : 'fish', fish.color)).setScale(3).setDepth(130);
     s.tweens.add({ targets: icon, y: y - 22, alpha: 0, duration: 1400, ease: 'Sine.easeOut', onComplete: () => icon.destroy() });
     if (fish.junk) s.showToast('You reeled in... a soggy boot. Ew!');
