@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import mapData from '../data/worldmap.json';
 import { inferVisited, markVisited } from '../worldmap.js';
 import { regenStep, inFight, newRegen } from '../regen.js';
+import { forDevice } from '../controls.js';
 import { toastMs, FADE_MS } from '../toast.js';
 import { STICK, stickDir, clampKnob, inStickZone } from '../joystick.js';
 import { LEVELS, LEVEL_IDS, chosen, setLevel, scaleMs, scaleDamage } from '../difficulty.js';
@@ -287,6 +288,7 @@ export default class WorldScene extends Phaser.Scene {
         const id = p.id ?? o.name ?? `${o.x},${o.y}`;
         const respawnMs = p.respawnMs ?? 0;
         let active = true;
+        if (p.flag && gs.flags[p.flag] && !respawnMs) return null; // its "cleared" flag is set (e.g. landslide_cleared): never bring it back
         if (isCleared(gs, gs.map, id)) {
           if (!respawnMs) return null; // cleared for good in an earlier visit
           active = targetReady(gs, gs.map, id); // grown back while you were away?
@@ -1638,7 +1640,7 @@ export default class WorldScene extends Phaser.Scene {
 
   showToast(msg) {
     this.tweens.killTweensOf(this.toast);
-    this.toast.setText(msg).setAlpha(1);
+    this.toast.setText(forDevice(msg, this.sys.game.device.input.touch)).setAlpha(1);
     this.tweens.add({ targets: this.toast, alpha: 0, delay: toastMs(msg), duration: FADE_MS }); // long messages stay longer
   }
 

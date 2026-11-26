@@ -315,3 +315,10 @@ without being run in a browser, so test new features on desktop and phone.
 
 ## Pop-up message time
 - `src/toast.js` (`test_toast.mjs`): `showToast` keeps a message up for 2.5s + 80ms per character (min 3.5s, max 12s), then a 0.5s fade. Locked-door messages (~85-110 chars) now stay 9-11s; short ones like "Picked!" stay 3.5s. Tune `TOAST_*` there.
+
+## Phone wording for key names
+- `src/controls.js` (`test_controls.mjs`): on touch devices, text that mentions keys is rewritten as it is shown: "press Space" -> "tap the A button", "press J" / "(J)" -> "tap the B button" / "(B button)", "press F" -> "tap the F button", "press M" -> "tap SND". Applied in DialogueBox, `showToast`, the bag's item/weapon description and the map FIND text. Keyboards see the original text. The test fails if any string in the data files would still say Space/J on a phone, so new text with key names is caught. Write dialogue with the keyboard wording ("press Space", "press J").
+
+## Shovel/tool repair at the farm stall; cleared targets stay cleared
+- The farm market stall now fixes the shovel (15g), axe (25g) and pickaxe (25g) for gold (`repairgold` offers, shown only for a tool you own that is worn). Before, a broken shovel could only be fixed at the far-away Tinkers. No "New Shovel" is sold (the shovel comes from the rabbit quest).
+- A target with a `flag` (the Town landslide: `landslide_cleared`) is never rebuilt while that flag is set, even if the saved target state is missing (co-op: the cloud's shared world replaces local state on every launch, so a lost target entry used to bring the pile back).

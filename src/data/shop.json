@@ -71,6 +71,27 @@
         "label": "Fix Pickaxe"
       },
       {
+        "id": "gfixshovel",
+        "type": "repairgold",
+        "tool": "shovel",
+        "label": "Fix Shovel",
+        "price": 15
+      },
+      {
+        "id": "gfixaxe",
+        "type": "repairgold",
+        "tool": "axe",
+        "label": "Fix Axe",
+        "price": 25
+      },
+      {
+        "id": "gfixpick",
+        "type": "repairgold",
+        "tool": "pickaxe",
+        "label": "Fix Pickaxe",
+        "price": 25
+      },
+      {
         "id": "axeup",
         "type": "toolup",
         "tool": "axe",

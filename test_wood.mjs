@@ -56,3 +56,11 @@ assert.equal(s.choice.options.length, 5); assert.match(s.choice.options[3].label
 gs.gold = 50; gs.items.wood = 10; s = F.talkFisher(gs, 'fisher', dlg.fisher, ctx); assert.equal(s.choice.options[3].disabled, false);
 const built = s.choice.onPick(3); assert.match(built.lines[0], /Pine Rod/); assert.equal(built.choice.options[3].disabled, true); // next one costs more
 console.log('wood ok');
+{ // the farm market stall also fixes any tool for gold (a broken shovel used to have no repair near home)
+  const gs = mk({ gold: 40 }); gs.tools.shovel.dur = 0;
+  assert.ok(getOffers(gs, shop.general, tools).some((o) => o.id === 'gfixshovel'));
+  assert.equal(buy(gs, shop.general, tools, 'gfixshovel').ok, true); assert.equal(gs.tools.shovel.dur, tools.shovel.durability); assert.equal(gs.gold, 25);
+  assert.ok(!getOffers(gs, shop.general, tools).some((o) => o.id === 'gfixshovel'), 'only while worn');
+  assert.ok(!getOffers(mk({ tools: {} }), shop.general, tools).some((o) => o.id.startsWith('gfix')), 'no tool, no offer (so the quest shovel is not bypassed)');
+  console.log('stall repairs ok');
+}
