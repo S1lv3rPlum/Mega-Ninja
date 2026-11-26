@@ -1,5 +1,5 @@
 // Friends: little creatures you have made friends with by offering a treat. No Phaser in here.
-//   gs.pets      = [{ id, kind, name }]   (up to friends.max)
+//   gs.pets      = [{ id, kind, name }]   (one per kind, no cap)
 //   gs.companion = the id of the one that follows you (or null: everyone is resting at home)
 // A friend is never fought: it is won over with its favourite treat (see data/friends.json).
 
@@ -13,7 +13,8 @@ export const cleanPetName = (text, fallback) => String(text ?? '').trim().slice(
 
 // one friend per kind: a wild animal of a kind you already have just hops away happy (nothing is used up)
 export const hasKind = (gs, kindId) => gs.pets.some((p) => p.kind === kindId);
-export const isFull = (gs, defs) => gs.pets.length >= defs.max;
+// no cap now: one friend of each kind, however many kinds there are. (Set "max" in friends.json to bring a cap back.)
+export const isFull = (gs, defs) => defs.max != null && gs.pets.length >= defs.max;
 // the favourite treat first, then anything else the kind likes (fish, see data/friends.json 'likes'); null if you have none
 export const treatFor = (gs, kind) => [kind.treat, ...(kind.likes ?? [])].find((t) => (gs.items[t] ?? 0) > 0) ?? null;
 export const hasTreat = (gs, kind) => treatFor(gs, kind) !== null;

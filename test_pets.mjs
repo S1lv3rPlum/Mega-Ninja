@@ -25,12 +25,13 @@ assert(P.setCompanion(gs, null) && !P.companionPet(gs));
 assert(!P.setCompanion(gs, 'ghost'));
 assert(P.renamePet(gs, 'rabbit1', 'Zoom') && gs.pets[0].name === 'Zoom');
 assert(P.releasePet(gs, 'rabbit1') && gs.pets.length === 1);
-// the friend list is capped
-const full = { items: { herb: 20 }, pets: [], companion: null };
-full.items = { herb: 20, carrot: 20, pumpkin: 20, crystal: 20, frostberry: 20, seaweed: 20, 'cactus-fruit': 20 };
-['shadow', 'rabbit', 'bat', 'moth', 'snowfox', 'crab'].forEach((k) => assert(P.befriend(full, k, '', defs).ok));
-assert.equal(full.pets.length, defs.max);
-assert.equal(P.befriend(full, 'sandlizard', '', defs).reason, 'full'); assert.equal(full.items['cactus-fruit'], 20);
+// no cap on the friend list: every kind can be collected, one each
+const full = { items: { herb: 20, carrot: 20, pumpkin: 20, crystal: 20, frostberry: 20, seaweed: 20, 'cactus-fruit': 20 }, pets: [], companion: null };
+const kinds = Object.keys(defs.kinds);
+assert.equal(defs.max, undefined);
+['shadow', 'rabbit', 'bat', 'moth', 'snowfox', 'crab', 'sandlizard'].forEach((k) => assert(P.befriend(full, k, '', defs).ok, k));
+assert.equal(full.pets.length, 7); assert.equal(P.isFull(full, defs), false);
+assert.equal(P.isFull(full, { max: 7 }), true); // a cap can still be switched on in data
 // (a kind you have wins over a full list: you are told you know it already)
 assert.equal(P.befriend(full, 'shadow', '', defs).reason, 'have');
 // a stale companion id is cleaned up on load

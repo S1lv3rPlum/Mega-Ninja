@@ -282,3 +282,10 @@ without being run in a browser, so test new features on desktop and phone.
 - Multipliers: easy = damage x0.5 (min 1 half-heart), attacks 1.5x slower, red warnings 1.7x longer, enemies move 1.3x slower, sight x0.8, invulnerability after a hit 1.6s. Hard = damage x1.5, attacks x0.8, warnings x0.75, move x0.85, sight x1.15, invuln 0.7s.
 - Applied in `WorldScene.hurtPlayer` (damage + invuln, so bosses/rocks/roots all scale), `Enemies.js` (attackMs, 380ms telegraph, moveMs, sight), `Boss.js`/`Golem.js` via `timing()` (everyMs, telegraphMs, summon timer, Golem roll warning).
 - Asked by `chooseLevel()` after the colour chooser (or on load for older saves); bag footer button "LV: EASY" re-opens it.
+
+## Touch joystick (replaces the on-screen D-pad)
+- `src/joystick.js` (pure, `test_joystick.mjs`): touch anywhere in the left 200px (below the top HUD strip, not on a button, no menu open), hold and drag; a ring + knob appear under the thumb. `stickDir` gives one of 4 directions with a 7px dead zone and a bias so the thumb near a diagonal doesn't flicker. A faint ring at (46,196) hints where to start.
+- Tracks its own pointer id, so tapping A/B/F with the other thumb no longer stops movement. If a menu closes while the thumb is still down, walking resumes from the thumb position.
+
+## Friend limit removed
+- The 6-friend cap is gone (`"max"` removed from friends.json; `isFull` is false unless `max` is set). Still one friend per kind, so the total is just the number of kinds; new kinds added later are collectable without releasing anyone. The friends list scrolls.
