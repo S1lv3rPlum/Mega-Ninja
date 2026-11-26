@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import mapData from '../data/worldmap.json';
 import { inferVisited, markVisited } from '../worldmap.js';
 import { regenStep, inFight, newRegen } from '../regen.js';
+import { toastMs, FADE_MS } from '../toast.js';
 import { STICK, stickDir, clampKnob, inStickZone } from '../joystick.js';
 import { LEVELS, LEVEL_IDS, chosen, setLevel, scaleMs, scaleDamage } from '../difficulty.js';
 import { SaveManager } from '../SaveManager.js';
@@ -1638,7 +1639,7 @@ export default class WorldScene extends Phaser.Scene {
   showToast(msg) {
     this.tweens.killTweensOf(this.toast);
     this.toast.setText(msg).setAlpha(1);
-    this.tweens.add({ targets: this.toast, alpha: 0, delay: 1200, duration: 400 });
+    this.tweens.add({ targets: this.toast, alpha: 0, delay: toastMs(msg), duration: FADE_MS }); // long messages stay longer
   }
 
   update(_time, delta) {

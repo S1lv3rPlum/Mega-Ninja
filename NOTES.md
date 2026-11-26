@@ -312,3 +312,6 @@ without being run in a browser, so test new features on desktop and phone.
 
 ## Heart regeneration
 - `src/regen.js` (pure, `test_regen.mjs`): once you have been out of a fight for a while (no hit taken, no sword swung), you win back 1 hp (half a heart) every few seconds until full. Normal: after 8s, then every 7s. Easy: 6s / 4s. Hard: 12s / 12s. Never during a boss fight (`boss.state` intro/active; the wait starts when it ends), never at 0 hp, resets when you take a hit or swing. A fresh map load also counts as just having fought. Hooked in WorldScene `update` (after the menus-open guard), `hurtPlayer` and `attack`. Tune the numbers in `REGEN`.
+
+## Pop-up message time
+- `src/toast.js` (`test_toast.mjs`): `showToast` keeps a message up for 2.5s + 80ms per character (min 3.5s, max 12s), then a 0.5s fade. Locked-door messages (~85-110 chars) now stay 9-11s; short ones like "Picked!" stay 3.5s. Tune `TOAST_*` there.
