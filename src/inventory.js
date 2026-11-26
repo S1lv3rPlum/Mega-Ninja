@@ -59,3 +59,40 @@ export function moveSelection(index, dx, dy, cols, count) {
   row = Math.max(0, Math.min(rows - 1, row + dy));
   return Math.min(count - 1, row * cols + col);
 }
+
+// ---- pockets: the bag is sorted into tabs so nothing needs scrolling
+export const POCKETS = [
+  { id: 'gear', label: 'GEAR' },
+  { id: 'food', label: 'FOOD' },
+  { id: 'seeds', label: 'SEEDS' },
+  { id: 'crops', label: 'CROPS' },
+  { id: 'fish', label: 'FISH' },
+  { id: 'stuff', label: 'STUFF' },
+];
+export const PER_POCKET = 25;
+const GEAR_ITEMS = ['fishing-rod', 'lantern', 'crystal-lantern', 'frost-boots', 'waystone-charm', 'padded-vest', 'copper-mail', 'crystal-plate', 'ember-gem', 'greater-ember-gem', 'ward-gem', 'greater-ward-gem'];
+const CROP_ITEMS = ['wheat', 'carrot', 'pumpkin', 'herb', 'frostberry', 'seaweed', 'cactus-fruit', 'moonbloom', 'glowcap'];
+
+export function pocketOf(e, fishIds = []) {
+  if (e.kind !== 'item') return 'gear'; // tools, weapon, armor
+  if (e.id.endsWith('seeds')) return 'seeds';
+  if (GEAR_ITEMS.includes(e.id)) return 'gear';
+  if (fishIds.includes(e.id)) return 'fish';
+  if (CROP_ITEMS.includes(e.id)) return 'crops'; // raw produce stays with the crops even if you can eat it
+  if (e.heal > 0 || e.brew) return 'food';
+  return 'stuff';
+}
+
+// [{ id, label, entries }] in tab order. A pocket with more than PER_POCKET things spills into "LABEL 2", "LABEL 3"...
+// The six standard pockets are always listed (an empty one is just dimmed); spill pages only when needed.
+export function buildPockets(entries, fishIds = [], per = PER_POCKET) {
+  const out = [];
+  POCKETS.forEach((p) => {
+    const mine = entries.filter((e) => pocketOf(e, fishIds) === p.id);
+    const pages = Math.max(1, Math.ceil(mine.length / per));
+    for (let i = 0; i < pages; i++) {
+      out.push({ id: i === 0 ? p.id : `${p.id}${i + 1}`, label: i === 0 ? p.label : `${p.label} ${i + 1}`, entries: mine.slice(i * per, (i + 1) * per) });
+    }
+  });
+  return out;
+}

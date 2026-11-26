@@ -3,7 +3,8 @@ import itemsData from './data/items.json';
 import toolDefs from './data/tools.json';
 import weaponDefs from './data/weapons.json';
 import armorDefs from './data/armor.json';
-import { listEntries, moveSelection } from './inventory.js';
+import { listEntries, moveSelection, buildPockets } from './inventory.js';
+import fishDefs from './data/fish.json';
 import enchantDefs from './data/enchants.json';
 import friendDefs from './data/friends.json';
 import { journalEntries, metCount, nextReward } from './journal.js';
@@ -76,6 +77,8 @@ export default class InventoryScreen {
     this.entries = [];
     this.mode = 'bag';
     this.jIndex = 0;
+    this.pocketId = null; // which tab is showing; remembered between openings
+    this.pockets = [];
   }
 
   toggle() {
@@ -88,7 +91,10 @@ export default class InventoryScreen {
     const s = this.scene;
     this.isOpen = true;
     this.mode = 'bag';
-    this.entries = listEntries(s.gameState, itemsData, toolDefs, weaponDefs, armorDefs, enchantDefs);
+    const all = listEntries(s.gameState, itemsData, toolDefs, weaponDefs, armorDefs, enchantDefs);
+    this.pockets = buildPockets(all, Object.keys(fishDefs));
+    if (!this.pockets.some((p) => p.id === this.pocketId)) this.pocketId = (this.pockets.find((p) => p.entries.length) ?? this.pockets[0]).id;
+    this.entries = this.pockets.find((p) => p.id === this.pocketId).entries;
     this.index = Math.min(this.index, Math.max(0, this.entries.length - 1));
 
     const add = (o) => {
@@ -101,13 +107,24 @@ export default class InventoryScreen {
     this.parts.push(zone);
     add(s.add.rectangle(160, 120, 320, 240, 0x000000, 0.55));
     add(s.add.rectangle(10, 12, 300, 216, 0x1a1a30, 0.98).setOrigin(0, 0).setStrokeStyle(2, 0xffffff));
-    add(s.add.text(20, 18, 'BAG', { fontSize: '12px', fontFamily: 'monospace', color: '#ffe08a' }));
+    add(s.add.text(20, 12, 'BAG', { fontSize: '12px', fontFamily: 'monospace', color: '#ffe08a' }));
 
     // purse (the Coin Pouch)
     const coin = iconKey(s, 'coin', '#f2c230');
     add(s.add.image(236, 24, coin).setOrigin(0.5));
     this.purseText = add(s.add.text(300, 24, '', { fontSize: '10px', fontFamily: 'monospace', color: '#ffffff' }).setOrigin(1, 0.5));
     add(s.add.text(300, 34, itemsData.purse.name, { fontSize: '7px', fontFamily: 'monospace', color: '#9aa0b8' }).setOrigin(1, 0));
+
+    // pocket tabs: tap one to look in that pocket (arrows past the edge of a pocket also hop to the next one)
+    let tx = 20;
+    this.pockets.forEach((p) => {
+      const on = p.id === this.pocketId;
+      const tab = add(
+        s.add.text(tx, 28, p.label, { fontSize: '7px', fontFamily: 'monospace', color: on ? '#1a1a30' : p.entries.length ? '#ffffff' : '#6a6e88', backgroundColor: on ? '#ffe08a' : p.entries.length ? '#3a3a62' : '#26263e', padding: { x: 3, y: 2 } }).setOrigin(0, 0).setInteractive(),
+      );
+      tab.on('pointerdown', () => this.switchPocket(p.id));
+      tx += tab.width + 2;
+    });
 
     // slots
     this.slotBoxes = [];
@@ -174,7 +191,7 @@ export default class InventoryScreen {
     });
 
     if (this.entries.length === 0) {
-      add(s.add.text(200, 44, 'Nothing yet.', { fontSize: '8px', fontFamily: 'monospace', color: '#8a90a8' }));
+      add(s.add.text(20, 60, 'Nothing in this pocket yet.', { fontSize: '8px', fontFamily: 'monospace', color: '#8a90a8' }));
     }
     this.refresh();
   }
@@ -197,8 +214,32 @@ export default class InventoryScreen {
       this.refreshJournal();
       return;
     }
-    this.index = moveSelection(this.index, dx, dy, COLS, this.entries.length);
+    const next = moveSelection(this.index, dx, dy, COLS, this.entries.length);
+    if (dx !== 0 && next === this.index) {
+      this.hopPocket(dx); // pushed against the side: go to the next pocket that has something in it
+      return;
+    }
+    this.index = next;
     this.refresh();
+  }
+
+  switchPocket(id) {
+    if (!this.isOpen || this.mode !== 'bag' || id === this.pocketId) return;
+    this.pocketId = id;
+    this.index = 0;
+    this.close();
+    this.open();
+  }
+
+  // dir = -1 / +1: the nearest pocket in that direction that is not empty
+  hopPocket(dir) {
+    const at = this.pockets.findIndex((p) => p.id === this.pocketId);
+    for (let i = at + dir; i >= 0 && i < this.pockets.length; i += dir) {
+      if (this.pockets[i].entries.length) {
+        this.switchPocket(this.pockets[i].id);
+        return;
+      }
+    }
   }
 
   refresh() {

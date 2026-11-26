@@ -289,3 +289,7 @@ without being run in a browser, so test new features on desktop and phone.
 
 ## Friend limit removed
 - The 6-friend cap is gone (`"max"` removed from friends.json; `isFull` is false unless `max` is set). Still one friend per kind, so the total is just the number of kinds; new kinds added later are collectable without releasing anyone. The friends list scrolls.
+
+## Bag pockets (tabs instead of one long grid)
+- Bag is sorted into tabs: GEAR (tools, weapon, armor, rod, lanterns, boots, charm, armor pieces, enchant gems), FOOD (anything that heals or is a brew), SEEDS, CROPS (raw produce), FISH (fish.json incl. the boot), STUFF (ores, gems, crests, the rest). `pocketOf`/`buildPockets` in inventory.js (tested). Tap a tab, or push the arrows past the side of a pocket to hop to the next non-empty one. The open tab is remembered. A pocket over 25 things spills to "STUFF 2" etc. (before this, anything past 25 was silently hidden).
+- To re-file an item, edit GEAR_ITEMS / CROP_ITEMS in inventory.js.
