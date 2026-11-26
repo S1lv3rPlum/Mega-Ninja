@@ -267,72 +267,134 @@
     {
       "what": "Weapon upgrades",
       "where": "market",
-      "how": "Hexsmith at the Shadow Market. Order a weapon, it is ready when you come back."
+      "how": "Hexsmith at the Shadow Market. Order a weapon, it is ready when you come back.",
+      "kind": "shop"
     },
     {
       "what": "Armor upgrades",
       "where": "bazaar",
-      "how": "The smith at the Desert Bazaar. Same deal: order, then return."
+      "how": "The smith at the Desert Bazaar. Same deal: order, then return.",
+      "kind": "shop"
     },
     {
       "what": "Enchant gems and scrolls",
       "where": "upper",
-      "how": "The Enchanter in the Workshop (upstairs at school)."
+      "how": "The Enchanter in the Workshop (upstairs at school).",
+      "kind": "shop"
     },
     {
       "what": "Sturdier axe, pickaxe, bigger pail",
       "where": "farm",
-      "how": "The market stall shopkeeper."
+      "how": "The market stall shopkeeper.",
+      "kind": "shop"
     },
     {
       "what": "Pickaxe fix or upgrade",
       "where": "quarry",
-      "how": "The Miner, so you do not have to walk back."
+      "how": "The Miner, so you do not have to walk back.",
+      "kind": "shop"
     },
     {
       "what": "Brews (speed, night sight)",
       "where": "market",
-      "how": "The Brewer at the east end of the Shadow Market."
+      "how": "The Brewer at the east end of the Shadow Market.",
+      "kind": "shop"
     },
     {
       "what": "Pet treats",
       "where": "market",
-      "how": "The Critter Seller. The Bazaar spice seller has treats too."
+      "how": "The Critter Seller. The Bazaar spice seller has treats too.",
+      "kind": "shop"
     },
     {
       "what": "Best gem prices",
       "where": "bazaar",
-      "how": "The gem trader. The Shadow Market charm seller also pays well."
+      "how": "The gem trader. The Shadow Market charm seller also pays well.",
+      "kind": "shop"
     },
     {
       "what": "Change ninja colour",
       "where": "town",
-      "how": "The Tailor."
+      "how": "The Tailor.",
+      "kind": "shop"
     },
     {
       "what": "Cooking",
       "where": "school",
-      "how": "The cook in the school kitchen."
+      "how": "The cook in the school kitchen.",
+      "kind": "shop"
     },
     {
       "what": "Train your pets",
       "where": "upper",
-      "how": "The trainer in the Dojo."
+      "how": "The trainer in the Dojo.",
+      "kind": "shop"
     },
     {
       "what": "Fishing rod, sell fish, better rods",
       "where": "forest",
-      "how": "The Old Fisher. Better rods cost wood and gold."
+      "how": "The Old Fisher. Better rods cost wood and gold.",
+      "kind": "shop"
     },
     {
       "what": "Tool repair (gold or materials)",
       "where": "peaks",
-      "how": "The Wandering Tinker by the waystone in the Frozen Peaks. A second Tinker works in the Desert Bazaar."
+      "how": "The Wandering Tinker by the waystone in the Frozen Peaks. A second Tinker works in the Desert Bazaar.",
+      "kind": "shop"
     },
     {
       "what": "Chop pine trees for wood",
       "where": "peaks",
-      "how": "Snowy pines in the Frozen Peaks give 2 wood each. Use wood for weapon orders, rods, repairs or sell it."
+      "how": "Snowy pines in the Frozen Peaks give 2 wood each. Use wood for weapon orders, rods, repairs or sell it.",
+      "kind": "shop"
+    },
+    {
+      "kind": "goal",
+      "what": "Heartwood Lantern (never runs out)",
+      "where": "forest",
+      "how": "Beat Gnarl the Treant in the Forest. The axe hurts him the most."
+    },
+    {
+      "kind": "goal",
+      "what": "Crest Stone",
+      "where": "cave",
+      "how": "Calm Granite, the stone guardian, deep in the Caves."
+    },
+    {
+      "kind": "goal",
+      "what": "Crystal Lantern (see the hidden crack)",
+      "where": "crystal",
+      "how": "Beat the Bat Queen at her roost in the Crystal Caverns. It also lights a much bigger circle in the dark."
+    },
+    {
+      "kind": "goal",
+      "what": "Cold passage to Frozen Peaks",
+      "where": "crystal",
+      "how": "Behind the Bat Queen's roost (bottom-right of the Caverns). It opens once she is beaten."
+    },
+    {
+      "kind": "goal",
+      "what": "Hidden crack to Shadow Market",
+      "where": "crystal",
+      "how": "Top-right corner of the Caverns, by the sign about a cold draft. Needs the Crystal Lantern."
+    },
+    {
+      "kind": "goal",
+      "what": "Frost Boots",
+      "where": "peaks",
+      "how": "Beat the Yeti in the snowy room at the north of the Frozen Peaks."
+    },
+    {
+      "kind": "goal",
+      "what": "Moon Crest half (Desert key)",
+      "where": "ruins",
+      "how": "Calm the Sea Serpent in the Sunken Ruins. The sandy archway in the Caverns then lets you into the Desert."
+    },
+    {
+      "kind": "goal",
+      "what": "Other Moon Crest half",
+      "where": "desert",
+      "how": "Beat the Scorpion King in the Desert."
     }
   ]
 }

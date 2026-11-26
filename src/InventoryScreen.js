@@ -238,11 +238,12 @@ export default class InventoryScreen {
   }
 
   // ---- the world map (worldmap.js): where you are, where you have been, and where to find things
-  openMap(find = false) {
+  openMap(find = false, kind = 'shop') {
     if (this.isOpen) return;
     const s = this.scene;
     this.isOpen = true;
     this.mode = find ? 'find' : 'map';
+    this.findKind = kind;
     const gs = s.gameState;
     this.mapSel = areaOf(mapData, gs.map) ?? 'town';
     const add = (o) => {
@@ -253,7 +254,7 @@ export default class InventoryScreen {
     this.parts.push(s.add.zone(160, 120, 320, 240).setScrollFactor(0).setDepth(299).setInteractive());
     add(s.add.rectangle(160, 120, 320, 240, 0x000000, 0.55));
     add(s.add.rectangle(10, 12, 300, 216, 0x1a1a30, 0.98).setOrigin(0, 0).setStrokeStyle(2, 0xffffff));
-    add(s.add.text(20, 14, find ? 'WHERE TO FIND THINGS' : 'WORLD MAP', { fontSize: '10px', fontFamily: 'monospace', color: '#ffe08a' }));
+    add(s.add.text(20, 14, find ? (kind === 'goal' ? 'GOALS: WHERE TO GET KEY ITEMS' : 'WHERE TO FIND SHOPS & HELP') : 'WORLD MAP', { fontSize: '10px', fontFamily: 'monospace', color: '#ffe08a' }));
     const btn = (x, label, color, fn) => {
       const b = add(s.add.text(x, 215, label, { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: color, padding: { x: 4, y: 3 } }).setOrigin(0.5).setInteractive());
       b.on('pointerdown', fn);
@@ -264,18 +265,25 @@ export default class InventoryScreen {
       this.openMap(!find);
     });
     if (find) {
-      this.findRows = findList(gs, mapData);
+      btn(150, kind === 'goal' ? 'SHOPS' : 'GOALS', '#6a4a8a', () => {
+        this.close();
+        this.findIndex = 0;
+        this.openMap(true, kind === 'goal' ? 'shop' : 'goal');
+      });
+    }
+    if (find) {
+      this.findRows = findList(gs, mapData, kind);
       this.findTexts = [];
       this.findIndex = Math.min(this.findIndex, Math.max(0, this.findRows.length - 1));
       this.findRows.forEach((r, i) => {
-        const row = add(s.add.text(22, 32 + i * 11, `${r.what}  >  ${r.visited ? r.placeName : `${r.placeName} (not found yet)`}`, { fontSize: '7px', fontFamily: 'monospace', color: r.visited ? '#ffffff' : '#ffb870' }).setInteractive());
+        const row = add(s.add.text(22, 32 + i * 9, `${r.what}  >  ${r.visited ? r.placeName : `${r.placeName} (not visited)`}`, { fontSize: '7px', fontFamily: 'monospace', color: r.visited ? '#ffffff' : '#ffb870' }).setInteractive());
         row.on('pointerdown', () => {
           this.findIndex = i;
           this.refreshFind();
         });
         this.findTexts.push(row);
       });
-      this.findCursor = add(s.add.rectangle(18, 0, 284, 10, 0xffe08a, 0.18).setOrigin(0, 0));
+      this.findCursor = add(s.add.rectangle(18, 0, 284, 9, 0xffe08a, 0.18).setOrigin(0, 0));
       this.findDetail = add(s.add.text(22, 176, '', { fontSize: '8px', fontFamily: 'monospace', color: '#c8ccdc', wordWrap: { width: 270 }, lineSpacing: 2 }));
       this.refreshFind();
       return;
@@ -327,7 +335,7 @@ export default class InventoryScreen {
       this.findCursor.setVisible(false);
       return;
     }
-    this.findCursor.setPosition(18, 31 + this.findIndex * 11).setVisible(true);
+    this.findCursor.setPosition(18, 31 + this.findIndex * 9).setVisible(true);
     this.findDetail.setText(this.findRows[this.findIndex].how);
   }
 

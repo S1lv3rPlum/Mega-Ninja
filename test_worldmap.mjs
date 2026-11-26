@@ -24,8 +24,14 @@ assert.equal(describe(gs, data, 'market').title, 'Shadow Market'); assert.match(
 const g2 = { map: 'town', flags: {} }; inferVisited(g2, data);
 assert.equal(statusOf(g2, data, 'crystal'), 'unknown'); assert.equal(describe(g2, data, 'crystal').title, '???');
 // find list: weapon upgrades is offered as a lead, with the place
-const f = findList(gs, data).find((s) => s.what === 'Weapon upgrades'); assert.ok(f && f.visited === false && f.placeName === 'Shadow Market');
-assert.ok(!findList(g2, data).some((s) => s.what === 'Weapon upgrades'));
+const f = findList(gs, data, 'shop').find((s) => s.what === 'Weapon upgrades'); assert.ok(f && f.visited === false && f.placeName === 'Shadow Market');
+assert.ok(!findList(g2, data, 'shop').some((s) => s.what === 'Weapon upgrades'));
+// goals: the Crystal Lantern is listed (Bat Queen, Crystal Caverns), and the two lists don't mix
+const goals = findList(gs, data, 'goal'); const lant = goals.find((s) => s.what.startsWith('Crystal Lantern'));
+assert.ok(lant && lant.placeName === 'Crystal Caverns' && /Bat Queen/.test(lant.how));
+assert.ok(goals.every((s) => s.kind === 'goal') && findList(gs, data, 'shop').every((s) => s.kind === 'shop'));
+assert.ok(findList(gs, data, 'shop').length <= 15 && goals.length <= 15, 'fits on the screen');
+assert.ok(!findList(g2, data, 'goal').some((s) => s.where === 'ruins'), 'unknown areas stay hidden');
 // markVisited
 const g3 = {}; assert.equal(markVisited(g3, data, 'kitchen'), 'school'); assert.ok(g3.visited.school);
 // met flags count

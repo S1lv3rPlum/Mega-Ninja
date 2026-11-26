@@ -63,9 +63,11 @@ export function describe(gs, data, id) {
   return { title: n.label, lines: [n.blurb], status: st };
 }
 
-// "where do I find...?" entries you may know about: the place is visited or is a lead
-export function findList(gs, data) {
+// "where do I find...?" entries (kind 'shop' = who sells/does what, 'goal' = where key items and bosses are)
+//  you may know about: the place is visited or is a lead
+export function findList(gs, data, kind = 'shop') {
   return data.services
+    .filter((s) => (s.kind ?? 'shop') === kind)
     .filter((s) => ['here', 'seen', 'lead'].includes(statusOf(gs, data, s.where)))
     .map((s) => ({ ...s, placeName: data.nodes[s.where].label, visited: statusOf(gs, data, s.where) !== 'lead' }));
 }
