@@ -1,4 +1,7 @@
 import Phaser from 'phaser';
+import mapData from '../data/worldmap.json';
+import { inferVisited, markVisited } from '../worldmap.js';
+import { STICK, stickDir, clampKnob, inStickZone } from '../joystick.js';
 import { LEVELS, LEVEL_IDS, chosen, setLevel, scaleMs, scaleDamage } from '../difficulty.js';
 import { SaveManager } from '../SaveManager.js';
 import DialogueBox from '../DialogueBox.js';
@@ -136,6 +139,8 @@ export default class WorldScene extends Phaser.Scene {
     ensureCombatState(gs);
     ensureSmith(gs);
     gs.flags.waystone_town = true; // the town waystone is always lit
+    if (!gs.visited) inferVisited(gs, mapData); // older saves: work out where you must have been
+    markVisited(gs, mapData, gs.map);
     if (gs.map === 'bazaar') gs.bazaarVisits += 1; // an order at the armor smith is ready the next time you come back
     if (gs.map === 'market') gs.marketVisits += 1; // an order at the weapon smith is ready the next time you come back
     // co-op: the shared world (farm, rocks, boulders, the treant) comes from the cloud before the map is built
@@ -407,6 +412,9 @@ export default class WorldScene extends Phaser.Scene {
     });
     this.input.keyboard.on('keydown-M', (event) => {
       if (!event.repeat) this.toggleMute();
+    });
+    this.input.keyboard.on('keydown-N', (event) => {
+      if (!event.repeat) this.openMap();
     });
     this.input.keyboard.on('keydown-I', toggleBag);
     this.input.keyboard.on('keydown-TAB', toggleBag);
@@ -696,6 +704,17 @@ export default class WorldScene extends Phaser.Scene {
     return r.msg;
   }
 
+
+  // the world map (N key / MAP button); pressing it again closes it
+  openMap() {
+    if (this.bag.isOpen) {
+      if (this.bag.mode === 'map' || this.bag.mode === 'find') this.bag.close();
+      return;
+    }
+    if (this.dialogue.isOpen || this.choice.isOpen || this.moving || this.transitioning) return;
+    this.touchDir = { x: 0, y: 0 };
+    this.bag.openMap();
+  }
 
   toggleBag() {
     if (this.bag.isOpen) {
@@ -1078,13 +1097,37 @@ export default class WorldScene extends Phaser.Scene {
       return b;
     };
 
-    make(44, 164, '▲', () => (this.touchDir = { x: 0, y: -1 }));
-    make(16, 192, '◀', () => (this.touchDir = { x: -1, y: 0 }));
-    make(72, 192, '▶', () => (this.touchDir = { x: 1, y: 0 }));
-    make(44, 220, '▼', () => (this.touchDir = { x: 0, y: 1 }));
-
-    // lifting any finger stops movement
-    this.input.on('pointerup', () => (this.touchDir = { x: 0, y: 0 }));
+    // Floating thumb-stick: touch anywhere on the left side, hold, and drag the way you want to walk.
+    const ring = this.add.circle(0, 0, STICK.radius, 0xffffff, 0.12).setStrokeStyle(1, 0xffffff, 0.5).setScrollFactor(0).setDepth(100).setVisible(false);
+    const knob = this.add.circle(0, 0, 10, 0xffffff, 0.45).setStrokeStyle(1, 0xffffff, 0.8).setScrollFactor(0).setDepth(101).setVisible(false);
+    const hint = this.add.circle(46, 196, STICK.radius, 0xffffff, 0.06).setStrokeStyle(1, 0xffffff, 0.25).setScrollFactor(0).setDepth(100); // where to put your thumb
+    this.stick = null; // { id, x, y } while a finger is down
+    const release = (pointer) => {
+      if (!this.stick || pointer.id !== this.stick.id) return;
+      this.stick = null;
+      this.touchDir = { x: 0, y: 0 };
+      ring.setVisible(false);
+      knob.setVisible(false);
+      hint.setVisible(true);
+    };
+    this.input.on('pointerdown', (pointer, over) => {
+      if (this.stick || over.length > 0 || !inStickZone(pointer.x, pointer.y)) return;
+      if (this.bag.isOpen || this.choice.isOpen || this.dialogue.isOpen) return;
+      this.stick = { id: pointer.id, x: pointer.x, y: pointer.y, pointer };
+      ring.setPosition(pointer.x, pointer.y).setVisible(true);
+      knob.setPosition(pointer.x, pointer.y).setVisible(true);
+      hint.setVisible(false);
+    });
+    this.input.on('pointermove', (pointer) => {
+      if (!this.stick || pointer.id !== this.stick.id) return;
+      const dx = pointer.x - this.stick.x;
+      const dy = pointer.y - this.stick.y;
+      const k = clampKnob(dx, dy);
+      knob.setPosition(this.stick.x + k.x, this.stick.y + k.y);
+      this.touchDir = stickDir(dx, dy, this.touchDir);
+    });
+    this.input.on('pointerup', release);
+    this.input.on('pointerupoutside', release);
 
     // A button = talk / interact (same as Space on a keyboard)
     make(292, 220, 'A', () => this.onAction());
@@ -1106,6 +1149,10 @@ export default class WorldScene extends Phaser.Scene {
     // FRIENDS button (the G key on a keyboard)
     const friendBtn = make(292, 76, 'PETS', () => this.friends.open());
     friendBtn.setStyle({ fixedWidth: 44, fontSize: '10px' });
+
+    // world map (the N key on a keyboard)
+    const mapBtn = make(292, 136, 'MAP', () => this.openMap());
+    mapBtn.setStyle({ fixedWidth: 44, fontSize: '10px' });
 
     // sound on / off (the M key on a keyboard)
     const soundBtn = make(292, 106, audio.muted ? 'MUTE' : 'SND', () => {
@@ -1614,6 +1661,7 @@ export default class WorldScene extends Phaser.Scene {
 
     // fall back to the on-screen buttons if no key is pressed
     if (dx === 0 && dy === 0) {
+      if (this.stick) this.touchDir = stickDir(this.stick.pointer.x - this.stick.x, this.stick.pointer.y - this.stick.y, this.touchDir); // thumb still down after a menu closed
       dx = this.touchDir.x;
       dy = this.touchDir.y;
     }

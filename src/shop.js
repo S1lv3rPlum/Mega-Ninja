@@ -1,14 +1,22 @@
-import { repairTool } from './tools.js';
+import { repairTool, maxDur } from './tools.js';
 // The market stall. No Phaser in here.
 //
 // shop.json offers:
 //   { type: 'item',    item, amount, price, label }          buy N of an item (seeds)
 //   { type: 'upgrade', label, levels: [{ to, price }, ...] } watering can size, one level at a time
+//   { type: 'toolup',  tool, label, levels: [{ to, price }] }  a sturdier axe / pickaxe (lasts `to` swings), needs the tool;
+//                                                            refills it too. Saved in gs.toolMax
 //   { type: 'tool',    tool, label }                         buy a tool (price from tools.json); only offered when
 //                                                            you have none or yours is broken
 //   { type: 'repair',  tool, label }                         repair a worn tool with materials (from tools.json)
 //   shop.json "sell": { item: price each }                   adds "Sell all <item>" entries for whatever you carry
 // Offers that make no sense right now (a tool you own, a pail already maxed out) are left out of the menu.
+
+// the next sturdiness level for a tool, or null when it is maxed out
+export function toolLevel(gs, toolDefs, offer) {
+  const cur = maxDur(gs, toolDefs, offer.tool);
+  return offer.levels.find((l) => l.to > cur) ?? null;
+}
 
 function pailLevel(gs, offer) {
   return offer.levels.find((l) => l.to > gs.can.max) ?? null;
@@ -25,10 +33,16 @@ export function getOffers(gs, shopDef, toolDefs) {
       if (!level) continue;
       price = level.price;
       label = `${o.label} (holds ${level.to})`;
+    } else if (o.type === 'toolup') {
+      if (!gs.tools[o.tool]) continue;
+      const level = toolLevel(gs, toolDefs, o);
+      if (!level) continue;
+      price = level.price;
+      label = `${o.label} (lasts ${level.to})`;
     } else if (o.type === 'repair') {
       const def = toolDefs[o.tool];
       const st = gs.tools[o.tool];
-      if (!st || st.dur >= def.durability) continue;
+      if (!st || st.dur >= maxDur(gs, toolDefs, o.tool)) continue;
       const cost = def.repair ?? {};
       const text = Object.entries(cost).map(([k, n]) => `${n} ${k}`).join(', ');
       out.push({
@@ -80,8 +94,14 @@ export function buy(gs, shopDef, toolDefs, id) {
     gs.can.max = level.to;
     return { ok: true, msg: `Your watering can now holds ${level.to}.` };
   }
+  if (def.type === 'toolup') {
+    const level = toolLevel(gs, toolDefs, def);
+    gs.toolMax = { ...(gs.toolMax ?? {}), [def.tool]: level.to };
+    gs.tools[def.tool].dur = level.to; // a better tool comes back in perfect shape
+    return { ok: true, msg: `Your ${toolDefs[def.tool].name.toLowerCase()} is sturdier now: it lasts ${level.to} swings.` };
+  }
   // tool: a fresh one with full durability
-  gs.tools[def.tool] = { dur: toolDefs[def.tool].durability };
+  gs.tools[def.tool] = { dur: maxDur(gs, toolDefs, def.tool) };
   const n = toolDefs[def.tool].name.toLowerCase();
   return { ok: true, msg: `Bought ${/^[aeiou]/.test(n) ? 'an' : 'a'} ${n}.` };
 }

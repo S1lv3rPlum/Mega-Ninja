@@ -5,6 +5,8 @@ import weaponDefs from './data/weapons.json';
 import armorDefs from './data/armor.json';
 import { listEntries, moveSelection, buildPockets } from './inventory.js';
 import fishDefs from './data/fish.json';
+import mapData from './data/worldmap.json';
+import { areaOf, statusOf, describe, findList, neighbor } from './worldmap.js';
 import enchantDefs from './data/enchants.json';
 import friendDefs from './data/friends.json';
 import { journalEntries, metCount, nextReward } from './journal.js';
@@ -77,6 +79,8 @@ export default class InventoryScreen {
     this.entries = [];
     this.mode = 'bag';
     this.jIndex = 0;
+    this.mapSel = null;
+    this.findIndex = 0;
     this.pocketId = null; // which tab is showing; remembered between openings
     this.pockets = [];
   }
@@ -209,6 +213,16 @@ export default class InventoryScreen {
 
   move(dx, dy) {
     if (!this.isOpen) return;
+    if (this.mode === 'map') {
+      this.mapSel = neighbor(mapData, this.mapSel, dx, dy);
+      this.refreshMap();
+      return;
+    }
+    if (this.mode === 'find') {
+      this.findIndex = Math.max(0, Math.min(this.findRows.length - 1, this.findIndex + dy));
+      this.refreshFind();
+      return;
+    }
     if (this.mode === 'journal') {
       this.jIndex = moveSelection(this.jIndex, dx, dy, JCOLS, this.jEntries.length);
       this.refreshJournal();
@@ -221,6 +235,100 @@ export default class InventoryScreen {
     }
     this.index = next;
     this.refresh();
+  }
+
+  // ---- the world map (worldmap.js): where you are, where you have been, and where to find things
+  openMap(find = false) {
+    if (this.isOpen) return;
+    const s = this.scene;
+    this.isOpen = true;
+    this.mode = find ? 'find' : 'map';
+    const gs = s.gameState;
+    this.mapSel = areaOf(mapData, gs.map) ?? 'town';
+    const add = (o) => {
+      o.setScrollFactor(0).setDepth(300);
+      this.parts.push(o);
+      return o;
+    };
+    this.parts.push(s.add.zone(160, 120, 320, 240).setScrollFactor(0).setDepth(299).setInteractive());
+    add(s.add.rectangle(160, 120, 320, 240, 0x000000, 0.55));
+    add(s.add.rectangle(10, 12, 300, 216, 0x1a1a30, 0.98).setOrigin(0, 0).setStrokeStyle(2, 0xffffff));
+    add(s.add.text(20, 14, find ? 'WHERE TO FIND THINGS' : 'WORLD MAP', { fontSize: '10px', fontFamily: 'monospace', color: '#ffe08a' }));
+    const btn = (x, label, color, fn) => {
+      const b = add(s.add.text(x, 215, label, { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: color, padding: { x: 4, y: 3 } }).setOrigin(0.5).setInteractive());
+      b.on('pointerdown', fn);
+    };
+    btn(284, 'CLOSE', '#444466', () => this.close());
+    btn(222, find ? 'MAP' : 'FIND', '#2a6a5a', () => {
+      this.close();
+      this.openMap(!find);
+    });
+    if (find) {
+      this.findRows = findList(gs, mapData);
+      this.findTexts = [];
+      this.findIndex = Math.min(this.findIndex, Math.max(0, this.findRows.length - 1));
+      this.findRows.forEach((r, i) => {
+        const row = add(s.add.text(22, 32 + i * 11, `${r.what}  >  ${r.visited ? r.placeName : `${r.placeName} (not found yet)`}`, { fontSize: '7px', fontFamily: 'monospace', color: r.visited ? '#ffffff' : '#ffb870' }).setInteractive());
+        row.on('pointerdown', () => {
+          this.findIndex = i;
+          this.refreshFind();
+        });
+        this.findTexts.push(row);
+      });
+      this.findCursor = add(s.add.rectangle(18, 0, 284, 10, 0xffe08a, 0.18).setOrigin(0, 0));
+      this.findDetail = add(s.add.text(22, 176, '', { fontSize: '8px', fontFamily: 'monospace', color: '#c8ccdc', wordWrap: { width: 270 }, lineSpacing: 2 }));
+      this.refreshFind();
+      return;
+    }
+    // links first (under the boxes)
+    const g = add(s.add.graphics());
+    g.lineStyle(1, 0x6a6e98, 1);
+    Object.entries(mapData.nodes).forEach(([id, n]) => {
+      n.links.forEach((l) => {
+        if (l < id) return; // draw each link once
+        if (statusOf(gs, mapData, id) === 'unknown' && statusOf(gs, mapData, l) === 'unknown') return;
+        const m = mapData.nodes[l];
+        g.lineBetween(n.x, n.y, m.x, m.y);
+      });
+    });
+    this.mapBoxes = {};
+    Object.entries(mapData.nodes).forEach(([id, n]) => {
+      const st = statusOf(gs, mapData, id);
+      const label = st === 'unknown' ? '?' : n.short ?? n.label;
+      const color = st === 'here' ? '#1a1a30' : st === 'seen' ? '#ffffff' : st === 'lead' ? '#ffb870' : '#6a6e88';
+      const bg = st === 'here' ? '#ffe08a' : st === 'seen' ? '#3a3a62' : st === 'lead' ? '#3a2a2a' : '#22223a';
+      const t = add(s.add.text(n.x, n.y, label, { fontSize: '7px', fontFamily: 'monospace', color, backgroundColor: bg, padding: { x: 3, y: 3 } }).setOrigin(0.5).setInteractive());
+      t.on('pointerdown', () => {
+        this.mapSel = id;
+        this.refreshMap();
+      });
+      this.mapBoxes[id] = t;
+      if (st === 'here') s.tweens.add({ targets: t, alpha: 0.55, duration: 450, yoyo: true, repeat: -1 });
+    });
+    this.mapCursor = add(s.add.rectangle(0, 0, 10, 10).setStrokeStyle(2, 0xffffff).setFillStyle(0, 0));
+    this.mapTitle = add(s.add.text(134, 26, '', { fontSize: '9px', fontFamily: 'monospace', color: '#ffe08a' }));
+    this.mapInfo = add(s.add.text(134, 40, '', { fontSize: '7px', fontFamily: 'monospace', color: '#c8ccdc', wordWrap: { width: 160 }, lineSpacing: 2 }));
+    add(s.add.text(20, 215, 'Yellow = you', { fontSize: '7px', fontFamily: 'monospace', color: '#8a90a8' }));
+    this.refreshMap();
+  }
+
+  refreshMap() {
+    const gs = this.scene.gameState;
+    const box = this.mapBoxes[this.mapSel];
+    this.mapCursor.setPosition(box.x, box.y).setSize(box.width + 4, box.height + 4);
+    const d = describe(gs, mapData, this.mapSel);
+    this.mapTitle.setText(d.status === 'here' ? `${d.title} (you are here)` : d.title);
+    this.mapInfo.setText(d.lines.join('\n\n'));
+  }
+
+  refreshFind() {
+    if (!this.findRows.length) {
+      this.findDetail.setText('Nothing to look for yet. Explore a little!');
+      this.findCursor.setVisible(false);
+      return;
+    }
+    this.findCursor.setPosition(18, 31 + this.findIndex * 11).setVisible(true);
+    this.findDetail.setText(this.findRows[this.findIndex].how);
   }
 
   switchPocket(id) {
@@ -278,7 +386,7 @@ export default class InventoryScreen {
 
   // Space / the EAT button: eat the selected food
   use() {
-    if (this.mode === 'journal') return;
+    if (this.mode !== 'bag') return;
     const e = this.entries[this.index];
     if (this.isOpen && e && e.kind === 'item' && e.id === 'waystone-charm') {
       this.close();

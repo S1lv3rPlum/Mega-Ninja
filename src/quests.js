@@ -9,7 +9,7 @@
 //     choice: { options: [...], onPick: (i) => step | null } }   // optional menu; null = conversation over
 // The scene shows the lines, runs afterClose, opens the menu, and repeats with whatever onPick returns.
 import { FREE_SEEDS, plantedCount } from './farming.js';
-import { giveTool, hasTool, isBroken, repairTool } from './tools.js';
+import { giveTool, hasTool, isBroken, repairTool, maxDur } from './tools.js';
 
 export const fill = (template, values) =>
   template.replace(/\{(\w+)\}/g, (_, k) => (values[k] !== undefined ? values[k] : `{${k}}`));
@@ -136,7 +136,7 @@ function serviceMenu(gs, npcId, data, quest, toolDefs) {
       { label: `Sell ${req.amount} ${req.item} (${req.reward}g)`, disabled: have < req.amount },
     ];
     const owned = hasTool(gs, tool);
-    const needsRepair = owned && gs.tools[tool].dur < def.durability;
+    const needsRepair = owned && gs.tools[tool].dur < maxDur(gs, toolDefs, tool);
     const repairIdx = needsRepair ? options.push({
       label: `Repair ${def.name.toLowerCase()} (${costText(cost)})`,
       disabled: !Object.entries(cost).every(([item, n]) => (gs.items[item] ?? 0) >= n),

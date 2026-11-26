@@ -4,6 +4,7 @@
 const NICE = (id) => id.charAt(0).toUpperCase() + id.slice(1);
 
 import { enchantOf, enchantText } from './enchant.js';
+import { maxDur } from './tools.js';
 
 export function listEntries(gs, items, toolDefs, weaponDefs = {}, armorDefs = {}, enchantDefs = {}) {
   const enchLine = (slot) => { const e = enchantDefs[enchantOf(gs, slot)]; return e ? `\nEnchanted: ${e.name} (${enchantText(e)})` : ''; };
@@ -35,7 +36,7 @@ export function listEntries(gs, items, toolDefs, weaponDefs = {}, armorDefs = {}
     const d = items.tools?.[id] ?? { icon: 'rock', color: '#b0b6c0', desc: '' };
     const repair = def.repair ? Object.entries(def.repair).map(([k, v]) => `${v} ${k}`).join(', ') : '';
     entries.push({
-      id, kind: 'tool', name: def.name, dur: st.dur, max: def.durability, broken: st.dur <= 0,
+      id, kind: 'tool', name: def.name, dur: st.dur, max: maxDur(gs, toolDefs, id), broken: st.dur <= 0,
       icon: d.icon, color: d.color, desc: d.desc, repair,
     });
   });
@@ -45,8 +46,8 @@ export function listEntries(gs, items, toolDefs, weaponDefs = {}, armorDefs = {}
 // tools that are worn low enough to deserve a warning on the HUD
 export function lowTools(gs, toolDefs, fraction = 0.25) {
   return Object.keys(gs.tools ?? {})
-    .filter((id) => toolDefs[id] && gs.tools[id].dur <= toolDefs[id].durability * fraction)
-    .map((id) => ({ id, name: toolDefs[id].short ?? toolDefs[id].name, dur: gs.tools[id].dur, max: toolDefs[id].durability }));
+    .filter((id) => toolDefs[id] && gs.tools[id].dur <= maxDur(gs, toolDefs, id) * fraction)
+    .map((id) => ({ id, name: toolDefs[id].short ?? toolDefs[id].name, dur: gs.tools[id].dur, max: maxDur(gs, toolDefs, id) }));
 }
 
 // move the selection around a grid with `cols` columns; stays inside [0, count)

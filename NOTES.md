@@ -293,3 +293,10 @@ without being run in a browser, so test new features on desktop and phone.
 ## Bag pockets (tabs instead of one long grid)
 - Bag is sorted into tabs: GEAR (tools, weapon, armor, rod, lanterns, boots, charm, armor pieces, enchant gems), FOOD (anything that heals or is a brew), SEEDS, CROPS (raw produce), FISH (fish.json incl. the boot), STUFF (ores, gems, crests, the rest). `pocketOf`/`buildPockets` in inventory.js (tested). Tap a tab, or push the arrows past the side of a pocket to hop to the next non-empty one. The open tab is remembered. A pocket over 25 things spills to "STUFF 2" etc. (before this, anything past 25 was silently hidden).
 - To re-file an item, edit GEAR_ITEMS / CROP_ITEMS in inventory.js.
+
+## Sturdier axe + pickaxe (shop upgrades)
+- shop.json offer `type: 'toolup'` (`tool`, `label`, `levels:[{to,price}]`) like the pail: Axe/Pickaxe 30 -> 45 (80g) -> 70 (200g) -> 100 (400g). Needs the tool; refills it (even if broken). Saved as `gs.toolMax = { axe: 45 }`; always read through `maxDur(gs, defs, id)` in tools.js (wear label, repair, bag bar, low-tool warning, replacement tools). Sold at the farm market stall (axe + pickaxe) and by the Quarry Miner (pickaxe). Test: `test_toolup.mjs`.
+
+## World map (N key / MAP button) + "where to find things"
+- `src/data/worldmap.json` (areas with x/y on the screen, links, which real maps belong to each, `blurb`, `hint`, plus `services` = what/where/how) and `src/worldmap.js` (pure; `test_worldmap.mjs` checks every map belongs to one area, links are two-way, no overlaps). Shown as a mode of the bag screen (`openMap()` in InventoryScreen), so it blocks movement and closes like the bag (Esc / N / CLOSE). Arrow keys or taps select an area; FIND toggles the "where to find things" list.
+- `gs.visited` is filled in on every map load. Old saves get it inferred (path from Town to where you are, NPCs met, boss flags, market/bazaar visits). Areas show as: you (yellow), seen, lead (next to a seen area: name + hint, orange) or ? (unknown). To add an area: a node + `maps` entry; add services as you add shops.

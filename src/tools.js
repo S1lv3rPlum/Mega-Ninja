@@ -9,17 +9,20 @@ export function ensureToolState(gs) {
   if (!gs.targets) gs.targets = {};
 }
 
+// how much wear a tool can take: the shop can make it sturdier (gs.toolMax = { axe: 45 }), otherwise the tools.json value
+export const maxDur = (gs, defs, id) => gs.toolMax?.[id] ?? defs[id].durability;
+
 export const hasTool = (gs, id) => !!gs.tools[id];
 export const isBroken = (gs, id) => !!gs.tools[id] && gs.tools[id].dur <= 0;
 
 export function giveTool(gs, defs, id) {
-  gs.tools[id] = { dur: defs[id].durability };
+  gs.tools[id] = { dur: maxDur(gs, defs, id) };
 }
 
 export function toolLabel(gs, defs, id) {
   const def = defs[id];
   const name = def.short ?? def.name;
-  return isBroken(gs, id) ? `${name} broken` : `${name} ${gs.tools[id].dur}/${def.durability}`;
+  return isBroken(gs, id) ? `${name} broken` : `${name} ${gs.tools[id].dur}/${maxDur(gs, defs, id)}`;
 }
 
 // Use a tool once. Returns { ok, msg, broke }.
@@ -37,13 +40,13 @@ export function repairTool(gs, defs, id) {
   const def = defs[id];
   const name = def.name.toLowerCase();
   if (!hasTool(gs, id)) return { ok: false, msg: `You don't have a ${name}.` };
-  if (gs.tools[id].dur >= def.durability) return { ok: false, msg: `Your ${name} is in perfect shape.` };
+  if (gs.tools[id].dur >= maxDur(gs, defs, id)) return { ok: false, msg: `Your ${name} is in perfect shape.` };
   const cost = def.repair ?? {};
   for (const [item, n] of Object.entries(cost)) {
     if ((gs.items[item] ?? 0) < n) return { ok: false, msg: `Repairing needs ${n} ${item}.` };
   }
   for (const [item, n] of Object.entries(cost)) gs.items[item] -= n;
-  gs.tools[id].dur = def.durability;
+  gs.tools[id].dur = maxDur(gs, defs, id);
   return { ok: true, msg: `Your ${name} is good as new.` };
 }
 

@@ -1,0 +1,328 @@
+{
+  "nodes": {
+    "garden": {
+      "label": "Garden",
+      "x": 40,
+      "y": 48,
+      "links": [
+        "school"
+      ],
+      "maps": [
+        "garden",
+        "barn",
+        "nightbarn"
+      ],
+      "npcs": [
+        "barnkeeper",
+        "nightkeeper",
+        "student_g1"
+      ],
+      "blurb": "The school garden. Two barns: tame day animals in one, night animals in the other.",
+      "hint": "Behind the School."
+    },
+    "school": {
+      "label": "School",
+      "x": 40,
+      "y": 84,
+      "links": [
+        "town",
+        "garden",
+        "upper"
+      ],
+      "maps": [
+        "school",
+        "kitchen",
+        "potions",
+        "library",
+        "sparring",
+        "dorm1",
+        "dorm2"
+      ],
+      "npcs": [
+        "headmaster",
+        "cook",
+        "alchemist",
+        "librarian",
+        "sparmaster"
+      ],
+      "blurb": "Classes, kitchen, potions, library and sparring.",
+      "hint": "The big building west of Town."
+    },
+    "upper": {
+      "label": "Upper Floor",
+      "x": 40,
+      "y": 120,
+      "links": [
+        "school"
+      ],
+      "maps": [
+        "upper",
+        "dojo",
+        "workshop"
+      ],
+      "npcs": [
+        "trainer",
+        "enchanter"
+      ],
+      "blurb": "The Dojo (pet training) and the Workshop (the Enchanter).",
+      "hint": "Upstairs in the School.",
+      "short": "Upstairs"
+    },
+    "farm": {
+      "label": "Farm",
+      "x": 100,
+      "y": 48,
+      "links": [
+        "town"
+      ],
+      "maps": [
+        "farm"
+      ],
+      "npcs": [
+        "farmer",
+        "shopkeeper"
+      ],
+      "blurb": "Your plots, the pump and the market stall.",
+      "hint": "North of Town."
+    },
+    "town": {
+      "label": "Town",
+      "x": 100,
+      "y": 84,
+      "links": [
+        "farm",
+        "forest",
+        "school"
+      ],
+      "maps": [
+        "town"
+      ],
+      "npcs": [
+        "elder",
+        "sensei",
+        "tailor"
+      ],
+      "blurb": "Home. The Tailor changes your ninja colour.",
+      "hint": ""
+    },
+    "forest": {
+      "label": "Forest",
+      "x": 100,
+      "y": 120,
+      "links": [
+        "town",
+        "quarry"
+      ],
+      "maps": [
+        "forest"
+      ],
+      "npcs": [
+        "lumberjack",
+        "fisher"
+      ],
+      "blurb": "Trees, the Lumberjack and the Old Fisher.",
+      "hint": "South of Town."
+    },
+    "quarry": {
+      "label": "Quarry",
+      "x": 160,
+      "y": 120,
+      "links": [
+        "forest",
+        "cave"
+      ],
+      "maps": [
+        "quarry"
+      ],
+      "npcs": [
+        "miner"
+      ],
+      "blurb": "Rocks to mine. The Miner fixes and upgrades pickaxes.",
+      "hint": "East of the Forest.",
+      "short": "Quarry"
+    },
+    "cave": {
+      "label": "Caves",
+      "x": 160,
+      "y": 156,
+      "links": [
+        "quarry",
+        "crystal"
+      ],
+      "maps": [
+        "cave"
+      ],
+      "npcs": [],
+      "blurb": "Dark caves with bats, and Granite.",
+      "hint": "Under the Quarry."
+    },
+    "crystal": {
+      "label": "Crystal Caverns",
+      "x": 220,
+      "y": 156,
+      "links": [
+        "cave",
+        "market",
+        "peaks",
+        "desert",
+        "ruins"
+      ],
+      "maps": [
+        "crystal"
+      ],
+      "npcs": [],
+      "blurb": "Glimmer Hall, the Moth Garden and the Bat Queen. Many doors lead out of here.",
+      "hint": "Past the Caves.",
+      "short": "Crystal"
+    },
+    "market": {
+      "label": "Shadow Market",
+      "x": 220,
+      "y": 192,
+      "links": [
+        "crystal"
+      ],
+      "maps": [
+        "market"
+      ],
+      "npcs": [
+        "hexsmith",
+        "brewer"
+      ],
+      "blurb": "Hidden dark-magic market: the Hexsmith (WEAPON upgrades), the Brewer, the Critter Seller and the Charm Seller.",
+      "hint": "A hidden crack in the wall in the top-right corner of the Crystal Caverns (a sign talks about a cold draft). You need the Crystal Lantern from the Bat Queen to see through it.",
+      "short": "Market"
+    },
+    "peaks": {
+      "label": "Frozen Peaks",
+      "x": 220,
+      "y": 120,
+      "links": [
+        "crystal",
+        "ruins"
+      ],
+      "maps": [
+        "peaks"
+      ],
+      "npcs": [
+        "icehermit"
+      ],
+      "blurb": "Snow, an Ice Hermit and the island gate to the Ruins.",
+      "hint": "A cold passage behind the Bat Queen's roost.",
+      "short": "Peaks"
+    },
+    "ruins": {
+      "label": "Sunken Ruins",
+      "x": 280,
+      "y": 120,
+      "links": [
+        "peaks",
+        "crystal"
+      ],
+      "maps": [
+        "ruins"
+      ],
+      "npcs": [
+        "runea"
+      ],
+      "blurb": "Rune stones and the Sea Serpent. A wave-carved arch leads back to the Caverns.",
+      "hint": "Across the water from the Frozen Peaks.",
+      "short": "Ruins"
+    },
+    "desert": {
+      "label": "Desert",
+      "x": 280,
+      "y": 156,
+      "links": [
+        "crystal",
+        "bazaar"
+      ],
+      "maps": [
+        "desert"
+      ],
+      "npcs": [],
+      "blurb": "Sand, scorpions and the Scorpion King.",
+      "hint": "A sealed sandy archway in the Moth Garden. It wants half of a silver Moon Crest."
+    },
+    "bazaar": {
+      "label": "Desert Bazaar",
+      "x": 280,
+      "y": 192,
+      "links": [
+        "desert"
+      ],
+      "maps": [
+        "bazaar"
+      ],
+      "npcs": [
+        "bzsmith",
+        "princess"
+      ],
+      "blurb": "The ARMOR smith, the spice seller, the gem trader and the princess.",
+      "hint": "Through the Desert.",
+      "short": "Bazaar"
+    }
+  },
+  "services": [
+    {
+      "what": "Weapon upgrades",
+      "where": "market",
+      "how": "Hexsmith at the Shadow Market. Order a weapon, it is ready when you come back."
+    },
+    {
+      "what": "Armor upgrades",
+      "where": "bazaar",
+      "how": "The smith at the Desert Bazaar. Same deal: order, then return."
+    },
+    {
+      "what": "Enchant gems and scrolls",
+      "where": "upper",
+      "how": "The Enchanter in the Workshop (upstairs at school)."
+    },
+    {
+      "what": "Sturdier axe, pickaxe, bigger pail",
+      "where": "farm",
+      "how": "The market stall shopkeeper."
+    },
+    {
+      "what": "Pickaxe fix or upgrade",
+      "where": "quarry",
+      "how": "The Miner, so you do not have to walk back."
+    },
+    {
+      "what": "Fishing rod, sell fish",
+      "where": "forest",
+      "how": "The Old Fisher."
+    },
+    {
+      "what": "Brews (speed, night sight)",
+      "where": "market",
+      "how": "The Brewer at the east end of the Shadow Market."
+    },
+    {
+      "what": "Pet treats",
+      "where": "market",
+      "how": "The Critter Seller. The Bazaar spice seller has treats too."
+    },
+    {
+      "what": "Best gem prices",
+      "where": "bazaar",
+      "how": "The gem trader. The Shadow Market charm seller also pays well."
+    },
+    {
+      "what": "Change ninja colour",
+      "where": "town",
+      "how": "The Tailor."
+    },
+    {
+      "what": "Cooking",
+      "where": "school",
+      "how": "The cook in the school kitchen."
+    },
+    {
+      "what": "Train your pets",
+      "where": "upper",
+      "how": "The trainer in the Dojo."
+    }
+  ]
+}

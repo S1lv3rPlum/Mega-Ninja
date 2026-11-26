@@ -69,6 +69,46 @@
         "type": "repair",
         "tool": "pickaxe",
         "label": "Fix Pickaxe"
+      },
+      {
+        "id": "axeup",
+        "type": "toolup",
+        "tool": "axe",
+        "label": "Sturdier Axe",
+        "levels": [
+          {
+            "to": 45,
+            "price": 80
+          },
+          {
+            "to": 70,
+            "price": 200
+          },
+          {
+            "to": 100,
+            "price": 400
+          }
+        ]
+      },
+      {
+        "id": "pickup",
+        "type": "toolup",
+        "tool": "pickaxe",
+        "label": "Sturdier Pickaxe",
+        "levels": [
+          {
+            "to": 45,
+            "price": 80
+          },
+          {
+            "to": 70,
+            "price": 200
+          },
+          {
+            "to": 100,
+            "price": 400
+          }
+        ]
       }
     ],
     "sell": {
@@ -214,6 +254,26 @@
         "type": "repair",
         "tool": "pickaxe",
         "label": "Fix Pickaxe"
+      },
+      {
+        "id": "pickup",
+        "type": "toolup",
+        "tool": "pickaxe",
+        "label": "Sturdier Pickaxe",
+        "levels": [
+          {
+            "to": 45,
+            "price": 80
+          },
+          {
+            "to": 70,
+            "price": 200
+          },
+          {
+            "to": 100,
+            "price": 400
+          }
+        ]
       }
     ]
   },
