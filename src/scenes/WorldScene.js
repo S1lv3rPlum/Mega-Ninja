@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import mapData from '../data/worldmap.json';
 import { inferVisited, markVisited } from '../worldmap.js';
+import { regenStep, inFight, newRegen } from '../regen.js';
 import { STICK, stickDir, clampKnob, inStickZone } from '../joystick.js';
 import { LEVELS, LEVEL_IDS, chosen, setLevel, scaleMs, scaleDamage } from '../difficulty.js';
 import { SaveManager } from '../SaveManager.js';
@@ -161,6 +162,8 @@ export default class WorldScene extends Phaser.Scene {
     pending.push(...giveGifts(gs, owedGifts(gs)));
     if (pending.length) this.registry.set('pendingMsg', pending);
     this.invulnUntil = 0;
+    this.regen = newRegen();
+    inFight(this.regen, this.time.now); // a fresh start (or a new map) counts as just having fought: hearts wait their turn
     this.nextSwing = 0;
     // older saves kept the shovel as a plain item: turn it into a tool
     if (gs.items.shovel > 0) {
@@ -593,6 +596,7 @@ export default class WorldScene extends Phaser.Scene {
   attack() {
     if (this.bag.isOpen || this.dialogue.isOpen || this.choice.isOpen || this.moving || this.transitioning) return;
     this.fishing.cancel();
+    inFight(this.regen, this.time.now); // swinging a sword counts as fighting
     const gs = this.gameState;
     const w = weaponDefs[gs.weapon];
     if (!w) {
@@ -629,6 +633,7 @@ export default class WorldScene extends Phaser.Scene {
     const now = this.time.now;
     if (now < this.invulnUntil || this.transitioning) return;
     this.invulnUntil = now + scaleMs(this.gameState, 1000, 'invuln');
+    inFight(this.regen, now);
     audio.sfx('hurt');
     this.fishing.cancel('Ouch! Your line snapped.');
     const r = applyHurt(this.gameState, reduceDamage(scaleDamage(this.gameState, amount), { defense: (armorDefs[this.gameState.armor]?.defense ?? 0) + enchantBonus(this.gameState, enchantDefs).defense }));
@@ -1648,6 +1653,9 @@ export default class WorldScene extends Phaser.Scene {
       this.updatePetFight();
       if (this.boss) this.boss.update(_time);
       this.updateWalkers(_time);
+      // hearts slowly come back when you are not fighting (never during a boss fight)
+      const bossOn = !!this.boss && ['intro', 'active'].includes(this.boss.state);
+      if (regenStep(this.gameState, this.regen, this.time.now, { blocked: bossOn || this.transitioning, level: this.gameState.difficulty })) this.updateHearts();
     }
 
     if (this.moving || this.transitioning || this.dialogue.isOpen || this.choice.isOpen || this.bag.isOpen) return;

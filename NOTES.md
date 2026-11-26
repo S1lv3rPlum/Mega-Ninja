@@ -309,3 +309,6 @@ without being run in a browser, so test new features on desktop and phone.
 
 ## Map "FIND" lists: shops and goals
 - Each `services` entry in worldmap.json has `kind`: `shop` (who sells or does what) or `goal` (where key items and bosses are: lanterns, Crest Stone, Frost Boots, Moon Crest halves, the Bat Queen's passage and the hidden market crack). The FIND screen has a SHOPS / GOALS button; rows are 9px apart (max ~15 per list). Only places you have visited or are next to are listed; the rest stay hidden so nothing is spoiled. When you add a boss or key item, add a `goal` row.
+
+## Heart regeneration
+- `src/regen.js` (pure, `test_regen.mjs`): once you have been out of a fight for a while (no hit taken, no sword swung), you win back 1 hp (half a heart) every few seconds until full. Normal: after 8s, then every 7s. Easy: 6s / 4s. Hard: 12s / 12s. Never during a boss fight (`boss.state` intro/active; the wait starts when it ends), never at 0 hp, resets when you take a hit or swing. A fresh map load also counts as just having fought. Hooked in WorldScene `update` (after the menus-open guard), `hurtPlayer` and `attack`. Tune the numbers in `REGEN`.
