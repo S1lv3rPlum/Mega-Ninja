@@ -1,3 +1,4 @@
+import { scaleMs, scaleSight } from './difficulty.js';
 import audio from './audio.js';
 import enemyDefs from './data/enemies.json';
 import { markEarned } from './bossGifts.js';
@@ -101,7 +102,7 @@ export default class Enemies {
       if (e.def.harmless) {
         // a gentle creature: it wanders about, never chases and never attacks
         if (time < e.nextMove) return;
-        e.nextMove = time + e.def.moveMs * (0.8 + Math.random() * 1.2);
+        e.nextMove = time + scaleMs(s.gameState, e.def.moveMs, 'move') * (0.8 + Math.random() * 1.2);
         const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
         const d = dirs[Math.floor(Math.random() * 4)];
         const nx = e.x + d[0];
@@ -115,14 +116,14 @@ export default class Enemies {
       }
       if (isAdjacent(me, s.tile)) {
         if (time >= e.nextAttack) {
-          e.nextAttack = time + e.def.attackMs;
+          e.nextAttack = time + scaleMs(s.gameState, e.def.attackMs, 'attack');
           this.telegraph(e);
         }
         return;
       }
       if (time < e.nextMove) return;
-      e.nextMove = time + e.def.moveMs * (0.8 + Math.random() * 0.4);
-      const step = chooseStep(me, s.tile, (x, y) => this.free(x, y, e), e.def.sight);
+      e.nextMove = time + scaleMs(s.gameState, e.def.moveMs, 'move') * (0.8 + Math.random() * 0.4);
+      const step = chooseStep(me, s.tile, (x, y) => this.free(x, y, e), scaleSight(s.gameState, e.def.sight));
       if (!step) return;
       e.moving = true;
       e.x = step.x;
@@ -135,7 +136,7 @@ export default class Enemies {
   telegraph(e) {
     const s = this.scene;
     e.sprite.setTint(0xff5050);
-    s.time.delayedCall(380, () => {
+    s.time.delayedCall(scaleMs(s.gameState, 380, 'warn'), () => {
       if (e.dead || !e.sprite) return;
       e.sprite.clearTint();
       if (isAdjacent({ x: e.x, y: e.y }, s.tile)) {

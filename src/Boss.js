@@ -1,3 +1,4 @@
+import { scaleMs } from './difficulty.js';
 import { useTool } from './tools.js';
 import toolDefs from './data/tools.json';
 
@@ -35,6 +36,13 @@ const FREED = [
 ];
 
 export default class Boss {
+  // this phase's timings, stretched or squeezed by the difficulty level
+  timing() {
+    const base = this.phase === 1 ? BOSS.phase1 : BOSS.phase2;
+    const gs = this.scene.gameState;
+    return { ...base, everyMs: scaleMs(gs, base.everyMs, 'attack'), telegraphMs: scaleMs(gs, base.telegraphMs, 'warn') };
+  }
+
   constructor(scene, obj) {
     this.scene = scene;
     this.x = Math.floor(obj.x / TILE);
@@ -85,13 +93,13 @@ export default class Boss {
     if (this.state !== 'active') return;
     if (this.dist() > BOSS.aggroRadius) return; // you ran away: it just stands there
 
-    const ph = this.phase === 1 ? BOSS.phase1 : BOSS.phase2;
+    const ph = this.timing();
     if (time >= this.nextAttack) {
       this.nextAttack = time + ph.everyMs;
       this.slam(ph);
     }
     if (this.phase === 2 && time >= this.nextSummon) {
-      this.nextSummon = time + BOSS.summonEveryMs;
+      this.nextSummon = time + scaleMs(this.scene.gameState, BOSS.summonEveryMs, 'attack');
       this.summon();
     }
   }

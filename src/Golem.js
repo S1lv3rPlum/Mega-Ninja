@@ -1,3 +1,4 @@
+import { scaleMs } from './difficulty.js';
 import { useTool } from './tools.js';
 import toolDefs from './data/tools.json';
 
@@ -42,6 +43,16 @@ const FREED = [
 ];
 
 export default class Golem {
+  timing() {
+    const base = this.phase === 1 ? GOLEM.fall : GOLEM.fall2;
+    const gs = this.scene.gameState;
+    return { ...base, everyMs: scaleMs(gs, base.everyMs, 'attack'), telegraphMs: scaleMs(gs, base.telegraphMs, 'warn') };
+  }
+
+  rollWarn() {
+    return scaleMs(this.scene.gameState, GOLEM.rollTelegraphMs, 'warn');
+  }
+
   constructor(scene, obj) {
     this.scene = scene;
     this.x = Math.floor(obj.x / TILE);
@@ -121,7 +132,7 @@ export default class Golem {
     if (this.dist() > GOLEM.aggroRadius) return;
 
     if (time >= this.nextAttack) {
-      const ph = this.phase === 1 ? GOLEM.fall : GOLEM.fall2;
+      const ph = this.timing();
       this.nextAttack = time + ph.everyMs;
       this.attackCount += 1;
       const every = this.phase === 1 ? GOLEM.rollEvery : GOLEM.rollEvery - 1;
@@ -129,7 +140,7 @@ export default class Golem {
       else this.rockfall(ph);
     }
     if (this.phase === 2 && time >= this.nextSummon) {
-      this.nextSummon = time + GOLEM.summonEveryMs;
+      this.nextSummon = time + scaleMs(this.scene.gameState, GOLEM.summonEveryMs, 'attack');
       this.summon();
     }
     void gs;
@@ -217,7 +228,7 @@ export default class Golem {
       steps.push({ x, y });
     }
     if (steps.length < 2) {
-      this.rockfall(this.phase === 1 ? GOLEM.fall : GOLEM.fall2); // no room to roll here
+      this.rockfall(this.timing()); // no room to roll here
       return;
     }
     this.busy = true;
@@ -226,10 +237,10 @@ export default class Golem {
     steps.forEach((st) => {
       for (let ty = st.y; ty <= st.y + 1; ty++) for (let tx = st.x; tx <= st.x + 1; tx++) laneTiles.set(`${tx},${ty}`, { x: tx, y: ty });
     });
-    const marks = [...laneTiles.values()].filter((t) => !this.occupies(t.x, t.y)).map((t) => this.mark(t, GOLEM.rollTelegraphMs));
+    const marks = [...laneTiles.values()].filter((t) => !this.occupies(t.x, t.y)).map((t) => this.mark(t, this.rollWarn()));
     s.showToast('Granite curls up! Get out of the red lane!');
     s.tweens.add({ targets: this.sprite, angle: -8, duration: 140, yoyo: true, repeat: 3 });
-    s.time.delayedCall(GOLEM.rollTelegraphMs, () => {
+    s.time.delayedCall(this.rollWarn(), () => {
       marks.forEach((m) => m.destroy());
       if (this.state !== 'active') return;
       // do not end up inside the player: stop short

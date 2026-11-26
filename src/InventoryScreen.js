@@ -1,3 +1,4 @@
+import { levelOf } from './difficulty.js';
 import itemsData from './data/items.json';
 import toolDefs from './data/tools.json';
 import weaponDefs from './data/weapons.json';
@@ -145,7 +146,7 @@ export default class InventoryScreen {
     this.detailDesc = add(s.add.text(200, 72, '', { fontSize: '8px', fontFamily: 'monospace', color: '#c8ccdc', wordWrap: { width: 104 }, lineSpacing: 2 }));
 
     // footer: hint + close button (the button is what phones use)
-    add(s.add.text(20, 214, 'Arrows: move  Space: use', { fontSize: '7px', fontFamily: 'monospace', color: '#8a90a8' }));
+    add(s.add.text(20, 214, 'Space: use', { fontSize: '7px', fontFamily: 'monospace', color: '#8a90a8' }));
     const close = add(
       s.add.text(284, 215, 'CLOSE', { fontSize: '9px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#444466', padding: { x: 4, y: 2 } }).setOrigin(0.5).setInteractive(),
     );
@@ -154,11 +155,18 @@ export default class InventoryScreen {
       s.add.text(222, 215, 'SAVE + TITLE', { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#2a4a6a', padding: { x: 4, y: 3 } }).setOrigin(0.5).setInteractive(),
     );
     const jbtn = add(
-      s.add.text(150, 215, 'JOURNAL', { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#6a3a6a', padding: { x: 4, y: 3 } }).setOrigin(0.5).setInteractive(),
+      s.add.text(160, 215, 'JOURNAL', { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#6a3a6a', padding: { x: 4, y: 3 } }).setOrigin(0.5).setInteractive(),
     );
     jbtn.on('pointerdown', () => {
       this.close();
       this.openJournal();
+    });
+    const lbtn = add(
+      s.add.text(98, 215, `LV: ${levelOf(s.gameState).name.toUpperCase()}`, { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: '#6a4a2a', padding: { x: 4, y: 3 } }).setOrigin(0.5).setInteractive(),
+    );
+    lbtn.on('pointerdown', () => {
+      this.close();
+      s.chooseLevel();
     });
     quit.on('pointerdown', () => {
       this.close();

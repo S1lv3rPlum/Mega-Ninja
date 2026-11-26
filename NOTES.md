@@ -276,3 +276,9 @@ without being run in a browser, so test new features on desktop and phone.
 - Sounds hooked in: sword swing, enemy hit, getting hurt, door, item pickup, gold, menu move/select/back (ChoiceMenu), eat/drink, fishing (cast, splash, bite, pull, miss, catch), making friends, journal rewards.
 - Mute: M key, the small ♪ in the top-right corner, or the SND/MUTE button on touch screens.
 - To change a tune, edit its line in THEMES (seed changes the melody, bpm/scale/prog change the feel) and run `node test_music.mjs`. New SFX: add an entry to SFX and call `audio.sfx('name')`.
+
+## Difficulty (Easy / Normal / Hard)
+- `src/difficulty.js` (pure, `test_difficulty.mjs`): `gs.difficulty` = easy|normal|hard; missing = asked once on next load, plays as Normal. Normal = the game exactly as before.
+- Multipliers: easy = damage x0.5 (min 1 half-heart), attacks 1.5x slower, red warnings 1.7x longer, enemies move 1.3x slower, sight x0.8, invulnerability after a hit 1.6s. Hard = damage x1.5, attacks x0.8, warnings x0.75, move x0.85, sight x1.15, invuln 0.7s.
+- Applied in `WorldScene.hurtPlayer` (damage + invuln, so bosses/rocks/roots all scale), `Enemies.js` (attackMs, 380ms telegraph, moveMs, sight), `Boss.js`/`Golem.js` via `timing()` (everyMs, telegraphMs, summon timer, Golem roll warning).
+- Asked by `chooseLevel()` after the colour chooser (or on load for older saves); bag footer button "LV: EASY" re-opens it.

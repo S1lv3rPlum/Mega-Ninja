@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { LEVELS, LEVEL_IDS, chosen, setLevel, scaleMs, scaleDamage } from '../difficulty.js';
 import { SaveManager } from '../SaveManager.js';
 import DialogueBox from '../DialogueBox.js';
 import dialogueData from '../data/dialogue.json';
@@ -353,6 +354,7 @@ export default class WorldScene extends Phaser.Scene {
     this.friends = new Friends(this);
     this.friends.start();
     if (!this.gameState.ninja) this.time.delayedCall(700, () => this.chooseNinja()); // choose a colour the first time
+    else if (!chosen(this.gameState)) this.time.delayedCall(700, () => this.chooseLevel()); // older saves: pick a difficulty once
 
     // --- Input: arrows + WASD to move; Space / Enter / Z to talk; P to save ---
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -618,10 +620,10 @@ export default class WorldScene extends Phaser.Scene {
   hurtPlayer(amount) {
     const now = this.time.now;
     if (now < this.invulnUntil || this.transitioning) return;
-    this.invulnUntil = now + 1000;
+    this.invulnUntil = now + scaleMs(this.gameState, 1000, 'invuln');
     audio.sfx('hurt');
     this.fishing.cancel('Ouch! Your line snapped.');
-    const r = applyHurt(this.gameState, reduceDamage(amount, { defense: (armorDefs[this.gameState.armor]?.defense ?? 0) + enchantBonus(this.gameState, enchantDefs).defense }));
+    const r = applyHurt(this.gameState, reduceDamage(scaleDamage(this.gameState, amount), { defense: (armorDefs[this.gameState.armor]?.defense ?? 0) + enchantBonus(this.gameState, enchantDefs).defense }));
     this.cameras.main.shake(120, 0.004);
     this.tweens.add({ targets: this.player, alpha: 0.3, duration: 80, yoyo: true, repeat: 4, onComplete: () => this.player.setAlpha(1) });
     this.updateHud();
@@ -1481,6 +1483,28 @@ export default class WorldScene extends Phaser.Scene {
     this.choice.open(NINJA_IDS.map((id) => NINJA_COLORS[id].name), {
       onSelect: (i) => {
         if (i >= 0 && i < NINJA_IDS.length) this.setNinja(NINJA_IDS[i]);
+        if (!chosen(this.gameState)) this.time.delayedCall(400, () => this.chooseLevel());
+      },
+    });
+  }
+
+  // how tough should the monsters be? (asked once per save; the bag has a LEVEL button to change it)
+  chooseLevel() {
+    if (this.choice.isOpen || this.dialogue.isOpen || this.transitioning) {
+      if (!chosen(this.gameState)) this.time.delayedCall(700, () => this.chooseLevel());
+      return;
+    }
+    const gs = this.gameState;
+    this.showToast('How tough should the monsters be?');
+    this.choice.open(LEVEL_IDS.map((id) => LEVELS[id].name), {
+      onSelect: (i) => {
+        if (i < 0 || i >= LEVEL_IDS.length) return;
+        setLevel(gs, LEVEL_IDS[i]);
+        this.showToast(`${LEVELS[LEVEL_IDS[i]].name} it is!`);
+        this.saveQuiet();
+      },
+      onCancel: () => {
+        if (!chosen(gs)) setLevel(gs, 'normal');
       },
     });
   }
