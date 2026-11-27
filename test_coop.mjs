@@ -102,3 +102,18 @@ console.log('coop ok');
   assert.deepEqual(patch, { 'enemies/forest/s1': null }); // it grew back
   console.log('coop enemies ok');
 }
+
+// the personal "I got my boss gift" marker must never be shared (it hid the Yeti's boots from a friend)
+{
+  assert(!C.isWorldFlag('gift_yeti_defeated'));
+  assert(C.isWorldFlag('yeti_defeated'));
+  const mine = { flags: { yeti_defeated: true, gift_yeti_defeated: true } };
+  const flat = C.flattenShared(mine);
+  assert(flat['flags/yeti_defeated'] && !flat['flags/gift_yeti_defeated']);
+  assert(C.personalPart(mine).flags.gift_yeti_defeated); // and it is saved in your own record
+  // a friend joins an old world whose cloud already holds the wrongly shared marker
+  const friend = { flags: {}, items: {} };
+  C.applyInitial(friend, { flags: { yeti_defeated: true, gift_yeti_defeated: true } });
+  assert(friend.flags.yeti_defeated && !friend.flags.gift_yeti_defeated);
+  console.log('coop gift flag ok');
+}

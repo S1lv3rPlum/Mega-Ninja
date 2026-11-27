@@ -43,3 +43,13 @@ import { reissueFor } from './src/bossGifts.js';
   assert.equal(reissueFor({ flags: {}, items: {} }, 'crystal-lantern'), null);               // boss not beaten: nothing
   assert.equal(reissueFor({ flags: { serpent_defeated: true }, items: {} }, 'moon-crest-half'), null); // used-up items never come back
 }
+{
+  // the friend of a yeti-slayer gets the boots once the marker is no longer shared
+  const C = await import('./src/coopLogic.js');
+  const friend = { flags: {}, items: {} };
+  C.applyInitial(friend, { flags: { yeti_defeated: true, gift_yeti_defeated: true } });
+  assert.equal(owedGifts(friend).length, 1);
+  giveGifts(friend, owedGifts(friend));
+  assert.equal(friend.items['frost-boots'], 1);
+  console.log('gifts reach a friend ok');
+}

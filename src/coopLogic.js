@@ -12,7 +12,8 @@ export const CODE_LENGTH = 6;
 export const STALE_MS = 45000; // a player who has not checked in for this long is treated as gone
 
 // A flag is shared if it is about the world, not about one player's story
-export const isWorldFlag = (f) => f.endsWith('_defeated') || f.endsWith('_cleared');
+// ("gift_<boss>_defeated" is NOT shared: it records that YOU got your own boss gift, see bossGifts.js)
+export const isWorldFlag = (f) => !f.startsWith('gift_') && (f.endsWith('_defeated') || f.endsWith('_cleared'));
 
 // The cloud database does not allow . $ # [ ] / in keys
 export const safeKey = (s) => String(s).replace(/[.$#[\]/]/g, '_');
@@ -91,6 +92,7 @@ function fixValue(section, v) {
 export function applyPath(gs, path, value) {
   const [section, a, b] = path.split('/');
   if (section === 'flags') {
+    if (!isWorldFlag(a)) return; // old cloud worlds hold gift_* flags that were wrongly shared: ignore them
     if (!gs.flags) gs.flags = {};
     if (value) gs.flags[a] = true;
     else delete gs.flags[a];
