@@ -3,8 +3,8 @@
 // A personal flag "gift_<flag>" records that you have had yours, so a used-up item (the Moon Crest halves join into
 // the whole Crest) is never handed out twice.
 export const BOSS_GIFTS = [
-  { flag: 'batqueen_defeated', item: 'crystal-lantern', who: 'The Bat Queen was beaten by your friends!', gets: 'You got a Crystal Lantern too.' },
-  { flag: 'yeti_defeated', item: 'frost-boots', who: 'The Yeti was beaten by your friends!', gets: 'You got Frost Boots too.' },
+  { flag: 'batqueen_defeated', item: 'crystal-lantern', reissue: true, who: 'The Bat Queen was beaten by your friends!', gets: 'You got a Crystal Lantern too.' },
+  { flag: 'yeti_defeated', item: 'frost-boots', reissue: true, who: 'The Yeti was beaten by your friends!', gets: 'You got Frost Boots too.' },
   { flag: 'serpent_defeated', item: 'moon-crest-half', who: 'The Sea Serpent was calmed by your friends!', gets: 'You got half of the Moon Crest too.' },
   { flag: 'scorpionking_defeated', item: 'moon-crest-half-2', who: 'The Scorpion King was beaten by your friends!', gets: 'You got the other Moon Crest half too.' },
 ];
@@ -31,3 +31,11 @@ export function giveGifts(gs, gifts) {
 export const markEarned = (gs, flag) => {
   gs.flags[giftFlag(flag)] = true;
 };
+
+// Safety net for items that are never used up (the lanterns, the boots): if you stand at a door or ice that needs one,
+// the boss is beaten in your world and you do not have it, it is handed over right then, whatever "gift_" says.
+export function reissueFor(gs, item) {
+  const g = BOSS_GIFTS.find((x) => x.item === item && x.reissue && gs.flags[x.flag]);
+  if (!g || gs.items[item] > 0) return null;
+  return giveGifts(gs, [g])[0];
+}

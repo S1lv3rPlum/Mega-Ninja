@@ -52,7 +52,7 @@ import InventoryScreen, { iconKey } from '../InventoryScreen.js';
 import { lowTools } from '../inventory.js';
 import { Coop } from '../Coop.js';
 import Friends from '../Friends.js';
-import { owedGifts, giveGifts } from '../bossGifts.js';
+import { owedGifts, giveGifts, reissueFor } from '../bossGifts.js';
 import waystoneData from '../data/waystones.json';
 import { ensureSmith, talkToSmith, reduceDamage, mergeCrest } from '../smith.js';
 import armorDefs from '../data/armor.json';
@@ -1966,7 +1966,11 @@ export default class WorldScene extends Phaser.Scene {
   lockedDoorAt(x, y) {
     const d = this.doors.find((o) => x >= o.x0 && x <= o.x1 && y >= o.y0 && y <= o.y1);
     if (!d) return null;
-    const noItem = d.requiresItem && !(this.gameState.items[d.requiresItem] > 0);
+    let noItem = d.requiresItem && !(this.gameState.items[d.requiresItem] > 0);
+    if (noItem) { // a friend beat the boss that drops it but the gift never reached you: hand it over now
+      const msg = reissueFor(this.gameState, d.requiresItem);
+      if (msg) { this.showToast(msg); noItem = false; }
+    }
     const noFlag = d.requiresFlag && !this.gameState.flags[d.requiresFlag];
     return noItem || noFlag ? d : null;
   }

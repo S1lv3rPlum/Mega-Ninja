@@ -33,3 +33,13 @@ for (const w of ways) {
 for (const c of Object.values(crops)) { assert(items.items[c.seed], c.seed); assert(items.items[c.item], c.item); }
 for (const id of Object.keys(crops).filter((c) => c !== 'wheat')) for (const n of [2, 3, 4]) assert(fs.existsSync(`public/assets/sprites/crop-${id}-${n}.png`), `${id}-${n}`);
 console.log('waystones ok');
+
+// ---- safety net: lanterns and boots are re-handed at the door if a friend beat the boss and you have none
+import { reissueFor } from './src/bossGifts.js';
+{
+  const g = { flags: { batqueen_defeated: true, gift_batqueen_defeated: true }, items: {} };   // gift marked as received, item missing
+  assert.match(reissueFor(g, 'crystal-lantern'), /Crystal Lantern/); assert.equal(g.items['crystal-lantern'], 1);
+  assert.equal(reissueFor(g, 'crystal-lantern'), null);                                      // only while you have none
+  assert.equal(reissueFor({ flags: {}, items: {} }, 'crystal-lantern'), null);               // boss not beaten: nothing
+  assert.equal(reissueFor({ flags: { serpent_defeated: true }, items: {} }, 'moon-crest-half'), null); // used-up items never come back
+}
