@@ -327,3 +327,51 @@ without being run in a browser, so test new features on desktop and phone.
 - `index.html`: viewport `viewport-fit=cover`, no pinch zoom, `100dvh` game area, no page scroll/bounce; `manifest.webmanifest` (display fullscreen, landscape) + apple meta tags so **Add to Home Screen** opens the game with no address bar (iPhone: Share > Add to Home Screen; Android: menu > Install app / Add to Home screen). Icons `assets/ui/icon-192.png` / `icon-512.png` are made from icon.png (regenerate if the icon changes).
 - **FULL** button (touch HUD, below MAP) and **FULL SCREEN** on the title screen use the browser Fullscreen API: Android Chrome and iPad yes; iPhone Safari does not allow it, so the buttons only appear where it is available.
 - Joystick: a finger that starts inside the game and drags out into the black bars keeps steering (the browser keeps sending its moves to the canvas). A finger that starts in the black bar on the left side also starts the stick (page-level touch listeners in `createTouchControls`, removed on scene shutdown). Tested with real touch events (CDP).
+
+## The big cave, the Surveyor and cooking/brewing from the bag
+- **Cave map** (`make_cave_map.py` builds `public/assets/maps/cave.json`, 46x36): 8 chambers joined by tunnels: Entrance Cavern, Echo Hall, Bat Roost, Granite's Hall, Lantern Crossing, Mushroom Grotto, Collapsed Mine, Hidden Vault. Six `gate0..5` rocks (no respawn, pickaxe) block the tunnels to the Roost shortcut, the Collapsed Mine and the Hidden Vault; everything else is reachable. Granite's arena, the stone door (21,1) and the Crystal door are in the same place as before. The Quarry's `to-cave` door now lands at (8,34). Decor rocks (`crock*`, respawn) and bats (`bat*`) are re-placed; `test_cave.mjs` checks that every chamber is reachable, the gates really gate, and nothing stands on a wall.
+- **Discovering**: the map has a `chambers` rectangle layer (id + name). Stepping into a new one sets `gs.flags.cave_ch_<id>` and shows "Discovered: Echo Hall (3 of 8)". `data/cave.json` lists the chambers (ids must match the map; the test checks) and the chest reward. Logic in `src/cave.js`.
+- **Surveyor Tam** (`cavemaster` sprite, Quarry at (22,4), dialogue `cavemaster`): asks you to explore all 8 chambers, reports progress, and when all are found teaches you: `learned_cook` + `learned_brew`.
+- **Treasure chest** (Hidden Vault, `chest`/`chest-open` sprites, role `chest`): once, 150 gold + ruby + sapphire + emerald + 3 herbs (`cave.json` `chest`). Sprites from `make_cave_sprites.py`.
+- **COOK / BREW tabs in the bag** (`src/lessons.js`, `test_cave.mjs`): after the lesson the bag shows two more pockets. COOK = kitchen + grill recipes, BREW = potion recipes (recipes.json). Each recipe is a slot (dim until you carry everything); the side panel lists "Item have/need"; Space or MAKE crafts it with `craft.js`. The school cook/alchemist still work (and are still what ticks the first-year class checks; making things from the bag does not).
+- Next (zip 2): tap an area on the world map to open its own detailed map (caves with discovered chambers, school rooms).
+
+## Co-op: the crack in the wall with a friend's Bat Queen kill
+- `bossGifts.js` `reissueFor(gs, item)`: for never-used-up rewards (Crystal Lantern, Frost Boots, `reissue: true`), `lockedDoorAt` hands the item over on the spot if the boss flag is set in your world and you have none, whatever `gift_<flag>` says. Safety net for when the load-time gift did not arrive.
+
+## World map follows the real door directions (north is up)
+- Area positions in `worldmap.json` now come from which edge each door is on: School has Town to its south, Garden east, Upstairs north; Town has Farm east and Forest south; Quarry east of Forest; Caves north of Quarry; Crystal north of Caves; Market north of Crystal (the crack); Desert and Peaks east of Crystal; Ruins east of Peaks; Bazaar east of Desert.
+- The Bazaar's door to the Desert moved from its south wall to its **west** wall (0,13), because the Desert's door is on its east edge. Desert's `to-bazaar` now lands at (1,13).
+- Known leftovers, left on purpose: the Caves -> Crystal passage (north door, arrives at Crystal's north end) and the Crystal -> Ruins archway (west door, arrives at the Ruins' north end) are "secret passages", not straight walks.
+
+## Zone maps (tap an area on the world map)
+- On the world map, **tap the selected area again**, press **Space**, or tap **OPEN** to open that area's own map (bag mode `'area'`: `openArea`/`refreshArea` in InventoryScreen). Arrow keys or taps move between rooms; MAP goes back, CLOSE / Esc / N closes. Every world-map area now has one (the message "No detailed map of this area yet." only shows for a future area without data).
+- Data: `src/data/areamaps.json`, built by `make_area_maps.py` (cave rooms are scaled from the real cave map's `chambers` layer; re-run it if you change the cave). Each room: `x,y,w,h` (screen pixels), `name`, `note`, `story` (gold edge = needed for the main story), and either `chamber` (a cave chamber, seen when `cave_ch_<id>` is set) or `map` (a real map, seen when `gs.mapsSeen[map]`). Optional `visitedArea` (seen once the world-map area was visited) and `seenFlags` (older saves: a finished class proves you were there). `links` (`'gate'` = orange, needs a pickaxe) and `exits` (text labels for doors that lead out of the area).
+- `gs.mapsSeen` (new): every map you load is recorded (`markMapSeen` in WorldScene create). Old saves start empty and fill in as you walk.
+- Logic in `src/areamap.js` (pure) with `test_areamap.mjs`, which checks every room fits the panel and never overlaps, cave rooms = cave.json chambers, school rooms = the School area's maps, and the story rooms (cave: Entrance, Echo, Crossing, Granite; school: Courtyard + all 4 classes).
+- To add an area: add an entry in `make_area_maps.py` keyed by the world-map area id.
+
+### Zone maps, part 2: fogged terrain maps for the one-map areas
+- Town, Forest, Quarry, Farm, Crystal Caverns, Enchanted Market, Frozen Peaks, Sunken Ruins, Desert and Bazaar are `kind: "terrain"` entries in `areamaps.json` (built by `make_area_maps.py` from the real map's obstacles layer: `rows` of `#`/`.`, plus hand-written `landmarks`: name, tile x/y, kind door/shop/boss/npc/waystone/thing, `story`, `note`). Garden (with the barns) and Upstairs (with the dojo and workshop) use the room boxes like the School.
+- **Fog of war**: `gs.fog[map]` is a 0/1 string, one character per 4x4-tile cell. `reveal()` (areamap.js) lifts every cell within 6 tiles of you on each step and on each map load (`revealFog()` in WorldScene; the cave uses its own chamber discovery instead). Landmarks only show once their cell is lifted, so nothing is spoiled; "Explored N%" counts walkable floor you have seen. Old saves: `inferFog` lifts the fog around the doors of an area you have visited.
+- `test_areamap.mjs` checks every landmark stands on a walkable tile, every door, boss and waystone in the real maps has a landmark, every world-map area has a zone map, and the fog logic.
+- If you change a map's layout or move a door/NPC, re-run `python3 make_area_maps.py` and update the landmark list there.
+
+## Test character + How to play
+- `src/testsave.js` builds a late-game "Tester" save (all bosses, Moon Crest, gear, tools, owl companion). It only appears as a TEST CHARACTER button (bottom-left of the title) when the page address has `?test=1`; it uses the first empty slot.
+- `src/helptext.js` holds the HOW TO PLAY pages (bottom-right of the title, or press H). Arrows/Space/Enter page through, Esc closes. Phone wording comes from `forDevice`.
+- Tests: `test_testsave.mjs`, `test_helptext.mjs`.
+
+## Co-op gift marker fix
+`gift_<boss>_defeated` ends in `_defeated`, so it was being shared as a world flag: one player's Yeti win marked everyone's gift as already received. `isWorldFlag` now excludes `gift_*`, `applyPath` ignores them from old cloud worlds, and they are saved in each player's own record. The shared boss flag still hands every friend their item once, on joining or live.
+
+## Cursed Hollow (the fairy wood)
+- West of the Forest (door at forest 0,10). The thorn door needs the **Fairy Charm** (`fairy-charm`). Nothing hands it out yet: the plan is to give it at the end of the school's 2nd floor. The `?test=1` Tester has one.
+- `hollow.json` (40x32, built by `make_hollow_map.py`): six glades (red, orange, yellow, green, blue, purple) around a center arena. Each glade has a thorn cage (an NPC whose `openFlag` is `fairy_<colour>_defeated`) and a Thorn guardian boss (`guard_<colour>` in enemies.json, with a wisp summon). Nine wisps wander the paths. Sprites: `make_hollow_assets.py`.
+- Freeing the sixth fairy sets `fairies_all_cleared` and wakes the **Rainbow Fairy** (`Enemies.wake()` spawns enemies that were waiting on `requiresFlag`). She drops the **Prism Gem** (weapon enchant: +3 damage, 0.85 swing time). Her sprite cycles through the six colours.
+- Gifts (`src/fairies.js`, worked out from the shared flags, nothing extra saved): Ruby +1 sword damage, Amber +1 heart from food (not elixir), Sunny +50% enemy gold, Fern crops grow in half the time, Marina fishing window/zone bonus, Violet faster regen. All flags end in `_defeated`, so a friend freeing a fairy gives the gift to everybody in co-op. The Prism Gem is in BOSS_GIFTS.
+- World map: new node "Hollow" at the far left; column x=40 nodes moved to x=62 to make room. Zone map `hollow` added to make_area_maps.py.
+- Tests: `test_fairies.mjs`.
+
+## Joystick stuck after naming a pet
+`window.prompt` (pet naming/renaming) swallows the touch-end, so `this.stick` stayed set and no new stick could start (the buttons still worked). Fixes: `this.releaseStick()` after each prompt in Friends.js; a stale stick (its pointer not down, or its finger not in `e.touches`) is dropped on the next touch and in `update()`.

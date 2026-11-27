@@ -54,6 +54,7 @@ import { lowTools } from '../inventory.js';
 import { Coop } from '../Coop.js';
 import Friends from '../Friends.js';
 import { owedGifts, giveGifts, reissueFor } from '../bossGifts.js';
+import { perkDamage, ALL_FREE_FLAG } from '../fairies.js';
 import waystoneData from '../data/waystones.json';
 import { ensureSmith, talkToSmith, reduceDamage, mergeCrest } from '../smith.js';
 import armorDefs from '../data/armor.json';
@@ -71,7 +72,7 @@ const START_MAP = 'town';
 const START_TILE = { x: 15, y: 10 };
 
 // To add a map: save it as public/assets/maps/<name>.json and add its name here.
-const MAPS = ['town', 'farm', 'forest', 'quarry', 'cave', 'crystal', 'market', 'peaks', 'ruins', 'desert', 'bazaar', 'school', 'kitchen', 'potions', 'library', 'sparring', 'dorm1', 'dorm2', 'garden', 'barn', 'upper', 'dojo', 'workshop', 'nightbarn'];
+const MAPS = ['town', 'farm', 'forest', 'hollow', 'quarry', 'cave', 'crystal', 'market', 'peaks', 'ruins', 'desert', 'bazaar', 'school', 'kitchen', 'potions', 'library', 'sparring', 'dorm1', 'dorm2', 'garden', 'barn', 'upper', 'dojo', 'workshop', 'nightbarn'];
 // To add a tileset: save it as public/assets/tilesets/<name>.png and add its name here.
 // (The name must match the tileset's name inside Tiled.)
 const TILESETS = ['tiles', 'farm-tiles', 'stall-tiles', 'mine-tiles', 'crystal-tiles', 'market-tiles', 'snow-tiles', 'ruins-tiles', 'desert-tiles', 'bazaar-tiles', 'school-tiles'];
@@ -105,7 +106,7 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('alchemist', 'assets/sprites/alchemist.png');
     ['grey', 'copper', 'sapphire', 'emerald', 'ruby', 'diamond', 'crystal', 'sun'].forEach((r) => this.load.image(`rock-${r}`, `assets/sprites/rock-${r}.png`));
     this.load.image('rubble', 'assets/sprites/rubble.png');
-    ['treant-boss', 'treant-good', 'sapling', 'sign', 'bat-queen', 'moth', 'hexsmith', 'hexcreature', 'hexcharm', 'yeti', 'snowfox', 'frostimp', 'snow-bush', 'snow-bush-bare', 'serpent', 'jelly', 'crab', 'kelp', 'kelp-bare', 'rune-off', 'rune-on', 'ruinsdoor', 'ruinsdoor-open', 'scorpion', 'sandlizard', 'scorpionking', 'cactus-fruit', 'cactus-fruit-bare', 'princess', 'bzsmith', 'bzspice', 'bzgem', 'waystone-off', 'waystone-on', 'tinker', 'snow-pine', 'snow-pine-stump'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
+    ['treant-boss', 'treant-good', 'sapling', 'sign', 'bat-queen', 'moth', 'hexsmith', 'hexcreature', 'hexcharm', 'yeti', 'snowfox', 'frostimp', 'snow-bush', 'snow-bush-bare', 'serpent', 'jelly', 'crab', 'kelp', 'kelp-bare', 'rune-off', 'rune-on', 'ruinsdoor', 'ruinsdoor-open', 'scorpion', 'sandlizard', 'scorpionking', 'cactus-fruit', 'cactus-fruit-bare', 'princess', 'bzsmith', 'bzspice', 'bzgem', 'waystone-off', 'waystone-on', 'tinker', 'snow-pine', 'snow-pine-stump', 'wisp', 'fairy-cage', 'rainbow-fairy', ...['red', 'orange', 'yellow', 'green', 'blue', 'purple'].flatMap((c) => [`fairy-${c}`, `guard-${c}`])].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
     this.load.image('bush', 'assets/sprites/bush.png');
     this.load.image('bush-bare', 'assets/sprites/bush-bare.png');
     ['carrot', 'pumpkin', 'frostberry', 'seaweed', 'cactus-fruit', 'moonbloom', 'glowcap'].forEach((c) => [2, 3, 4].forEach((n) => this.load.image(`crop-${c}-${n}`, `assets/sprites/crop-${c}-${n}.png`)));
@@ -189,6 +190,7 @@ export default class WorldScene extends Phaser.Scene {
     this.crops = null;
     this.map.layers.forEach((l) => {
       const layer = this.map.createLayer(l.name, tilesets);
+      if (gs.map === 'hollow' && layer.setTint) layer.setTint(0x9a90d0); // the Hollow is always a purple twilight
       if (l.name === 'obstacles') this.obstacles = layer;
       if (l.name === 'ground') this.groundLayer = layer;
       if (l.name === 'crops') this.crops = layer;
@@ -634,7 +636,7 @@ export default class WorldScene extends Phaser.Scene {
     this.tweens.add({ targets: slash, alpha: 0, duration: 160, onComplete: () => slash.destroy() });
     this.tweens.add({ targets: this.player, x: this.player.x + fx * 3, y: this.player.y + fy * 3, duration: 60, yoyo: true });
 
-    const dmg = w.damage + sparBonus(gs) + enchantBonus(gs, enchantDefs).damage; // sparring class +1, Ember gems
+    const dmg = w.damage + sparBonus(gs) + enchantBonus(gs, enchantDefs).damage + perkDamage(gs); // sparring class +1, Ember gems, Ruby's gift
     const e = this.enemies.at(tx, ty);
     const dummy = !e && this.npcs.find((n) => n.role === 'dummy' && n.x === tx && n.y === ty);
     if (dummy) {
@@ -1129,11 +1131,18 @@ export default class WorldScene extends Phaser.Scene {
       knob.setVisible(false);
       hint.setVisible(true);
     };
+    // window.prompt (naming a pet) swallows the finger-up, so the stick would think a thumb is still down and never start again.
+    // Anything that can do that calls this afterwards.
+    this.releaseStick = () => {
+      this.input.manager.pointers.forEach((p) => { if (p.wasTouch && p.isDown) p.isDown = false; });
+      releaseStick();
+    };
     const release = (pointer) => {
       if (!this.stick || pointer.id !== this.stick.id) return;
       releaseStick();
     };
     this.input.on('pointerdown', (pointer, over) => {
+      if (this.stick && !this.stick.pointer.isDown) releaseStick(); // a stale stick (its finger-up never came): start over
       if (this.stick || over.length > 0 || !inStickZone(pointer.x, pointer.y)) return;
       if (this.bag.isOpen || this.choice.isOpen || this.dialogue.isOpen) return;
       this.stick = { id: pointer.id, x: pointer.x, y: pointer.y, pointer };
@@ -1162,6 +1171,7 @@ export default class WorldScene extends Phaser.Scene {
     };
     const find = (e, id) => [...e.changedTouches].find((t) => t.identifier === id);
     const onTouchStart = (e) => {
+      if (this.stick && this.stick.dom !== undefined && ![...e.touches].some((t) => t.identifier === this.stick.dom)) releaseStick(); // stale
       if (this.stick || e.target === canvas) return; // inside the game: Phaser handles it
       if (this.bag.isOpen || this.choice.isOpen || this.dialogue.isOpen) return;
       const t = e.changedTouches[0];
@@ -1652,6 +1662,7 @@ export default class WorldScene extends Phaser.Scene {
     const gs = this.gameState;
     let freed = false;
     paths.forEach((path) => {
+      if (path === `flags/${ALL_FREE_FLAG}` && this.enemies) this.enemies.wake(); // a friend freed the last fairy
       const [section, a, b] = path.split('/');
       if (section === 'plots' && a === gs.map && this.crops) {
         const [x, y] = b.split(',').map(Number);
@@ -1750,6 +1761,7 @@ export default class WorldScene extends Phaser.Scene {
 
     // fall back to the on-screen buttons if no key is pressed
     if (dx === 0 && dy === 0) {
+      if (this.stick && this.stick.dom === undefined && !this.stick.pointer.isDown) this.releaseStick(); // finger-up lost (a prompt or a call came in)
       if (this.stick) this.touchDir = stickDir(this.stick.pointer.x - this.stick.x, this.stick.pointer.y - this.stick.y, this.touchDir); // thumb still down after a menu closed
       dx = this.touchDir.x;
       dy = this.touchDir.y;

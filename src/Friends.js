@@ -131,6 +131,7 @@ export default class Friends {
     try {
       const typed = window.prompt(`Your new ${kind.name.toLowerCase()} is happy! Name it:`, kind.baseName);
       name = cleanPetName(typed, kind.baseName);
+      s.releaseStick?.(); // the prompt ate the finger-up: let the joystick start fresh
     } catch (err) {
       /* no prompt available: keep the default name */
     }
@@ -191,6 +192,7 @@ export default class Friends {
           } catch (err) {
             /* ignore */
           }
+          s.releaseStick?.();
           if (typed !== null) renamePet(gs, pet.id, typed);
         } else if (i === 2) {
           s.choice.open(['Yes, set it free', 'No'], {
