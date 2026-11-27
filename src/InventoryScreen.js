@@ -12,6 +12,9 @@ import enchantDefs from './data/enchants.json';
 import friendDefs from './data/friends.json';
 import { journalEntries, metCount, nextReward } from './journal.js';
 import recipeData from './data/recipes.json';
+import areaData from './data/areamaps.json';
+import { hasArea, roomStatus, summary, describeRoom, nextRoom, exploredPct, visibleLandmarks, describeLandmark, inferFog } from './areamap.js';
+import { chamberAt } from './cave.js';
 import { recipeEntries, shownPockets, makeFromBag, needsText } from './lessons.js';
 
 // 10x10 pixel icons. '#' = main colour, 'o' = dark outline, 'h' = highlight, '.' = empty.
@@ -224,6 +227,11 @@ export default class InventoryScreen {
       this.refreshMap();
       return;
     }
+    if (this.mode === 'area') {
+      this.areaSel = nextRoom({ rooms: this.areaItems }, this.areaSel, dx, dy);
+      this.refreshArea();
+      return;
+    }
     if (this.mode === 'find') {
       this.findIndex = Math.max(0, Math.min(this.findRows.length - 1, this.findIndex + dy));
       this.refreshFind();
@@ -313,6 +321,10 @@ export default class InventoryScreen {
       const bg = st === 'here' ? '#ffe08a' : st === 'seen' ? '#3a3a62' : st === 'lead' ? '#3a2a2a' : '#22223a';
       const t = add(s.add.text(n.x, n.y, label, { fontSize: '7px', fontFamily: 'monospace', color, backgroundColor: bg, padding: { x: 3, y: 3 } }).setOrigin(0.5).setInteractive());
       t.on('pointerdown', () => {
+        if (this.mapSel === id) { // tapping the selected area again opens its own map
+          this.openArea(id);
+          return;
+        }
         this.mapSel = id;
         this.refreshMap();
       });
@@ -323,7 +335,158 @@ export default class InventoryScreen {
     this.mapTitle = add(s.add.text(134, 26, '', { fontSize: '9px', fontFamily: 'monospace', color: '#ffe08a' }));
     this.mapInfo = add(s.add.text(134, 40, '', { fontSize: '7px', fontFamily: 'monospace', color: '#c8ccdc', wordWrap: { width: 160 }, lineSpacing: 2 }));
     add(s.add.text(20, 215, 'Yellow = you', { fontSize: '7px', fontFamily: 'monospace', color: '#8a90a8' }));
+    btn(160, 'OPEN', '#6a4a8a', () => this.openArea(this.mapSel));
     this.refreshMap();
+  }
+
+  // ---- a zone map (areamap.js + data/areamaps.json): the rooms of one area, with what you have found
+  openArea(id) {
+    const s = this.scene;
+    if (!hasArea(areaData, id)) {
+      this.areaMsg = 'No detailed map of this area yet.';
+      if (this.mapInfo) this.mapInfo.setText(this.areaMsg);
+      return;
+    }
+    this.close();
+    const gs = s.gameState;
+    const area = areaData[id];
+    this.area = area;
+    this.areaId = id;
+    this.isOpen = true;
+    this.mode = 'area';
+    this.hereCh = s.chambers && s.chambers.length ? chamberAt(s.chambers, s.tile.x, s.tile.y)?.id ?? null : null;
+    const add = (o) => {
+      o.setScrollFactor(0).setDepth(300);
+      this.parts.push(o);
+      return o;
+    };
+    this.parts.push(s.add.zone(160, 120, 320, 240).setScrollFactor(0).setDepth(299).setInteractive());
+    add(s.add.rectangle(160, 120, 320, 240, 0x000000, 0.55));
+    add(s.add.rectangle(10, 12, 300, 216, 0x1a1a30, 0.98).setOrigin(0, 0).setStrokeStyle(2, 0xffffff));
+    add(s.add.text(20, 14, area.title.toUpperCase(), { fontSize: '10px', fontFamily: 'monospace', color: '#ffe08a' }));
+    if (area.kind === 'terrain') {
+      this.buildTerrain(area, add, gs);
+      return;
+    }
+    this.areaItems = area.rooms;
+    const sum = summary(gs, area, this.hereCh);
+    add(s.add.text(300, 15, sum.all ? `All ${sum.total} explored!` : `Explored ${sum.known} of ${sum.total}`, { fontSize: '8px', fontFamily: 'monospace', color: sum.all ? '#9be8a0' : '#c8ccdc' }).setOrigin(1, 0));
+    add(s.add.text(20, 27, this.words(area.tagline), { fontSize: '6px', fontFamily: 'monospace', color: '#8a90a8' }));
+    const byId = Object.fromEntries(area.rooms.map((r) => [r.id, r]));
+    const mid = (r) => [r.x + r.w / 2, r.y + r.h / 2];
+    const g = add(s.add.graphics());
+    (area.links ?? []).forEach(([a, b, gate]) => {
+      const [ax, ay] = mid(byId[a]);
+      const [bx, by] = mid(byId[b]);
+      g.lineStyle(2, gate ? 0xd08a3a : 0x6a6e98, 1);
+      g.lineBetween(ax, ay, bx, by);
+    });
+    (area.exits ?? []).forEach((e) => {
+      add(s.add.text(e.x, e.y, e.label, { fontSize: '6px', fontFamily: 'monospace', color: '#b0a8d8', backgroundColor: '#1a1a30', padding: { x: 2, y: 1 } }).setOrigin(0.5, 0));
+    });
+    this.areaBoxes = {};
+    area.rooms.forEach((r) => {
+      const st = roomStatus(gs, area, r, this.hereCh);
+      const fill = st === 'here' ? 0xffe08a : st === 'seen' ? 0x3a3a62 : 0x22223a;
+      const rect = add(s.add.rectangle(r.x, r.y, r.w, r.h, fill, 1).setOrigin(0, 0).setStrokeStyle(r.story ? 2 : 1, r.story ? 0xe0b84a : 0x6a6e88).setInteractive());
+      rect.on('pointerdown', () => {
+        this.areaSel = r.id;
+        this.refreshArea();
+      });
+      const label = st === 'unknown' ? '?' : r.name;
+      const t = add(s.add.text(r.x + r.w / 2, r.y + r.h / 2, label, { fontSize: st === 'unknown' ? '9px' : '6px', fontFamily: 'monospace', color: st === 'here' ? '#1a1a30' : st === 'seen' ? '#ffffff' : '#6a6e88', align: 'center', wordWrap: { width: r.w - 4 } }).setOrigin(0.5));
+      this.areaBoxes[r.id] = rect;
+      if (st === 'here') s.tweens.add({ targets: [rect, t], alpha: 0.6, duration: 450, yoyo: true, repeat: -1 });
+    });
+    this.areaCursor = add(s.add.rectangle(0, 0, 10, 10).setStrokeStyle(2, 0xffffff).setFillStyle(0, 0));
+    this.areaTitle = add(s.add.text(20, 188, '', { fontSize: '8px', fontFamily: 'monospace', color: '#ffe08a' }));
+    this.areaInfo = add(s.add.text(20, 198, '', { fontSize: '7px', fontFamily: 'monospace', color: '#c8ccdc', wordWrap: { width: 200 }, lineSpacing: 0 }));
+    const btn = (x, label, color, fn) => {
+      const b = add(s.add.text(x, 215, label, { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: color, padding: { x: 4, y: 3 } }).setOrigin(0.5).setInteractive());
+      b.on('pointerdown', fn);
+    };
+    btn(284, 'CLOSE', '#444466', () => this.close());
+    btn(238, 'MAP', '#2a6a5a', () => {
+      this.close();
+      this.openMap();
+    });
+    this.areaSel = (area.rooms.find((r) => roomStatus(gs, area, r, this.hereCh) === 'here') ?? area.rooms[0]).id;
+    this.refreshArea();
+  }
+
+  // a one-map area: the real map drawn small, with fog over what you have not walked near yet
+  buildTerrain(area, add, gs) {
+    const s = this.scene;
+    inferFog(gs, area, this.areaId);
+    add(s.add.text(300, 15, `Explored ${exploredPct(gs, area)}%`, { fontSize: '8px', fontFamily: 'monospace', color: '#c8ccdc' }).setOrigin(1, 0));
+    add(s.add.text(20, 27, this.words(area.tagline), { fontSize: '6px', fontFamily: 'monospace', color: '#8a90a8' }));
+    const sc = Math.min(280 / area.w, 148 / area.h);
+    const ox = 20 + (280 - area.w * sc) / 2;
+    const oy = 36 + (148 - area.h * sc) / 2;
+    const g = add(s.add.graphics());
+    g.fillStyle(0x0e0e1a, 1).fillRect(ox, oy, area.w * sc, area.h * sc);
+    g.lineStyle(1, 0x6a6e98, 1).strokeRect(ox - 0.5, oy - 0.5, area.w * sc + 1, area.h * sc + 1);
+    const f = gs.fog?.[area.map];
+    const cols = Math.ceil(area.w / 4);
+    area.rows.forEach((row, y) => {
+      for (let x = 0; x < area.w; x++) {
+        if (!f || f[Math.floor(y / 4) * cols + Math.floor(x / 4)] !== '1') continue;
+        g.fillStyle(row[x] === '#' ? 0x24243c : 0x4a4a80, 1).fillRect(ox + x * sc, oy + y * sc, sc + 0.4, sc + 0.4);
+      }
+    });
+    const COLORS = { door: 0xffffff, shop: 0x7ad07a, boss: 0xe05a5a, npc: 0x8ab4ff, waystone: 0xb08aff, thing: 0xffd070 };
+    this.areaItems = visibleLandmarks(gs, area).map((l) => ({ ...l, x: ox + (l.x + 0.5) * sc, y: oy + (l.y + 0.5) * sc, w: 0, h: 0 }));
+    this.areaBoxes = {};
+    this.areaItems.forEach((l) => {
+      const size = Math.max(5, sc);
+      const m = add(s.add.rectangle(l.x, l.y, size, size, COLORS[l.kind] ?? 0xffffff, 1).setStrokeStyle(l.story ? 2 : 1, l.story ? 0xe0b84a : 0x000000).setInteractive());
+      m.on('pointerdown', () => {
+        this.areaSel = l.id;
+        this.refreshArea();
+      });
+      this.areaBoxes[l.id] = m;
+    });
+    if (gs.map === area.map) {
+      const you = add(s.add.rectangle(ox + (s.tile.x + 0.5) * sc, oy + (s.tile.y + 0.5) * sc, Math.max(4, sc), Math.max(4, sc), 0xffe08a, 1));
+      s.tweens.add({ targets: you, alpha: 0.3, duration: 400, yoyo: true, repeat: -1 });
+    }
+    this.areaCursor = add(s.add.rectangle(0, 0, 10, 10).setStrokeStyle(2, 0xffffff).setFillStyle(0, 0).setVisible(false));
+    this.areaTitle = add(s.add.text(20, 188, '', { fontSize: '8px', fontFamily: 'monospace', color: '#ffe08a' }));
+    this.areaInfo = add(s.add.text(20, 198, '', { fontSize: '7px', fontFamily: 'monospace', color: '#c8ccdc', wordWrap: { width: 200 }, lineSpacing: 0 }));
+    const btn = (x, label, color, fn) => {
+      const b = add(s.add.text(x, 215, label, { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', backgroundColor: color, padding: { x: 4, y: 3 } }).setOrigin(0.5).setInteractive());
+      b.on('pointerdown', fn);
+    };
+    btn(284, 'CLOSE', '#444466', () => this.close());
+    btn(238, 'MAP', '#2a6a5a', () => {
+      this.close();
+      this.openMap();
+    });
+    this.areaSel = this.areaItems[0]?.id ?? null;
+    this.refreshArea();
+  }
+
+  refreshArea() {
+    if (this.area.kind === 'terrain') {
+      const l = this.areaItems.find((x) => x.id === this.areaSel);
+      if (!l) {
+        this.areaCursor.setVisible(false);
+        this.areaTitle.setText('Fog of war');
+        this.areaInfo.setText('Walk around to explore. The fog lifts as you go.');
+        return;
+      }
+      const KIND = { door: 'way out', shop: 'shop', boss: 'boss', npc: 'person', waystone: 'waystone', thing: 'something to read' };
+      const d = describeLandmark(l);
+      this.areaCursor.setPosition(l.x, l.y).setSize(12, 12).setVisible(true);
+      this.areaTitle.setText(`${d.title} (${KIND[l.kind] ?? l.kind})`);
+      this.areaInfo.setText(d.lines.map((t) => this.words(t)).join('\n'));
+      return;
+    }
+    const r = this.areaItems.find((x) => x.id === this.areaSel);
+    this.areaCursor.setPosition(r.x + r.w / 2, r.y + r.h / 2).setSize(r.w + 5, r.h + 5);
+    const d = describeRoom(this.scene.gameState, this.area, r, this.hereCh);
+    this.areaTitle.setText(d.title);
+    this.areaInfo.setText(d.lines.map((l) => this.words(l)).join('\n'));
   }
 
   refreshMap() {
@@ -408,6 +571,10 @@ export default class InventoryScreen {
 
   // Space / the EAT button: eat the selected food
   use() {
+    if (this.mode === 'map') { // Space on the world map opens the zone map of the selected area
+      this.openArea(this.mapSel);
+      return;
+    }
     if (this.mode !== 'bag') return;
     const e = this.entries[this.index];
     if (this.isOpen && e && e.kind === 'item' && e.id === 'waystone-charm') {

@@ -31,6 +31,7 @@ import shopData from '../data/shop.json';
 import { talkToShopkeeper } from '../shop.js';
 import { talkToCrafter } from '../craft.js';
 import caveCfg from '../data/cave.json';
+import { markMapSeen, reveal } from '../areamap.js';
 import { stepInto as caveStep, talkTeacher, openChest } from '../cave.js';
 import FishingUI from '../FishingUI.js';
 import audio from '../audio.js';
@@ -146,6 +147,7 @@ export default class WorldScene extends Phaser.Scene {
     gs.flags.waystone_town = true; // the town waystone is always lit
     if (!gs.visited) inferVisited(gs, mapData); // older saves: work out where you must have been
     markVisited(gs, mapData, gs.map);
+    markMapSeen(gs, gs.map); // which exact rooms you have walked into (for the zone maps)
     if (gs.map === 'bazaar') gs.bazaarVisits += 1; // an order at the armor smith is ready the next time you come back
     if (gs.map === 'market') gs.marketVisits += 1; // an order at the weapon smith is ready the next time you come back
     // co-op: the shared world (farm, rocks, boulders, the treant) comes from the cloud before the map is built
@@ -287,6 +289,8 @@ export default class WorldScene extends Phaser.Scene {
       const p = readProps(o.properties);
       return { id: p.id, name: p.name, x0: Math.floor(o.x / TILE), y0: Math.floor(o.y / TILE), x1: Math.floor((o.x + o.width - 1) / TILE), y1: Math.floor((o.y + o.height - 1) / TILE) };
     });
+
+    this.revealFog(); // the fog on the zone map lifts around where you stand
 
     // --- Targets: things you work on with a tool (dirt piles, trees, rocks) ---
     // A target with "respawnMs" (a tree) turns into a stump when cleared and grows back later.
@@ -724,7 +728,7 @@ export default class WorldScene extends Phaser.Scene {
   // the world map (N key / MAP button); pressing it again closes it
   openMap() {
     if (this.bag.isOpen) {
-      if (this.bag.mode === 'map' || this.bag.mode === 'find') this.bag.close();
+      if (this.bag.mode === 'map' || this.bag.mode === 'find' || this.bag.mode === 'area') this.bag.close();
       return;
     }
     if (this.dialogue.isOpen || this.choice.isOpen || this.moving || this.transitioning) return;
@@ -1929,9 +1933,15 @@ export default class WorldScene extends Phaser.Scene {
           this.wasd.S.isDown || this.touchDir.x !== 0 || this.touchDir.y !== 0;
         if (!held) this.faceFrame(this.facing);
         this.checkChambers();
+        this.revealFog();
         this.checkDoor();
       },
     });
+  }
+
+  revealFog() {
+    const gs = this.gameState;
+    if (this.map && gs.map !== 'cave') reveal(gs, gs.map, this.map.width, this.map.height, this.tile.x, this.tile.y);
   }
 
   // entering a cave chamber for the first time discovers it
