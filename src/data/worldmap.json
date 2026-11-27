@@ -2,8 +2,8 @@
   "nodes": {
     "garden": {
       "label": "Garden",
-      "x": 40,
-      "y": 48,
+      "x": 100,
+      "y": 104,
       "links": [
         "school"
       ],
@@ -23,7 +23,7 @@
     "school": {
       "label": "School",
       "x": 40,
-      "y": 84,
+      "y": 104,
       "links": [
         "town",
         "garden",
@@ -51,7 +51,7 @@
     "upper": {
       "label": "Upper Floor",
       "x": 40,
-      "y": 120,
+      "y": 72,
       "links": [
         "school"
       ],
@@ -71,7 +71,7 @@
     "farm": {
       "label": "Farm",
       "x": 100,
-      "y": 48,
+      "y": 136,
       "links": [
         "town"
       ],
@@ -87,8 +87,8 @@
     },
     "town": {
       "label": "Town",
-      "x": 100,
-      "y": 84,
+      "x": 40,
+      "y": 136,
       "links": [
         "farm",
         "forest",
@@ -107,8 +107,8 @@
     },
     "forest": {
       "label": "Forest",
-      "x": 100,
-      "y": 120,
+      "x": 40,
+      "y": 168,
       "links": [
         "town",
         "quarry"
@@ -126,7 +126,7 @@
     "quarry": {
       "label": "Quarry",
       "x": 160,
-      "y": 120,
+      "y": 168,
       "links": [
         "forest",
         "cave"
@@ -145,7 +145,7 @@
     "cave": {
       "label": "Caves",
       "x": 160,
-      "y": 156,
+      "y": 136,
       "links": [
         "quarry",
         "crystal"
@@ -159,8 +159,8 @@
     },
     "crystal": {
       "label": "Crystal Caverns",
-      "x": 220,
-      "y": 156,
+      "x": 160,
+      "y": 104,
       "links": [
         "cave",
         "market",
@@ -178,8 +178,8 @@
     },
     "market": {
       "label": "Shadow Market",
-      "x": 220,
-      "y": 192,
+      "x": 160,
+      "y": 72,
       "links": [
         "crystal"
       ],
@@ -197,7 +197,7 @@
     "peaks": {
       "label": "Frozen Peaks",
       "x": 220,
-      "y": 120,
+      "y": 136,
       "links": [
         "crystal",
         "ruins"
@@ -215,7 +215,7 @@
     "ruins": {
       "label": "Sunken Ruins",
       "x": 280,
-      "y": 120,
+      "y": 136,
       "links": [
         "peaks",
         "crystal"
@@ -232,8 +232,8 @@
     },
     "desert": {
       "label": "Desert",
-      "x": 280,
-      "y": 156,
+      "x": 220,
+      "y": 104,
       "links": [
         "crystal",
         "bazaar"
@@ -248,7 +248,7 @@
     "bazaar": {
       "label": "Desert Bazaar",
       "x": 280,
-      "y": 192,
+      "y": 104,
       "links": [
         "desert"
       ],

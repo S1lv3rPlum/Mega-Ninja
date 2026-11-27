@@ -37,10 +37,10 @@ const g3 = {}; assert.equal(markVisited(g3, data, 'kitchen'), 'school'); assert.
 // met flags count
 const g4 = { map: 'town', flags: { met_enchanter: true } }; inferVisited(g4, data); assert.ok(g4.visited.upper);
 // arrow keys walk the map sensibly
-assert.equal(neighbor(data, 'town', 1, 0), 'quarry');
-assert.equal(neighbor(data, 'town', -1, 0), 'school'); assert.equal(neighbor(data, 'town', 0, -1), 'farm'); assert.equal(neighbor(data, 'town', 0, 1), 'forest');
-assert.equal(neighbor(data, 'crystal', 0, 1), 'market'); assert.equal(neighbor(data, 'crystal', 1, 0), 'desert'); assert.equal(neighbor(data, 'crystal', 0, -1), 'peaks');
-assert.equal(neighbor(data, 'garden', -1, 0), 'garden'); // nothing there: stay
+assert.equal(neighbor(data, 'town', 1, 0), 'farm');
+assert.equal(neighbor(data, 'town', 0, -1), 'school'); assert.equal(neighbor(data, 'town', 0, 1), 'forest');
+assert.equal(neighbor(data, 'crystal', 0, -1), 'market'); assert.equal(neighbor(data, 'crystal', 1, 0), 'desert'); assert.equal(neighbor(data, 'crystal', 0, 1), 'cave');
+assert.equal(neighbor(data, 'garden', -1, 0), 'school'); assert.equal(neighbor(data, 'garden', 0, 1), 'farm'); assert.equal(neighbor(data, 'garden', 1, 0), 'crystal');
 for (const id of Object.keys(data.nodes)) assert.ok(data.nodes[id].short || data.nodes[id].label.length <= 11, id);
 // the tinkers and the pines exist on the maps, with textures that are actually loaded
 const ws = fs.readFileSync('src/scenes/WorldScene.js', 'utf8');
