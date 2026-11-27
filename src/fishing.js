@@ -1,3 +1,4 @@
+import { perkRod } from './fairies.js';
 // Fishing. No Phaser in here.
 //   gs.items['fishing-rod']  = 1 once the Old Fisher gives you the rod
 //   gs.fishLog = { 'pond-minnow': 3, ... }   how many of each fish you have ever caught
@@ -22,7 +23,13 @@ export const ROD_LEVELS = [
 ];
 export const rodLevel = (gs) => Math.min(gs.rodLevel ?? 0, ROD_LEVELS.length);
 export const rodName = (gs) => (rodLevel(gs) > 0 ? ROD_LEVELS[rodLevel(gs) - 1].name : 'Fishing Rod');
-export const rodBonus = (gs) => (rodLevel(gs) > 0 ? ROD_LEVELS[rodLevel(gs) - 1] : { window: 0, zone: 0 });
+const baseRod = (gs) => (rodLevel(gs) > 0 ? ROD_LEVELS[rodLevel(gs) - 1] : { window: 0, zone: 0 });
+// the rod's bonus plus Marina's gift (blue fairy)
+export const rodBonus = (gs) => {
+  const b = baseRod(gs);
+  const f = perkRod(gs);
+  return { ...b, window: b.window + f.window, zone: b.zone + f.zone };
+};
 export const nextRod = (gs) => ROD_LEVELS[rodLevel(gs)] ?? null;
 export const canBuildRod = (gs) => {
   const r = nextRod(gs);

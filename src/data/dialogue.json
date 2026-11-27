@@ -1129,5 +1129,134 @@
     "repeatLines": [
       "The chest is empty now."
     ]
+  },
+  "hollowsign": {
+    "name": "Sign",
+    "lines": [
+      "THE CURSED HOLLOW. Six fairies are trapped in thorn cages, each guarded by a dark twin. Free them all, and the light at the center will wake."
+    ],
+    "repeatLines": [
+      "THE CURSED HOLLOW. Free the six fairies, then face the light at the center."
+    ]
+  },
+  "fairycage_red": {
+    "name": "Ruby",
+    "lines": [
+      "A tiny red fairy is trapped in the thorns. She looks up at you, hopeful.",
+      "\"Her thorn twin keeps me here. Beat it, please!\""
+    ],
+    "repeatLines": [
+      "\"Beat the thorn twin, please!\""
+    ]
+  },
+  "fairyfree_red": {
+    "name": "Ruby",
+    "lines": [
+      "Ruby twirls in the air, glowing red.",
+      "\"I am free! My gift to you: your sword hits 1 harder, always.\""
+    ],
+    "repeatLines": [
+      "Ruby sparkles. \"Your sword hits 1 harder, always.\""
+    ]
+  },
+  "fairycage_orange": {
+    "name": "Amber",
+    "lines": [
+      "A tiny orange fairy is trapped in the thorns. She looks up at you, hopeful.",
+      "\"Her thorn twin keeps me here. Beat it, please!\""
+    ],
+    "repeatLines": [
+      "\"Beat the thorn twin, please!\""
+    ]
+  },
+  "fairyfree_orange": {
+    "name": "Amber",
+    "lines": [
+      "Amber twirls in the air, glowing orange.",
+      "\"I am free! My gift to you: food and potions heal you 1 extra heart.\""
+    ],
+    "repeatLines": [
+      "Amber sparkles. \"Food and potions heal you 1 extra heart.\""
+    ]
+  },
+  "fairycage_yellow": {
+    "name": "Sunny",
+    "lines": [
+      "A tiny yellow fairy is trapped in the thorns. She looks up at you, hopeful.",
+      "\"Her thorn twin keeps me here. Beat it, please!\""
+    ],
+    "repeatLines": [
+      "\"Beat the thorn twin, please!\""
+    ]
+  },
+  "fairyfree_yellow": {
+    "name": "Sunny",
+    "lines": [
+      "Sunny twirls in the air, glowing yellow.",
+      "\"I am free! My gift to you: enemies drop 50% more gold.\""
+    ],
+    "repeatLines": [
+      "Sunny sparkles. \"Enemies drop 50% more gold.\""
+    ]
+  },
+  "fairycage_green": {
+    "name": "Fern",
+    "lines": [
+      "A tiny green fairy is trapped in the thorns. She looks up at you, hopeful.",
+      "\"Her thorn twin keeps me here. Beat it, please!\""
+    ],
+    "repeatLines": [
+      "\"Beat the thorn twin, please!\""
+    ]
+  },
+  "fairyfree_green": {
+    "name": "Fern",
+    "lines": [
+      "Fern twirls in the air, glowing green.",
+      "\"I am free! My gift to you: crops grow in about half the time.\""
+    ],
+    "repeatLines": [
+      "Fern sparkles. \"Crops grow in about half the time.\""
+    ]
+  },
+  "fairycage_blue": {
+    "name": "Marina",
+    "lines": [
+      "A tiny blue fairy is trapped in the thorns. She looks up at you, hopeful.",
+      "\"Her thorn twin keeps me here. Beat it, please!\""
+    ],
+    "repeatLines": [
+      "\"Beat the thorn twin, please!\""
+    ]
+  },
+  "fairyfree_blue": {
+    "name": "Marina",
+    "lines": [
+      "Marina twirls in the air, glowing blue.",
+      "\"I am free! My gift to you: fishing is easier: a longer bite window and a wider green zone.\""
+    ],
+    "repeatLines": [
+      "Marina sparkles. \"Fishing is easier: a longer bite window and a wider green zone.\""
+    ]
+  },
+  "fairycage_purple": {
+    "name": "Violet",
+    "lines": [
+      "A tiny purple fairy is trapped in the thorns. She looks up at you, hopeful.",
+      "\"Her thorn twin keeps me here. Beat it, please!\""
+    ],
+    "repeatLines": [
+      "\"Beat the thorn twin, please!\""
+    ]
+  },
+  "fairyfree_purple": {
+    "name": "Violet",
+    "lines": [
+      "Violet twirls in the air, glowing purple.",
+      "\"I am free! My gift to you: your hearts come back much faster.\""
+    ],
+    "repeatLines": [
+      "Violet sparkles. \"Your hearts come back much faster.\""
+    ]
   }
 }

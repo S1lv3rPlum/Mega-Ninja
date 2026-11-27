@@ -6,6 +6,7 @@ export const BOSS_GIFTS = [
   { flag: 'batqueen_defeated', item: 'crystal-lantern', reissue: true, who: 'The Bat Queen was beaten by your friends!', gets: 'You got a Crystal Lantern too.' },
   { flag: 'yeti_defeated', item: 'frost-boots', reissue: true, who: 'The Yeti was beaten by your friends!', gets: 'You got Frost Boots too.' },
   { flag: 'serpent_defeated', item: 'moon-crest-half', who: 'The Sea Serpent was calmed by your friends!', gets: 'You got half of the Moon Crest too.' },
+  { flag: 'rainbow_defeated', item: 'prism-gem', who: 'The Rainbow Fairy was freed by your friends!', gets: 'You got a Prism Gem too.' },
   { flag: 'scorpionking_defeated', item: 'moon-crest-half-2', who: 'The Scorpion King was beaten by your friends!', gets: 'You got the other Moon Crest half too.' },
 ];
 

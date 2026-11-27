@@ -1,3 +1,4 @@
+import { perkGrowMul } from './fairies.js';
 // Farming rules. No Phaser in here, so it is easy to test and to tune.
 //
 // A plot goes through these stages:
@@ -61,7 +62,7 @@ export function water(gs, map, x, y, now = Date.now(), crops = DEFAULT_CROPS) {
   if (gs.can.water < 1) return { ok: false, msg: 'Your can is empty. Fill it at the pump.' };
   gs.can.water -= 1;
   const crop = crops[p.crop ?? 'wheat'] ?? DEFAULT_CROPS.wheat;
-  setPlot(gs, map, x, y, { stage: p.stage, growsAt: now + (crop.growMs ?? GROW_MS), crop: p.crop ?? 'wheat' });
+  setPlot(gs, map, x, y, { stage: p.stage, growsAt: now + Math.round((crop.growMs ?? GROW_MS) * perkGrowMul(gs)), crop: p.crop ?? 'wheat' }); // Fern's gift: faster
   return { ok: true, msg: 'Watered.' };
 }
 

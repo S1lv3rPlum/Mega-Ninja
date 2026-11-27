@@ -506,6 +506,18 @@
       "color": "#a060e0",
       "desc": "Swirly purple brew. Run faster AND see in the dark. A ninja favourite.",
       "brew": true
+    },
+    "fairy-charm": {
+      "name": "Fairy Charm",
+      "icon": "gem",
+      "color": "#d9a8ff",
+      "desc": "A tiny sparkling charm. Thorns that guard the fairies' hidden wood will part for it."
+    },
+    "prism-gem": {
+      "name": "Prism Gem",
+      "icon": "gem",
+      "color": "#ffffff",
+      "desc": "A gem that shines every color. An enchantment for your weapon: +3 damage and a faster swing. Set it at the Enchanting Workshop."
     }
   },
   "tools": {

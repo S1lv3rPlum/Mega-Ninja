@@ -23,5 +23,11 @@
     "name": "Swift Scroll",
     "slot": "weapon",
     "cooldownMul": 0.75
+  },
+  "prism-gem": {
+    "name": "Prism Gem",
+    "slot": "weapon",
+    "damage": 3,
+    "cooldownMul": 0.85
   }
 }

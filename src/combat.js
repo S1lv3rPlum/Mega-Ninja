@@ -1,3 +1,4 @@
+import { perkHeal } from './fairies.js';
 // Hearts, damage, fainting, eating and enemy movement. No Phaser in here.
 // One heart = 2 hit points. Damage and healing are in hit points.
 
@@ -37,7 +38,7 @@ export function eat(gs, items, id) {
   if (gs.hp >= gs.maxHp) return { ok: false, msg: `You're already at full health.` };
   gs.items[id] -= 1;
   const before = gs.hp;
-  gs.hp = Math.min(gs.maxHp, gs.hp + def.heal);
+  gs.hp = Math.min(gs.maxHp, gs.hp + def.heal + (def.heal < 90 ? perkHeal(gs) : 0)); // Amber's gift: +1 heart (not needed for a full-heal elixir)
   const gained = gs.hp - before;
   return { ok: true, gained, msg: `Ate ${def.name.toLowerCase()}. +${gained / 2} heart${gained === 2 ? '' : 's'}` };
 }

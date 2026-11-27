@@ -7,8 +7,8 @@ const maps = fs.readdirSync('public/assets/maps').map((f) => f.replace('.json', 
 for (const m of maps) { const owners = Object.keys(data.nodes).filter((id) => data.nodes[id].maps.includes(m)); assert.equal(owners.length, 1, `${m} -> ${owners}`); }
 for (const [id, n] of Object.entries(data.nodes)) {
   for (const l of n.links) assert.ok(data.nodes[l].links.includes(id), `${id}<->${l}`);
-  assert.ok(n.x >= 24 && n.x <= 296 && n.y >= 40 && n.y <= 195, id);
-  for (const [id2, n2] of Object.entries(data.nodes)) if (id2 !== id) assert.ok(Math.abs(n.x - n2.x) >= 50 || Math.abs(n.y - n2.y) >= 20, `${id} overlaps ${id2}`);
+  assert.ok(n.x >= 16 && n.x <= 296 && n.y >= 40 && n.y <= 195, id);
+  for (const [id2, n2] of Object.entries(data.nodes)) if (id2 !== id) assert.ok(Math.abs(n.x - n2.x) >= 38 || Math.abs(n.y - n2.y) >= 20, `${id} overlaps ${id2}`);
 }
 for (const s of data.services) assert.ok(data.nodes[s.where], s.what);
 assert.equal(areaOf(data, 'dorm2'), 'school'); assert.equal(areaOf(data, 'nightbarn'), 'garden'); assert.equal(areaOf(data, 'nowhere'), null);

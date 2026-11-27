@@ -68,7 +68,7 @@ console.log('areamap tests ok');
 
 // ================= terrain zone maps and fog =================
 import { reveal, isSeen, exploredPct, visibleLandmarks, describeLandmark, FOG_CELL } from './src/areamap.js';
-const maps = ['town', 'forest', 'quarry', 'farm', 'crystal', 'market', 'peaks', 'ruins', 'desert', 'bazaar'];
+const maps = ['town', 'forest', 'hollow', 'quarry', 'farm', 'crystal', 'market', 'peaks', 'ruins', 'desert', 'bazaar'];
 const world2 = world.nodes;
 for (const id of maps) {
   const a = areas[id];
@@ -93,7 +93,7 @@ for (const id of maps) {
 // the maps' story-boss rooms are gold
 assert.ok(areas.forest.landmarks.find((l) => l.kind === 'boss').story && areas.ruins.landmarks.find((l) => l.name === 'Sea Serpent').story);
 assert.ok(areas.market.landmarks.every((l) => !l.story));
-assert.deepEqual(Object.keys(areas).sort(), ['bazaar', 'cave', 'crystal', 'desert', 'farm', 'forest', 'garden', 'market', 'peaks', 'quarry', 'ruins', 'school', 'town', 'upper']); // every world-map area has a zone map
+assert.deepEqual(Object.keys(areas).sort(), ['bazaar', 'cave', 'crystal', 'desert', 'farm', 'forest', 'garden', 'hollow', 'market', 'peaks', 'quarry', 'ruins', 'school', 'town', 'upper']); // every world-map area has a zone map
 assert.deepEqual(Object.keys(world.nodes).sort(), Object.keys(areas).sort());
 
 // ---- fog

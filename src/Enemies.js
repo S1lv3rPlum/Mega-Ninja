@@ -3,8 +3,10 @@ import audio from './audio.js';
 import enemyDefs from './data/enemies.json';
 import { markEarned } from './bossGifts.js';
 import { chooseStep, damageEnemy, isAdjacent } from './combat.js';
+import { perkGold, allFree, ALL_FREE_FLAG } from './fairies.js';
 
 const TILE = 16;
+const RAINBOW = [0xff6060, 0xffa040, 0xffe060, 0x70e080, 0x70a8ff, 0xc080ff];
 
 // Real-time enemies that live on the tile grid. Each one chases you when you are close and attacks when adjacent
 // (it flashes red first, so you have time to step away or hit it). Pure rules are in combat.js.
@@ -12,17 +14,30 @@ export default class Enemies {
   constructor(scene) {
     this.scene = scene;
     this.list = [];
+    this.sleepers = [];
+    this.readProps = null;
+  }
+
+  // enemies that were waiting for a flag (the Rainbow Fairy) appear now that it is set
+  wake() {
+    const waiting = this.sleepers;
+    this.sleepers = [];
+    if (waiting.length && this.readProps) this.spawn(waiting, this.readProps);
   }
 
   // objs: the "enemies" object layer from Tiled. Properties: id, type (a key in data/enemies.json), requiresFlag?
   spawn(objs, readProps) {
     const gs = this.scene.gameState;
     const now = Date.now();
+    this.readProps = readProps;
     objs.forEach((o) => {
       const p = readProps(o.properties);
       const def = enemyDefs[p.type];
       if (!def) return;
-      if (p.requiresFlag && !gs.flags[p.requiresFlag]) return;
+      if (p.requiresFlag && !gs.flags[p.requiresFlag]) {
+        if (!(p.hideIfFlag && gs.flags[p.hideIfFlag])) this.sleepers.push(o); // it wakes later (the Rainbow Fairy)
+        return;
+      }
       if (p.hideIfFlag && gs.flags[p.hideIfFlag]) return; // e.g. the sprouts vanish once the treant is freed
       const id = p.id ?? o.name;
       const saved = gs.enemies[gs.map]?.[id];
@@ -92,6 +107,7 @@ export default class Enemies {
     const s = this.scene;
     const now = Date.now();
     this.list.forEach((e) => {
+      if (e.def.rainbow && e.sprite) e.sprite.setTint(RAINBOW[Math.floor(time / 250) % RAINBOW.length]);
       if (e.def.summon && !e.dead && !e.hidden && e.def.sight >= Math.abs(e.x - s.tile.x) + Math.abs(e.y - s.tile.y)) this.summonTick(e, time);
       if (e.dead) {
         if (now >= e.respawnAt && (!e.nightOnly || s.isNight) && this.free(e.home.x, e.home.y, e)) this.revive(e); // (Infinity = never)
@@ -210,8 +226,9 @@ export default class Enemies {
     e.sprite = null;
     s.tweens.add({ targets: spr, alpha: 0, duration: 300, onComplete: () => spr.destroy() });
     if (e.def.gold && !quiet) {
-      gs.gold += e.def.gold;
-      s.showToast(`${e.def.name} defeated! +${e.def.gold} gold`);
+      const earned = perkGold(gs, e.def.gold); // Sunny's gift
+      gs.gold += earned;
+      s.showToast(`${e.def.name} defeated! +${earned} gold`);
       s.updateHud();
     }
   }
@@ -222,6 +239,11 @@ export default class Enemies {
     const gs = s.gameState;
     gs.flags[e.def.flag] = true;
     markEarned(gs, e.def.flag); // this reward is yours already: no gift later
+    if (allFree(gs) && !gs.flags[ALL_FREE_FLAG]) {
+      gs.flags[ALL_FREE_FLAG] = true; // the sixth fairy is free: the Rainbow Fairy wakes in the middle of the Hollow
+      this.wake();
+      s.time.delayedCall(3200, () => s.showToast('A rainbow light blazes in the middle of the Hollow!'));
+    }
     const r = e.def.reward;
     if (r) {
       gs.items[r.item] = (gs.items[r.item] ?? 0) + 1;

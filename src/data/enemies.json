@@ -269,5 +269,182 @@
     "gold": 0,
     "tame": "moonhare",
     "harmless": true
+  },
+  "wisp": {
+    "name": "Dark Wisp",
+    "texture": "wisp",
+    "hp": 3,
+    "damage": 1,
+    "moveMs": 520,
+    "attackMs": 1200,
+    "sight": 7,
+    "respawnMs": 40000,
+    "gold": 5
+  },
+  "guard_red": {
+    "name": "Thorn Ruby",
+    "texture": "guard-red",
+    "hp": 14,
+    "damage": 1,
+    "moveMs": 600,
+    "attackMs": 1300,
+    "sight": 10,
+    "respawnMs": 31536000000,
+    "gold": 50,
+    "boss": true,
+    "flag": "fairy_red_defeated",
+    "summon": {
+      "type": "wisp",
+      "everyMs": 8000,
+      "max": 2
+    },
+    "defeatLines": [
+      "The dark thorns fall away from Ruby. She blinks, and the shadow drains out of her like smoke.",
+      "\"You freed me! Thank you, little ninja. Take my gift.\"",
+      "Gift: Your sword hits 1 harder, always."
+    ]
+  },
+  "guard_orange": {
+    "name": "Thorn Amber",
+    "texture": "guard-orange",
+    "hp": 16,
+    "damage": 1,
+    "moveMs": 600,
+    "attackMs": 1300,
+    "sight": 10,
+    "respawnMs": 31536000000,
+    "gold": 50,
+    "boss": true,
+    "flag": "fairy_orange_defeated",
+    "summon": {
+      "type": "wisp",
+      "everyMs": 8000,
+      "max": 2
+    },
+    "defeatLines": [
+      "The dark thorns fall away from Amber. She blinks, and the shadow drains out of her like smoke.",
+      "\"You freed me! Thank you, little ninja. Take my gift.\"",
+      "Gift: Food and potions heal you 1 extra heart."
+    ]
+  },
+  "guard_yellow": {
+    "name": "Thorn Sunny",
+    "texture": "guard-yellow",
+    "hp": 16,
+    "damage": 1,
+    "moveMs": 600,
+    "attackMs": 1300,
+    "sight": 10,
+    "respawnMs": 31536000000,
+    "gold": 50,
+    "boss": true,
+    "flag": "fairy_yellow_defeated",
+    "summon": {
+      "type": "wisp",
+      "everyMs": 8000,
+      "max": 2
+    },
+    "defeatLines": [
+      "The dark thorns fall away from Sunny. She blinks, and the shadow drains out of her like smoke.",
+      "\"You freed me! Thank you, little ninja. Take my gift.\"",
+      "Gift: Enemies drop 50% more gold."
+    ]
+  },
+  "guard_green": {
+    "name": "Thorn Fern",
+    "texture": "guard-green",
+    "hp": 18,
+    "damage": 2,
+    "moveMs": 600,
+    "attackMs": 1300,
+    "sight": 10,
+    "respawnMs": 31536000000,
+    "gold": 50,
+    "boss": true,
+    "flag": "fairy_green_defeated",
+    "summon": {
+      "type": "wisp",
+      "everyMs": 8000,
+      "max": 2
+    },
+    "defeatLines": [
+      "The dark thorns fall away from Fern. She blinks, and the shadow drains out of her like smoke.",
+      "\"You freed me! Thank you, little ninja. Take my gift.\"",
+      "Gift: Crops grow in about half the time."
+    ]
+  },
+  "guard_blue": {
+    "name": "Thorn Marina",
+    "texture": "guard-blue",
+    "hp": 18,
+    "damage": 2,
+    "moveMs": 600,
+    "attackMs": 1300,
+    "sight": 10,
+    "respawnMs": 31536000000,
+    "gold": 50,
+    "boss": true,
+    "flag": "fairy_blue_defeated",
+    "summon": {
+      "type": "wisp",
+      "everyMs": 8000,
+      "max": 2
+    },
+    "defeatLines": [
+      "The dark thorns fall away from Marina. She blinks, and the shadow drains out of her like smoke.",
+      "\"You freed me! Thank you, little ninja. Take my gift.\"",
+      "Gift: Fishing is easier: a longer bite window and a wider green zone."
+    ]
+  },
+  "guard_purple": {
+    "name": "Thorn Violet",
+    "texture": "guard-purple",
+    "hp": 22,
+    "damage": 2,
+    "moveMs": 600,
+    "attackMs": 1300,
+    "sight": 10,
+    "respawnMs": 31536000000,
+    "gold": 50,
+    "boss": true,
+    "flag": "fairy_purple_defeated",
+    "summon": {
+      "type": "wisp",
+      "everyMs": 8000,
+      "max": 2
+    },
+    "defeatLines": [
+      "The dark thorns fall away from Violet. She blinks, and the shadow drains out of her like smoke.",
+      "\"You freed me! Thank you, little ninja. Take my gift.\"",
+      "Gift: Your hearts come back much faster."
+    ]
+  },
+  "rainbow": {
+    "name": "Rainbow Fairy",
+    "texture": "rainbow-fairy",
+    "hp": 48,
+    "damage": 2,
+    "moveMs": 520,
+    "attackMs": 1100,
+    "sight": 14,
+    "respawnMs": 31536000000,
+    "gold": 200,
+    "boss": true,
+    "rainbow": true,
+    "flag": "rainbow_defeated",
+    "summon": {
+      "type": "wisp",
+      "everyMs": 5000,
+      "max": 3
+    },
+    "reward": {
+      "item": "prism-gem",
+      "msg": "The Rainbow Fairy is free! She left you a Prism Gem."
+    },
+    "defeatLines": [
+      "The Rainbow Fairy was the first to be taken. Her wings flare through every color, and the dark spell shatters like glass.",
+      "\"The six of us are free, all thanks to you. The Hollow will bloom again!\"",
+      "She presses a shining gem into your hand. \"A Prism Gem. Set it on your sword. Its light will never fade.\""
+    ]
   }
 }

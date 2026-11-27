@@ -1,3 +1,4 @@
+import { perkRegenMul } from './fairies.js';
 // Hearts that slowly come back. No Phaser in here.
 // Once you have been out of a fight for `delay` ms (no hit taken, no sword swung), you win back 1 hp (half a heart)
 // every `every` ms until you are full. Never during a boss fight, and never from 0 hp.
@@ -16,7 +17,9 @@ export const inFight = (st, now) => {
 
 // call every frame while the game is running; returns true when a half heart was just restored
 export function regenStep(gs, st, now, { blocked = false, level = 'normal' } = {}) {
-  const r = REGEN[level] ?? REGEN.normal;
+  const base = REGEN[level] ?? REGEN.normal;
+  const k = perkRegenMul(gs); // Violet's gift
+  const r = { delay: base.delay * (k < 1 ? 0.75 : 1), every: base.every * k };
   if (blocked) st.lastFight = now; // a boss fight counts as fighting, so the wait starts when it ends
   if (blocked || gs.hp <= 0 || gs.hp >= gs.maxHp) {
     st.nextHeal = null;

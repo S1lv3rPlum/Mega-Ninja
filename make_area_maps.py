@@ -99,7 +99,18 @@ T['forest'] = terrain('forest', 'Forest', 'Gold ring = needed for the story. Fog
   ('Lumberjack', 17, 5, 'npc', False, 'Gives you your axe.'),
   ('Old Fisher', 8, 6, 'shop', False, 'Fishing rods and fishing tips.'),
   ('The Treant', 5, 6, 'boss', True, 'A great tree that guards the Heartwood Lantern.'),
+  ('Thorn wall to the Hollow', 0, 10, 'door', False, 'West. The thorns part for the Fairy Charm.'),
   ('Path to the Quarry', 25, 12, 'door', True, 'East to the quarry.')])
+T['hollow'] = terrain('hollow', 'Cursed Hollow', 'Gold ring = a trapped fairy. Free all six to wake the light.', [
+  ('Path to the Forest', 39, 16, 'door', False, 'East, back to the forest.'),
+  ('Sign', 37, 15, 'thing', False, 'Tells the story of the Hollow.'),
+  ('Ruby (red)', 7, 6, 'boss', True, 'Her gift: your sword hits harder.'),
+  ('Amber (orange)', 20, 4, 'boss', True, 'Her gift: food heals more.'),
+  ('Sunny (yellow)', 32, 6, 'boss', True, 'Her gift: more gold from enemies.'),
+  ('Fern (green)', 7, 26, 'boss', True, 'Her gift: crops grow faster.'),
+  ('Marina (blue)', 20, 27, 'boss', True, 'Her gift: easier fishing.'),
+  ('Violet (purple)', 32, 26, 'boss', True, 'Her gift: hearts heal faster.'),
+  ('Rainbow Fairy', 20, 16, 'boss', True, 'Wakes when all six fairies are free. Drops the Prism Gem.')])
 T['quarry'] = terrain('quarry', 'Quarry', 'Gold ring = needed for the story. Fog = not explored yet.', [
   ('Path to the Forest', 0, 12, 'door', False, 'West, back to the forest.'),
   ('Waystone', 1, 10, 'waystone', False, 'Light it to travel here later.'),

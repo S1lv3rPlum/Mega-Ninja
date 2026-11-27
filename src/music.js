@@ -63,7 +63,7 @@ export const THEMES = {
 export const MAP_THEME = {
   town: 'town', farm: 'farm', forest: 'forest', quarry: 'quarry', cave: 'cave', crystal: 'crystal', market: 'market',
   peaks: 'peaks', ruins: 'ruins', desert: 'desert', bazaar: 'bazaar',
-  school: 'school', kitchen: 'school', potions: 'school', library: 'school', sparring: 'school', dorm1: 'school', dorm2: 'school',
+  hollow: 'garden', school: 'school', kitchen: 'school', potions: 'school', library: 'school', sparring: 'school', dorm1: 'school', dorm2: 'school',
   upper: 'school', dojo: 'school', workshop: 'school', garden: 'garden', barn: 'garden', nightbarn: 'garden',
 };
 export const themeFor = (map) => MAP_THEME[map] ?? 'town';

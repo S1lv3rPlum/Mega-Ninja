@@ -22,7 +22,7 @@
     },
     "school": {
       "label": "School",
-      "x": 40,
+      "x": 62,
       "y": 104,
       "links": [
         "town",
@@ -50,7 +50,7 @@
     },
     "upper": {
       "label": "Upper Floor",
-      "x": 40,
+      "x": 62,
       "y": 72,
       "links": [
         "school"
@@ -87,7 +87,7 @@
     },
     "town": {
       "label": "Town",
-      "x": 40,
+      "x": 62,
       "y": 136,
       "links": [
         "farm",
@@ -107,11 +107,12 @@
     },
     "forest": {
       "label": "Forest",
-      "x": 40,
+      "x": 62,
       "y": 168,
       "links": [
         "town",
-        "quarry"
+        "quarry",
+        "hollow"
       ],
       "maps": [
         "forest"
@@ -262,6 +263,21 @@
       "blurb": "The ARMOR smith, the spice seller, the gem trader and the princess.",
       "hint": "Through the Desert.",
       "short": "Bazaar"
+    },
+    "hollow": {
+      "label": "Cursed Hollow",
+      "short": "Hollow",
+      "x": 20,
+      "y": 168,
+      "links": [
+        "forest"
+      ],
+      "maps": [
+        "hollow"
+      ],
+      "npcs": [],
+      "blurb": "A purple twilight wood. Six fairies are trapped in thorn cages, each guarded by a dark twin.",
+      "hint": "West of the Forest, behind a thorn wall. Needs the Fairy Charm."
     }
   },
   "services": [
@@ -408,6 +424,18 @@
       "what": "Treasure chest (gold and gems)",
       "where": "cave",
       "how": "In the Hidden Vault, the last chamber at the back of the Caves. Two rock piles block the tunnel: bring a pickaxe."
+    },
+    {
+      "kind": "goal",
+      "what": "Free the six fairies (a gift from each)",
+      "where": "hollow",
+      "how": "Beat the thorn guardian beside each cage: red, orange, yellow, green, blue and purple."
+    },
+    {
+      "kind": "goal",
+      "what": "Prism Gem (best weapon enchant)",
+      "where": "hollow",
+      "how": "Free all six fairies, then beat the Rainbow Fairy in the middle of the Hollow."
     }
   ]
 }
