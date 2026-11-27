@@ -58,7 +58,7 @@ console.log('mining ok', counts);
   const pk = buildPockets(ents, fishIds);
   assert.equal(pk.reduce((a, p) => a + p.entries.length, 0), ents.length); // nothing lost, nothing doubled
   assert.ok(pk.every((p) => p.entries.length <= 25));
-  assert.equal(pk.length, POCKETS.length, 'with today\'s items every pocket fits on one page');
+  assert.equal(pk.length, POCKETS.filter((p) => !p.optional).length, 'with today\'s items every pocket fits on one page');
   const where = (id) => pk.find((p) => p.entries.some((e) => e.id === id && e.kind === 'item'))?.id;
   assert.equal(where('carrot-seeds'), 'seeds'); assert.equal(where('seeds'), 'seeds');
   assert.equal(where('bread'), 'food'); assert.equal(where('swift-brew'), 'food'); assert.equal(where('healing-potion'), 'food');

@@ -1,0 +1,13 @@
+{
+  "chambers": [
+    { "id": "mouth", "name": "Entrance Cavern" },
+    { "id": "echo", "name": "Echo Hall" },
+    { "id": "roost", "name": "Bat Roost" },
+    { "id": "granite", "name": "Granite's Hall" },
+    { "id": "cross", "name": "Lantern Crossing" },
+    { "id": "grotto", "name": "Mushroom Grotto" },
+    { "id": "mine", "name": "Collapsed Mine" },
+    { "id": "vault", "name": "Hidden Vault" }
+  ],
+  "chest": { "gold": 150, "items": { "ruby": 1, "sapphire": 1, "emerald": 1, "herb": 3 } }
+}

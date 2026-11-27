@@ -30,6 +30,8 @@ import { ensureCombatState, hurtPlayer as applyHurt, faint as applyFaint, eat } 
 import shopData from '../data/shop.json';
 import { talkToShopkeeper } from '../shop.js';
 import { talkToCrafter } from '../craft.js';
+import caveCfg from '../data/cave.json';
+import { stepInto as caveStep, talkTeacher, openChest } from '../cave.js';
 import FishingUI from '../FishingUI.js';
 import audio from '../audio.js';
 import { themeFor } from '../music.js';
@@ -109,7 +111,7 @@ export default class WorldScene extends Phaser.Scene {
     this.load.image('sensei', 'assets/sprites/sensei.png');
     this.load.image('shadow', 'assets/sprites/shadow.png');
     this.load.image('boulder', 'assets/sprites/boulder.png');
-    ['bat', 'golem', 'golem-ball', 'golem-good', 'pebble', 'sealed-door-open'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
+    ['bat', 'golem', 'golem-ball', 'golem-good', 'pebble', 'sealed-door-open', 'cavemaster', 'chest', 'chest-open'].forEach((n) => this.load.image(n, `assets/sprites/${n}.png`));
     this.load.image('sealed-door', 'assets/sprites/sealed-door.png');
     this.load.image('dialogue-box', 'assets/ui/dialogue-box.png');
   }
@@ -278,6 +280,12 @@ export default class WorldScene extends Phaser.Scene {
         nextStep: 800 + Math.random() * 2000,
         moving: false,
       };
+    });
+
+    // --- Cave chambers (a rectangle layer): walking into a new one discovers it (see cave.js) ---
+    this.chambers = objects('chambers').map((o) => {
+      const p = readProps(o.properties);
+      return { id: p.id, name: p.name, x0: Math.floor(o.x / TILE), y0: Math.floor(o.y / TILE), x1: Math.floor((o.x + o.width - 1) / TILE), y1: Math.floor((o.y + o.height - 1) / TILE) };
     });
 
     // --- Targets: things you work on with a tool (dirt piles, trees, rocks) ---
@@ -1297,6 +1305,16 @@ export default class WorldScene extends Phaser.Scene {
       this.checkRuneDoors();
       return;
     }
+    if (npc.role === 'cavemaster') {
+      this.runConvo(talkTeacher(this.gameState, data, caveCfg), data.name);
+      return;
+    }
+    if (npc.role === 'chest' && !this.gameState.flags.cave_chest_open) {
+      const r = openChest(this.gameState, caveCfg, itemsData.items, data);
+      this.refreshOpenNpcs();
+      this.runConvo({ lines: r.lines, afterClose: () => r.msg }, data.name);
+      return;
+    }
     if (npc.role === 'wardrobe') {
       this.runConvo(talkTailor(this.gameState, npc.id, data, (id) => this.setNinja(id)), data.name);
       return;
@@ -1910,9 +1928,20 @@ export default class WorldScene extends Phaser.Scene {
           this.cursors.down.isDown || this.wasd.A.isDown || this.wasd.D.isDown || this.wasd.W.isDown ||
           this.wasd.S.isDown || this.touchDir.x !== 0 || this.touchDir.y !== 0;
         if (!held) this.faceFrame(this.facing);
+        this.checkChambers();
         this.checkDoor();
       },
     });
+  }
+
+  // entering a cave chamber for the first time discovers it
+  checkChambers() {
+    if (!this.chambers || !this.chambers.length) return;
+    const msg = caveStep(this.gameState, caveCfg, this.chambers, this.tile.x, this.tile.y);
+    if (msg) {
+      audio.sfx('pickup');
+      this.showToast(msg);
+    }
   }
 
   dirName(f) {

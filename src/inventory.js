@@ -69,12 +69,15 @@ export const POCKETS = [
   { id: 'crops', label: 'CROPS' },
   { id: 'fish', label: 'FISH' },
   { id: 'stuff', label: 'STUFF' },
+  { id: 'cook', label: 'COOK', optional: true },   // these two only appear once the cave teacher has taught you (lessons.js)
+  { id: 'brew', label: 'BREW', optional: true },
 ];
 export const PER_POCKET = 25;
 const GEAR_ITEMS = ['fishing-rod', 'lantern', 'crystal-lantern', 'frost-boots', 'waystone-charm', 'padded-vest', 'copper-mail', 'crystal-plate', 'ember-gem', 'greater-ember-gem', 'ward-gem', 'greater-ward-gem'];
 const CROP_ITEMS = ['wheat', 'carrot', 'pumpkin', 'herb', 'frostberry', 'seaweed', 'cactus-fruit', 'moonbloom', 'glowcap'];
 
 export function pocketOf(e, fishIds = []) {
+  if (e.kind === 'recipe') return e.pocket;
   if (e.kind !== 'item') return 'gear'; // tools, weapon, armor
   if (e.id.endsWith('seeds')) return 'seeds';
   if (GEAR_ITEMS.includes(e.id)) return 'gear';
@@ -86,9 +89,10 @@ export function pocketOf(e, fishIds = []) {
 
 // [{ id, label, entries }] in tab order. A pocket with more than PER_POCKET things spills into "LABEL 2", "LABEL 3"...
 // The six standard pockets are always listed (an empty one is just dimmed); spill pages only when needed.
-export function buildPockets(entries, fishIds = [], per = PER_POCKET) {
+export function buildPockets(entries, fishIds = [], per = PER_POCKET, shown = []) {
   const out = [];
   POCKETS.forEach((p) => {
+    if (p.optional && !shown.includes(p.id)) return;
     const mine = entries.filter((e) => pocketOf(e, fishIds) === p.id);
     const pages = Math.max(1, Math.ceil(mine.length / per));
     for (let i = 0; i < pages; i++) {

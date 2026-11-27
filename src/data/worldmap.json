@@ -135,9 +135,10 @@
         "quarry"
       ],
       "npcs": [
-        "miner"
+        "miner",
+        "cavemaster"
       ],
-      "blurb": "Rocks to mine. The Miner fixes and upgrades pickaxes.",
+      "blurb": "Rocks to mine. The Miner fixes and upgrades pickaxes. Surveyor Tam waits by the cave mouth.",
       "hint": "East of the Forest.",
       "short": "Quarry"
     },
@@ -153,8 +154,8 @@
         "cave"
       ],
       "npcs": [],
-      "blurb": "Dark caves with bats, and Granite.",
-      "hint": "Under the Quarry."
+      "blurb": "A big dark cave of 8 chambers, bats and Granite. Explore every chamber (a message shows each new one). A pickaxe clears blocked tunnels.",
+      "hint": "Through the cave mouth in the Quarry. Bring a light."
     },
     "crystal": {
       "label": "Crystal Caverns",
@@ -395,6 +396,18 @@
       "what": "Other Moon Crest half",
       "where": "desert",
       "how": "Beat the Scorpion King in the Desert."
+    },
+    {
+      "kind": "goal",
+      "what": "Learn to cook and brew (COOK/BREW tabs in the bag)",
+      "where": "quarry",
+      "how": "Explore all 8 chambers of the Caves, then talk to Surveyor Tam by the cave mouth in the Quarry."
+    },
+    {
+      "kind": "goal",
+      "what": "Treasure chest (gold and gems)",
+      "where": "cave",
+      "how": "In the Hidden Vault, the last chamber at the back of the Caves. Two rock piles block the tunnel: bring a pickaxe."
     }
   ]
 }

@@ -1,3 +1,4 @@
+import { forDevice } from './controls.js';
 import { levelOf } from './difficulty.js';
 import itemsData from './data/items.json';
 import toolDefs from './data/tools.json';
@@ -10,6 +11,8 @@ import { areaOf, statusOf, describe, findList, neighbor } from './worldmap.js';
 import enchantDefs from './data/enchants.json';
 import friendDefs from './data/friends.json';
 import { journalEntries, metCount, nextReward } from './journal.js';
+import recipeData from './data/recipes.json';
+import { recipeEntries, shownPockets, makeFromBag, needsText } from './lessons.js';
 
 // 10x10 pixel icons. '#' = main colour, 'o' = dark outline, 'h' = highlight, '.' = empty.
 const ICONS = {
@@ -95,8 +98,8 @@ export default class InventoryScreen {
     const s = this.scene;
     this.isOpen = true;
     this.mode = 'bag';
-    const all = listEntries(s.gameState, itemsData, toolDefs, weaponDefs, armorDefs, enchantDefs);
-    this.pockets = buildPockets(all, Object.keys(fishDefs));
+    const all = [...listEntries(s.gameState, itemsData, toolDefs, weaponDefs, armorDefs, enchantDefs), ...recipeEntries(s.gameState, recipeData, itemsData.items)];
+    this.pockets = buildPockets(all, Object.keys(fishDefs), undefined, shownPockets(s.gameState));
     if (!this.pockets.some((p) => p.id === this.pocketId)) this.pocketId = (this.pockets.find((p) => p.entries.length) ?? this.pockets[0]).id;
     this.entries = this.pockets.find((p) => p.id === this.pocketId).entries;
     this.index = Math.min(this.index, Math.max(0, this.entries.length - 1));
@@ -115,7 +118,7 @@ export default class InventoryScreen {
 
     // purse (the Coin Pouch)
     const coin = iconKey(s, 'coin', '#f2c230');
-    add(s.add.image(236, 24, coin).setOrigin(0.5));
+    add(s.add.image(246, 24, coin).setOrigin(0.5));
     this.purseText = add(s.add.text(300, 24, '', { fontSize: '10px', fontFamily: 'monospace', color: '#ffffff' }).setOrigin(1, 0.5));
     add(s.add.text(300, 34, itemsData.purse.name, { fontSize: '7px', fontFamily: 'monospace', color: '#9aa0b8' }).setOrigin(1, 0));
 
@@ -141,7 +144,10 @@ export default class InventoryScreen {
         box.setInteractive();
         box.on('pointerdown', () => this.select(i));
         const img = add(s.add.image(x + SLOT / 2, y + SLOT / 2 - 3, iconKey(s, e.icon, e.color)).setOrigin(0.5).setScale(2));
-        if (e.kind === 'weapon' || e.kind === 'armor') {
+        if (e.kind === 'recipe') {
+          img.setAlpha(e.affordable ? 1 : 0.35); // dim until you carry everything it needs
+          if (e.held > 0) add(s.add.text(x + SLOT - 3, y + SLOT - 3, String(e.held), { fontSize: '8px', fontFamily: 'monospace', color: '#9be8a0', stroke: '#000000', strokeThickness: 2 }).setOrigin(1, 1));
+        } else if (e.kind === 'weapon' || e.kind === 'armor') {
           // weapons and armor don't wear out: no count, no bar
         } else if (e.kind === 'item') {
           add(s.add.text(x + SLOT - 3, y + SLOT - 3, String(e.count), { fontSize: '8px', fontFamily: 'monospace', color: '#ffffff', stroke: '#000000', strokeThickness: 2 }).setOrigin(1, 1));
@@ -336,7 +342,12 @@ export default class InventoryScreen {
       return;
     }
     this.findCursor.setPosition(18, 31 + this.findIndex * 9).setVisible(true);
-    this.findDetail.setText(this.findRows[this.findIndex].how);
+    this.findDetail.setText(this.words(this.findRows[this.findIndex].how));
+  }
+
+  // text as this device should show it (phones: key names become button names)
+  words(text) {
+    return forDevice(text, this.scene.sys.game.device.input.touch);
   }
 
   switchPocket(id) {
@@ -373,17 +384,20 @@ export default class InventoryScreen {
       return;
     }
     this.detailName.setText(e.name);
-    this.eatBtn.setVisible(e.kind === 'item' && (e.heal > 0 || e.brew || e.id === 'waystone-charm'));
-    this.eatBtn.setText(e.id === 'waystone-charm' ? 'USE' : e.brew ? 'DRINK' : 'EAT');
-    if (e.kind === 'armor') {
+    this.eatBtn.setVisible(e.kind === 'recipe' ? e.affordable : e.kind === 'item' && (e.heal > 0 || e.brew || e.id === 'waystone-charm'));
+    this.eatBtn.setText(e.kind === 'recipe' ? 'MAKE' : e.id === 'waystone-charm' ? 'USE' : e.brew ? 'DRINK' : 'EAT');
+    if (e.kind === 'recipe') {
+      this.detailSub.setText(e.held > 0 ? `You have x${e.held}` : 'Recipe');
+      this.detailDesc.setText(`Needs:\n${needsText(e)}\n\n${this.words(e.desc)}`);
+    } else if (e.kind === 'armor') {
       this.detailSub.setText(`Defense ${e.defense}`);
-      this.detailDesc.setText(e.desc);
+      this.detailDesc.setText(this.words(e.desc));
     } else if (e.kind === 'weapon') {
       this.detailSub.setText(`Damage ${e.damage}`);
-      this.detailDesc.setText(e.desc);
+      this.detailDesc.setText(this.words(e.desc));
     } else if (e.kind === 'item') {
       this.detailSub.setText(e.heal > 0 ? `x${e.count}   heals ${e.heal / 2} heart${e.heal === 2 ? '' : 's'}` : `x${e.count}`);
-      this.detailDesc.setText(e.desc);
+      this.detailDesc.setText(this.words(e.desc));
     } else {
       this.detailSub.setText(e.broken ? 'Broken!' : `Wear ${e.dur}/${e.max}`);
       const lines = [e.desc];
@@ -399,6 +413,13 @@ export default class InventoryScreen {
     if (this.isOpen && e && e.kind === 'item' && e.id === 'waystone-charm') {
       this.close();
       this.scene.openWaystones();
+      return;
+    }
+    if (this.isOpen && e && e.kind === 'recipe') {
+      const r = makeFromBag(this.scene.gameState, recipeData, itemsData.items, e);
+      this.close();
+      this.open(); // counts and dimming update
+      this.scene.showToast(r.msg);
       return;
     }
     if (!this.isOpen || !e || e.kind !== 'item' || !(e.heal || e.brew)) return;

@@ -1087,5 +1087,47 @@
     "menu": "What can I fix for you?",
     "nothing": "Your tools look fine to me, and you have nothing to sell. Come back when something is worn.",
     "farewell": "Keep those edges sharp!"
+  },
+  "cavemaster": {
+    "name": "Surveyor Tam",
+    "lines": [
+      "Oh! A visitor with a lantern. Perfect timing!",
+      "I am the Surveyor. I am supposed to draw a map of every chamber in these caves, but my knees gave out years ago.",
+      "Here is my offer: explore the whole cave for me. Eight chambers, from the Entrance Cavern all the way to the very back. A pickaxe will clear the blocked tunnels.",
+      "When you have seen every one, I will thank you properly. I will teach you to cook and to brew."
+    ],
+    "noneLine": "You have not found any chambers yet. Go on in, and mind the bats!",
+    "progress": "You have found {n} of {total} chambers. Keep exploring! Some tunnels are blocked by rocks.",
+    "teachLines": [
+      "You found them all! Every single chamber, even the hidden one. My map is finished!",
+      "A deal is a deal. Listen close: cooking is just ingredients and a steady hand. Brewing is the same, with herbs and a little patience.",
+      "From now on you do not need the school cook or the alchemist. Open your bag and look for the COOK and BREW tabs. Pick a recipe and make it, anywhere you like.",
+      "The school will still do it for you if you are in a hurry. Thank you, friend!"
+    ],
+    "repeatLines": [
+      "Thank you again! My map looks wonderful. Enjoy your cooking and brewing."
+    ]
+  },
+  "cavechest": {
+    "name": "Chest",
+    "lines": [
+      "The lid creaks open...",
+      "Treasure! The old miners hid it well. It is all yours."
+    ],
+    "repeatLines": [
+      "The chest is empty now."
+    ],
+    "openLines": [
+      "The chest is empty now."
+    ]
+  },
+  "cavechestopen": {
+    "name": "Chest",
+    "lines": [
+      "The chest is empty now."
+    ],
+    "repeatLines": [
+      "The chest is empty now."
+    ]
   }
 }
