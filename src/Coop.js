@@ -5,6 +5,7 @@
 //                worlds/<CODE>/shared/...               farm plots, rocks/trees/boulders, world flags (everyone)
 //                worlds/<CODE>/chars/<name>             each player's own bag, hearts, gold, quests...
 //                worlds/<CODE>/players/<name>           where everyone is right now (for seeing each other)
+//                worlds/<CODE>/trades/<id>              offers between two players (see trade.js)
 import { cloudReady, cGet, cPut, cPatch, cDelete, cDeleteOnExit, cListen } from './cloud.js';
 import {
   applyInitial, applyPath, applyStreamEvent, canon, diffFlat, flattenShared, flattenTree,
@@ -12,6 +13,8 @@ import {
 } from './coopLogic.js';
 import { SaveManager } from './SaveManager.js';
 import { companionPet } from './pets.js';
+import itemsData from './data/items.json';
+import { makeOffer, acceptOffer, settleOffer, sanitizeOffer, trimDone } from './trade.js';
 
 const PERSONAL_EVERY_MS = 8000; // how often the character is backed up to the cloud
 const HEARTBEAT_EVERY = 10; // seconds between "I'm still here" updates
@@ -53,6 +56,7 @@ export const Coop = {
     Object.assign(this, {
       active: false, started: false, online: false, scene: null, gs: null, pushing: false,
       sharedTree: {}, remoteFlat: {}, lastPushed: {}, playersTree: {}, me: null,
+      tradesTree: {}, notified: new Set(), settling: new Set(),
       presenceBusy: false, presenceDirty: false, lastPersonalAt: 0, personalTimer: null, seconds: 0,
     });
   },
@@ -81,6 +85,10 @@ export const Coop = {
       cListen(`${base}/players`, (type, p) => {
         this.playersTree = applyStreamEvent(this.playersTree, type, p);
         this.refreshPlayers();
+      }),
+      cListen(`${base}/trades`, (type, p) => {
+        this.tradesTree = applyStreamEvent(this.tradesTree, type, p);
+        this.onTrades();
       })
     );
     SaveManager.afterSave = (state) => this.savePersonal(state);
@@ -142,6 +150,127 @@ export const Coop = {
     if (this.me && this.seconds % HEARTBEAT_EVERY === 0) this.sendPresence(this.me.m, this.me.x, this.me.y, this.me.d);
     this.refreshPlayers(); // also drops anyone who went quiet
     if (this.seconds % 20 === 0 && this.scene) this.scene.saveQuiet(); // autosave while playing together
+  },
+
+  // ---- trading (the rules are in trade.js; the offers live in the cloud) ----
+  offers() {
+    return Object.values(this.tradesTree ?? {}).map((o) => sanitizeOffer(o, itemsData.items)).filter(Boolean);
+  },
+  incoming() {
+    return this.offers().filter((o) => o.to === this.key && o.status === 'open');
+  },
+  outgoing() {
+    return this.offers().filter((o) => o.from === this.key && o.status === 'open');
+  },
+
+  // something changed in the trades: tell me about new offers, and collect answers to my own
+  onTrades() {
+    if (!this.gs) return;
+    for (const o of this.offers()) {
+      if (o.to === this.key && o.status === 'open' && !this.notified.has(o.id)) {
+        this.notified.add(o.id);
+        this.scene?.showToast(`${o.fromName} wants to trade! Open PETS, then Trades.`);
+      }
+      if (o.from === this.key && o.status !== 'open') this.settle(o);
+    }
+  },
+
+  async settle(o) {
+    if (this.settling.has(o.id)) return;
+    this.settling.add(o.id);
+    const gs = this.gs;
+    const r = settleOffer(gs, o, itemsData.items);
+    if (r.ok) {
+      trimDone(gs);
+      this.save();
+      this.scene?.showToast(r.msg);
+      this.scene?.updateHud?.();
+    }
+    try {
+      await cDelete(`worlds/${this.code}/trades/${o.id}`);
+    } catch (e) {
+      this.settling.delete(o.id); // try again on the next change (tradesDone stops it being paid twice)
+    }
+  },
+
+  save() {
+    if (this.scene?.saveQuiet) this.scene.saveQuiet();
+    else SaveManager.save(this.gs);
+    this.savePersonal(this.gs, true);
+  },
+
+  // Send an offer. The things on offer leave your bag now and wait in the offer.
+  async sendOffer(to, toName, give, giveGold, ask, askGold) {
+    const gs = this.gs;
+    const id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    const snap = JSON.stringify({ items: gs.items, gold: gs.gold });
+    const made = makeOffer(gs, { id, from: this.key, fromName: this.name, to, toName, give, giveGold, ask, askGold }, itemsData.items);
+    if (!made.ok) return made;
+    this.save();
+    try {
+      await cPut(`worlds/${this.code}/trades/${id}`, made.offer);
+    } catch (err) {
+      let there = false;
+      try { there = !!(await cGet(`worlds/${this.code}/trades/${id}`)); } catch (e2) { /* offline */ }
+      if (!there) {
+        Object.assign(gs, JSON.parse(snap)); // it never left: put it all back
+        this.save();
+        return { ok: false, msg: 'Could not reach the world. Nothing was sent.' };
+      }
+    }
+    return { ok: true, offer: made.offer };
+  },
+
+  // the receiver says yes (accept = true) or no
+  async respond(id, accept) {
+    const gs = this.gs;
+    const path = `worlds/${this.code}/trades/${id}`;
+    let raw;
+    try { raw = await cGet(path); } catch (e) { return { ok: false, msg: 'Could not reach the world.' }; }
+    const o = sanitizeOffer(raw, itemsData.items);
+    if (!o || o.status !== 'open' || o.to !== this.key) return { ok: false, msg: 'That offer is gone.' };
+    if (!accept) {
+      try { await cPatch(path, { status: 'declined' }); } catch (e) { return { ok: false, msg: 'Could not reach the world.' }; }
+      return { ok: true, msg: 'Declined.' };
+    }
+    const snap = JSON.stringify({ items: gs.items, gold: gs.gold });
+    const r = acceptOffer(gs, o, itemsData.items);
+    if (!r.ok) return r;
+    try {
+      await cPatch(path, { status: 'accepted', paid: r.paid });
+    } catch (err) {
+      let status = null;
+      try { status = (await cGet(path))?.status; } catch (e2) { /* offline */ }
+      if (status !== 'accepted') {
+        Object.assign(gs, JSON.parse(snap)); // it did not go through: undo
+        return { ok: false, msg: 'Could not reach the world. Nothing changed.' };
+      }
+    }
+    this.save();
+    return { ok: true, msg: 'Trade done!' };
+  },
+
+  // the sender takes an open offer back
+  async cancel(id) {
+    const path = `worlds/${this.code}/trades/${id}`;
+    try {
+      const o = sanitizeOffer(await cGet(path), itemsData.items);
+      if (!o || o.status !== 'open') return { ok: false, msg: 'It was already answered.' };
+      await cPatch(path, { status: 'cancelled' }); // the live connection then returns your things
+      return { ok: true, msg: 'Cancelling...' };
+    } catch (e) {
+      return { ok: false, msg: 'Could not reach the world.' };
+    }
+  },
+
+  // what the other player has (their last backup), for choosing what to ask for
+  async theirItems(key) {
+    try {
+      const st = await cGet(`worlds/${this.code}/chars/${key}/state`);
+      return { items: st?.items ?? {}, gold: st?.gold ?? 0 };
+    } catch (e) {
+      return null;
+    }
   },
 
   // ---- seeing each other ----

@@ -378,3 +378,8 @@ without being run in a browser, so test new features on desktop and phone.
 
 ## Desert door fix
 Forging the Moon Crest uses up both halves, which locked the Crystal Cave's desert door (it needed `moon-crest-half`). Doors now accept `requiresItem: 'a|b'` (either item) and an `openFlag` (set when you walk through; the door then stays open). The desert door takes `moon-crest-half|moon-crest` and sets `desert_open`. Edited in make_crystal_assets.py and crystal.json. Test: test_desertdoor.mjs.
+
+## Co-op trading
+- `src/trade.js` (pure rules, `test_trade.mjs`): an offer lives in the cloud at `worlds/<CODE>/trades/<id>`. What the sender gives leaves their bag when the offer is made (escrow); accepting pays the asked-for things into `paid`; the sender then collects once (`gs.tradesDone`), or gets their own things back on decline / cancel. Key items (lantern, boots, crest, sunstone, fairy charm) can't be traded. Gold and items both work, either side can be empty (a gift).
+- `Coop.js`: `offers/incoming/outgoing`, `sendOffer`, `respond`, `cancel`, `theirItems`, a live listener on `trades`, `settle`. `TradeUI.js`: the menus (PETS / G > Trades). The receiver sees "<name> wants to trade!".
+- Tested with two simulated players against an in-memory database (offer, accept, decline, cancel: totals unchanged).

@@ -53,6 +53,7 @@ import InventoryScreen, { iconKey } from '../InventoryScreen.js';
 import { lowTools } from '../inventory.js';
 import { Coop } from '../Coop.js';
 import Friends from '../Friends.js';
+import TradeUI from '../TradeUI.js';
 import { owedGifts, giveGifts, reissueFor } from '../bossGifts.js';
 import { perkDamage, ALL_FREE_FLAG } from '../fairies.js';
 import waystoneData from '../data/waystones.json';
@@ -378,6 +379,7 @@ export default class WorldScene extends Phaser.Scene {
     this.choice = new ChoiceMenu(this);
     this.bag = new InventoryScreen(this);
     this.friends = new Friends(this);
+    this.trade = new TradeUI(this);
     this.friends.start();
     if (!this.gameState.ninja) this.time.delayedCall(700, () => this.chooseNinja()); // choose a colour the first time
     else if (!chosen(this.gameState)) this.time.delayedCall(700, () => this.chooseLevel()); // older saves: pick a difficulty once

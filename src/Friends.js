@@ -163,14 +163,17 @@ export default class Friends {
     if (s.choice.isOpen || s.dialogue.isOpen || s.bag.isOpen || s.moving || s.transitioning) return;
     const gs = s.gameState;
     const opts = gs.pets.map((p) => `${p.name}${p.level ? ` Lv${p.level}` : ''}${p.id === gs.companion ? ' (with you)' : ''}`);
-    opts.push('Friend Journal', 'Close');
+    opts.push('Friend Journal');
+    const tradeAt = Coop.active ? opts.length : -1; // trading only in a co-op world
+    if (Coop.active) opts.push(`Trades${Coop.incoming().length ? ` (${Coop.incoming().length} new)` : ''}`);
+    opts.push('Close');
     s.choice.open(opts, {
       onSelect: (i) => {
         if (i < gs.pets.length) this.openPet(gs.pets[i]);
         else if (i === gs.pets.length) {
           claimRewards(gs, itemsData.items).forEach((m) => s.showToast(m)); // (an old save may already have earned one)
           s.bag.openJournal();
-        }
+        } else if (i === tradeAt) s.trade.open();
       },
     });
   }
