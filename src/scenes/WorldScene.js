@@ -219,6 +219,7 @@ export default class WorldScene extends Phaser.Scene {
           toY: p.toY,
           requiresItem: p.requiresItem, // e.g. 'lantern': the door will not open without it
           requiresFlag: p.requiresFlag, // e.g. 'stonedoor_cleared': closed until that flag is set
+          openFlag: p.openFlag, // set once you have been through: from then on the door stays open (even if the item is used up)
           lockedMsg: p.lockedMsg ?? 'It is locked.',
         };
       })
@@ -1988,9 +1989,10 @@ export default class WorldScene extends Phaser.Scene {
   lockedDoorAt(x, y) {
     const d = this.doors.find((o) => x >= o.x0 && x <= o.x1 && y >= o.y0 && y <= o.y1);
     if (!d) return null;
-    let noItem = d.requiresItem && !(this.gameState.items[d.requiresItem] > 0);
+    // 'a|b' means either item will do; an openFlag means you have been through before
+    let noItem = d.requiresItem && !d.requiresItem.split('|').some((id) => this.gameState.items[id] > 0) && !(d.openFlag && this.gameState.flags[d.openFlag]);
     if (noItem) { // a friend beat the boss that drops it but the gift never reached you: hand it over now
-      const msg = reissueFor(this.gameState, d.requiresItem);
+      const msg = reissueFor(this.gameState, d.requiresItem.split('|')[0]);
       if (msg) { this.showToast(msg); noItem = false; }
     }
     const noFlag = d.requiresFlag && !this.gameState.flags[d.requiresFlag];
@@ -2004,6 +2006,7 @@ export default class WorldScene extends Phaser.Scene {
   }
 
   useDoor(door) {
+    if (door.openFlag) this.gameState.flags[door.openFlag] = true;
     this.transitioning = true;
     audio.sfx('door');
     this.touchDir = { x: 0, y: 0 };

@@ -135,13 +135,14 @@ for p in [(7, 12), (7, 15), (11, 12), (11, 15), (23, 12), (27, 13), (21, 22), (2
 fl[0][4] = True        # the way back up to the stone door
 fl[22][33] = True      # the cold passage behind the Queen's roost: the way to the Snowy Peaks
 fl[13][1] = True       # the sealed wave-carved archway in the Gallery: the loop back from the Sunken Ruins
+fl[13][31] = True      # the crescent-sealed archway in the Moth Garden: the way to the Desert (needs the Moon Crest half)
 fl[2][31] = True       # the hidden crack in the nook wall: the way to the Shadow Market
 
 ground, obstacles = [], []
 for y in range(H):
     for x in range(W):
         if fl[y][x]:
-            g = 5 if (x, y) in ((4, 0), (31, 2), (33, 22), (1, 13)) else (3 if random.random() < 0.12 else 2)
+            g = 5 if (x, y) in ((4, 0), (31, 2), (33, 22), (1, 13), (31, 13)) else (3 if random.random() < 0.12 else 2)
             ground.append(g); obstacles.append(0)
         else:
             ground.append(2)
@@ -186,6 +187,8 @@ doors = [obj('to-cave', 4, 0, toMap='cave', toX=21, toY=2),
              lockedMsg='A crack in the wall. It is too dim to see through. A brighter light might help.'),
          obj('to-peaks', 33, 22, toMap='peaks', toX=1, toY=24, requiresFlag='batqueen_defeated',
              lockedMsg='A freezing draft blows from a passage behind the roost. The Bat Queen still guards it.'),
+         obj('to-desert', 31, 13, toMap='desert', toX=1, toY=15, requiresItem='moon-crest-half|moon-crest', openFlag='desert_open',
+             lockedMsg='A sandy archway sealed with a crescent mark. Half of something silver might fit it.'),
          obj('to-ruins', 1, 13, toMap='ruins', toX=12, toY=3, requiresFlag='serpent_defeated',
              lockedMsg='An archway carved with waves, sealed tight. Something deep and watery holds it shut.')]
 
@@ -213,9 +216,9 @@ while q:
     x, y = q.popleft()
     for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
         nx, ny = x + dx, y + dy
-        if 0 <= nx < W and 0 <= ny < H and fl[ny][nx] and (nx, ny) not in seen and (nx, ny) not in blocked and (nx, ny) not in ((4, 0), (31, 2), (33, 22), (1, 13)):
+        if 0 <= nx < W and 0 <= ny < H and fl[ny][nx] and (nx, ny) not in seen and (nx, ny) not in blocked and (nx, ny) not in ((4, 0), (31, 2), (33, 22), (1, 13), (31, 13)):
             seen.add((nx, ny)); q.append((nx, ny))
-allfloor = {(x, y) for y in range(H) for x in range(W) if fl[y][x] and (x, y) not in blocked and (x, y) not in ((4, 0), (31, 2), (33, 22), (1, 13))}
+allfloor = {(x, y) for y in range(H) for x in range(W) if fl[y][x] and (x, y) not in blocked and (x, y) not in ((4, 0), (31, 2), (33, 22), (1, 13), (31, 13))}
 assert not (allfloor - seen), sorted(allfloor - seen)[:10]
 json.dump(crystal, open(f'{A}/maps/crystal.json', 'w'), separators=(',', ':'))
 

@@ -375,3 +375,6 @@ without being run in a browser, so test new features on desktop and phone.
 
 ## Joystick stuck after naming a pet
 `window.prompt` (pet naming/renaming) swallows the touch-end, so `this.stick` stayed set and no new stick could start (the buttons still worked). Fixes: `this.releaseStick()` after each prompt in Friends.js; a stale stick (its pointer not down, or its finger not in `e.touches`) is dropped on the next touch and in `update()`.
+
+## Desert door fix
+Forging the Moon Crest uses up both halves, which locked the Crystal Cave's desert door (it needed `moon-crest-half`). Doors now accept `requiresItem: 'a|b'` (either item) and an `openFlag` (set when you walk through; the door then stays open). The desert door takes `moon-crest-half|moon-crest` and sets `desert_open`. Edited in make_crystal_assets.py and crystal.json. Test: test_desertdoor.mjs.
